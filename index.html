@@ -12,7 +12,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-09-b'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-10-b'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -118,6 +118,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* ─── HABIT CARD ─── */
 /* Gym/HIIT habit (I) moved to Bowl challenge system — card hidden but DOM kept for legacy tick compatibility */
 #hI{display:none !important}
+/* Breakfast (C) removed — card hidden but DOM kept for legacy compatibility */
+#hC{display:none !important}
 
 /* ═══════════════════ BOWL PAGE (GUMBALL MACHINE) ═══════════════════ */
 #pg-bowl{padding:8px 0 0}
@@ -127,8 +129,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 #pg-bowl .bowl-crank-row,
 #pg-bowl .bowl-progress,
 #pg-bowl .bowl-history,
-#pg-bowl #bowl-today-dock,
-#pg-bowl #bowl-tomorrow-dock{padding-left:14px;padding-right:14px}
+#pg-bowl .bowl-history{padding-left:14px;padding-right:14px}
 .bowl-header{text-align:center;margin-bottom:16px;padding:0 4px}
 .bowl-title{font-family:var(--font-ui);font-size:22px;font-weight:900;letter-spacing:-.5px;color:#fff;margin-bottom:4px;background:linear-gradient(135deg,#fff 40%,var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .bowl-sub{font-size:12px;color:var(--muted);line-height:1.5;letter-spacing:.1px;transition:opacity .3s}
@@ -1505,6 +1506,9 @@ button,a,[role="button"],.hc-main,.hc-chk,.tab,.bn-tab,.epd-habit,.wk-day{-webki
 .rw-celebrate.show .rw-celebrate-box{transform:scale(1)}
 .rw-celebrate-icon{font-size:64px;margin-bottom:12px;animation:rw-spin .8s cubic-bezier(.34,1.3,.64,1) forwards}
 @keyframes rw-spin{0%{transform:scale(0) rotate(-30deg)}60%{transform:scale(1.2) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
+/* Reward lightbox animations */
+@keyframes rwLbIn{from{opacity:0}to{opacity:1}}
+@keyframes rwLbZoom{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
 .rw-celebrate-title{font-size:26px;font-weight:900;color:#FFD97D;margin-bottom:6px;text-shadow:0 0 20px rgba(255,215,0,.5)}
 .rw-celebrate-sub{font-size:13px;color:rgba(255,255,255,.7);line-height:1.5}
 /* Reward modal image tabs */
@@ -1982,7 +1986,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 .is-sat .fri-opt-badge{display:none!important}
 .is-fri .hide-fri{display:none!important}
 .is-sat .hide-sat{display:none!important}
-/* Eid: hide everything not in STEPS_EID (B C K M N P) */
+/* Eid: hide everything not in STEPS_EID (B K N) */
 .is-eid #hA,.is-eid #hD,.is-eid #hE,.is-eid #hF,.is-eid #hG,.is-eid #hS,.is-eid #hT,.is-eid #hU,.is-eid #hV,.is-eid #hW,.is-eid #hI,.is-eid #hJ,.is-eid #hL,.is-eid #hO,.is-eid #hQ,.is-eid #hR,
 .is-eid #rA,.is-eid #rD,.is-eid #rE,.is-eid #rF,.is-eid #rG,.is-eid #rH,.is-eid #rW,.is-eid #rI,.is-eid #rJ,.is-eid #rL,.is-eid #rO,.is-eid #rQ,.is-eid #rR{display:none!important}
 /* Hide all phase headers on Eid — show only relevant flow */
@@ -3144,8 +3148,8 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <input accept=".json" id="imp-file-quick" onchange="importData(event)" style="display:none" type="file"/>
 </div>
 </div>
-<!-- XP Level Strip -->
-<div class="xp-strip" id="xp-strip">
+<!-- XP Level Strip (hidden — data moved into streak bar) -->
+<div class="xp-strip" id="xp-strip" style="display:none">
   <div class="xp-strip-lvl" id="xp-strip-lvl">LVL 1 · RECRUIT</div>
   <div class="xp-strip-bar"><div class="xp-strip-fill" id="xp-strip-fill" style="width:0%"></div></div>
   <div class="xp-strip-amt" id="xp-strip-amt">0 XP</div>
@@ -3164,6 +3168,13 @@ textarea.auto-grow{overflow:hidden;resize:none}
     <div>
       <div class="streak-tile-lbl">Best</div>
       <div class="streak-tile-val" id="streak-best-badge" style="color:var(--gold)">0 days</div>
+    </div>
+  </div>
+  <div class="streak-tile">
+    <span style="font-size:20px">⚡</span>
+    <div>
+      <div class="streak-tile-lbl" id="xp-inline-lvl">LVL 1 · RECRUIT</div>
+      <div class="streak-tile-val" id="xp-inline-amt" style="color:var(--gold)">0 XP</div>
     </div>
   </div>
 
@@ -3189,6 +3200,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 </div>
 <div class="day-mode-banner" id="day-mode-banner"><div class="dmb-icon">🛋️</div><div><div class="dmb-text">Friday — Sloth Day</div><div class="dmb-sub">No pressure. Just the essentials.</div></div></div>
 <div class="hc-list">
+<div class="ph" id="ph-morning"><div class="ph-dot" style="color:var(--a2)"></div><div class="ph-lbl">Morning</div><div class="ph-line"></div></div>
 <div class="hc hide-fri" id="hA"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'A')}"><div class="hc-chk" onclick="tickDone(event,'A')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Wake Up — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'A')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">A</span><span class="hc-name">Wake Up</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">7:00 AM</span></div><div class="hc-action">Feet on floor in 60 sec. Drink a full glass of water.</div></div></div></div>
 <div class="hc" id="hB"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'B')}"><div class="hc-chk" onclick="tickDone(event,'B')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Morning Walk — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'B')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">B</span><span class="hc-name">Morning Walk</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">7:05 AM</span></div><div class="hc-action">30 min outside. No phone. Silence resets the mind.</div></div></div></div>
 
@@ -3196,10 +3208,12 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div class="hc" id="hD"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'D')}"><div class="hc-chk" onclick="tickDone(event,'D')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Brush and Face — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'D')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">D</span><span class="hc-name">Brush + Face</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">8:00 AM</span></div><div class="hc-action">2 min brush, wash face. One positive thing in the mirror.</div></div></div></div>
 <div class="hc week-only" id="hE"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'E')}"><div class="hc-chk" onclick="tickDone(event,'E')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Set 3 Priorities — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'E')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">E</span><span class="hc-name">Set 3 Priorities</span><span class="hc-time">8:15 AM</span></div><div class="hc-action">Write 3 tasks on paper. If only these 3 — is today a win?</div></div></div></div>
 
+<div class="ph" id="ph-office"><div class="ph-dot" style="color:var(--muted)"></div><div class="ph-lbl">Office</div><div class="ph-line"></div></div>
 <div class="hc sat-only" id="hQ"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'Q')}"><div class="hc-chk" onclick="tickDone(event,'Q')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Weekly Preview — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'Q')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">Q</span><span class="hc-name">Weekly Preview</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">10:00 AM</span></div><div class="hc-action">Open calendar. Write 3 intentions for next week. 10 minutes only.</div></div></div></div>
 <div class="hc week-only" id="hF"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'F')}"><div class="hc-chk" onclick="tickDone(event,'F')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Deep Work — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'F')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">F</span><span class="hc-name">Deep Work</span><span class="hc-time">9:00 AM</span></div><div class="hc-action">Before email — Priority 1. Protect the first 90 min. Phone in bag.</div></div></div></div>
 <div class="hc hide-fri" id="hG"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'G')}"><div class="hc-chk" onclick="tickDone(event,'G')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Mid-Morning Walk — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'G')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">G</span><span class="hc-name">Mid-Morning Walk</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">11:00 AM</span></div><div class="hc-action">20 min outside. No screens. Brain recharge block.</div></div></div></div>
 
+<div class="ph" id="ph-evening"><div class="ph-dot" style="color:var(--muted)"></div><div class="ph-lbl">Evening</div><div class="ph-line"></div></div>
 <div class="hc week-only" id="hJ"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'J')}"><div class="hc-chk" onclick="tickDone(event,'J')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Arrive Home — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'J')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">J</span><span class="hc-name">Arrive Home</span><span class="hc-time">5:30 PM</span></div><div class="hc-action">Change clothes immediately. Sit 5 min. Do nothing. Breathe.</div></div></div></div>
 <div class="hc not-eid" id="hS"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'S')}"><div class="hc-chk" onclick="tickDone(event,'S')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Chest Stretch — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'S')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">S</span><span class="hc-name">Chest Stretch</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:15 PM</span></div><div class="hc-action">Doorframe stretch. Forearms on frame, elbows 90°. Lean forward. 30s × 3.</div></div></div></div>
 <div class="hc not-eid" id="hT"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'T')}"><div class="hc-chk" onclick="tickDone(event,'T')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Couch Stretch — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'T')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">T</span><span class="hc-name">Couch Stretch</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:18 PM</span></div><div class="hc-action">Back foot on couch/wall behind you, front knee down. Push hips forward, squeeze rear glute. 60s each side.</div></div></div></div>
@@ -3213,6 +3227,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 
 
 
+<div class="ph" id="ph-night"><div class="ph-dot" style="color:var(--muted)"></div><div class="ph-lbl">Night</div><div class="ph-line"></div></div>
 <div class="hc" id="hN"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'N')}"><div class="hc-chk" onclick="tickDone(event,'N')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Brush Teeth — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'N')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">N</span><span class="hc-name">Brush Teeth</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">10:30 PM</span></div><div class="hc-action">Brush, floss, wash face. Same time every night. Sleep cue.</div></div></div></div>
 <div class="hc week-only" id="hO"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'O')}"><div class="hc-chk" onclick="tickDone(event,'O')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Journal and Breathe — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'O')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">O</span><span class="hc-name">Journal + Breathe</span><span class="hc-time">10:35 PM</span></div><div class="hc-action">Win / Challenge / Tomorrow. Then 5 min slow breathing.</div></div></div></div>
 <div class="hc sat-only" id="hR"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'R')}"><div class="hc-chk" onclick="tickDone(event,'R')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Weekly Reset — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'R')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">R</span><span class="hc-name">Weekly Reset</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">10:00 PM</span></div><div class="hc-action">Tidy workspace. Prep bag and clothes. 5-min review of last week done.</div></div></div></div>
@@ -3259,6 +3274,64 @@ textarea.auto-grow{overflow:hidden;resize:none}
 </div>
 </div><div class="pg" id="pg-gym">
 <!-- ──────────────── ACTIVITY BOARD ──────────────── -->
+
+<!-- Body Weight + Steps compact 2-col row -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;margin-bottom:14px">
+
+<!-- Body Weight (kept) -->
+<div class="bw-card" style="margin-bottom:0">
+<div class="bw-hdr">
+<div class="bw-title">⚖️ Body Weight</div>
+<button onclick="saveBW()" style="background:rgba(77,141,255,.15);border:1px solid rgba(107,182,255,.3);border-radius:6px;color:var(--a2);font-family:var(--font-ui);font-size:10px;font-weight:700;padding:4px 10px;cursor:pointer">Log</button>
+</div>
+<div class="bw-row">
+<input class="bw-inp" id="bw-inp" placeholder="75" step="0.1" type="number"/>
+<span class="bw-unit">kg</span>
+<span id="bw-change" style="font-family:var(--font-ui);font-size:11px;font-weight:700;margin-left:6px"></span>
+</div>
+<div class="bw-trend" id="bw-trend"></div>
+</div>
+
+<!-- Steps (kept) -->
+<div class="steps-card" style="margin-bottom:0">
+<div class="steps-hdr">
+<div class="steps-title">👟 Steps</div>
+<div style="display:flex;align-items:center;gap:6px">
+<button class="epd-trigger-btn" onclick="openStepsHistory()" style="font-size:10px;padding:3px 7px"><svg class="svg-icon" style="font-size:12px;margin-right:2px"><use href="#icon-calendar"/></svg> Hist</button>
+<div class="steps-goal-lbl" id="steps-goal-lbl" style="font-size:10px">Goal: 10k</div>
+</div>
+</div>
+<div class="steps-main">
+<div class="steps-ring-wrap">
+<svg class="steps-ring-svg" height="72" viewbox="0 0 88 88" width="72">
+<defs>
+<lineargradient id="stepsGrad" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#4D8DFF"></stop>
+<stop offset="100%" stop-color="#7EC8FF"></stop>
+</lineargradient>
+</defs>
+<circle class="steps-ring-bg" cx="44" cy="44" r="36" stroke-width="8"></circle>
+<circle class="steps-ring-fill" cx="44" cy="44" id="steps-ring-fill" r="36" stroke-dasharray="226" stroke-dashoffset="226" stroke-width="8"></circle>
+</svg>
+<div class="steps-ring-num">
+<div class="steps-ring-val" id="steps-ring-val" style="font-size:13px">0</div>
+<div class="steps-ring-unit" style="font-size:9px">steps</div>
+</div>
+</div>
+<div class="steps-right">
+<div class="steps-pct" id="steps-pct" style="font-size:10px">0% of goal</div>
+<div class="steps-bar-track"><div class="steps-bar-fill" id="steps-bar-fill" style="width:0%"></div></div>
+<div class="steps-input-row">
+<input class="steps-inp" id="steps-inp" placeholder="8500" type="number" style="font-size:11px"/>
+<button class="steps-save-btn" onclick="saveSteps()" style="font-size:11px;padding:5px 8px">Save</button>
+</div>
+</div>
+</div>
+<div class="steps-week" id="steps-week"></div>
+</div>
+
+</div><!-- end 2-col grid -->
+
 <!-- Top KPI strip (3 small cards) -->
 <div class="ab-kpi" id="ab-kpi"></div>
 
@@ -3279,58 +3352,6 @@ textarea.auto-grow{overflow:hidden;resize:none}
   </div>
   <div class="ab-chips-grid" id="ab-chips-grid"></div>
   <button class="ab-add-chip-btn" onclick="abOpenAddChip()">＋ New activity</button>
-</div>
-
-<!-- Body Weight (kept) -->
-<div class="bw-card">
-<div class="bw-hdr">
-<div class="bw-title">⚖️ Body Weight</div>
-<button onclick="saveBW()" style="background:rgba(77,141,255,.15);border:1px solid rgba(107,182,255,.3);border-radius:6px;color:var(--a2);font-family:var(--font-ui);font-size:10px;font-weight:700;padding:4px 10px;cursor:pointer">Log</button>
-</div>
-<div class="bw-row">
-<input class="bw-inp" id="bw-inp" placeholder="75" step="0.1" type="number"/>
-<span class="bw-unit">kg</span>
-<span id="bw-change" style="font-family:var(--font-ui);font-size:11px;font-weight:700;margin-left:6px"></span>
-</div>
-<div class="bw-trend" id="bw-trend"></div>
-</div>
-
-<!-- Steps (kept) -->
-<div class="steps-card">
-<div class="steps-hdr">
-<div class="steps-title">👟 Daily Steps</div>
-<div style="display:flex;align-items:center;gap:8px">
-<button class="epd-trigger-btn" onclick="openStepsHistory()"><svg class="svg-icon" style="font-size:14px;margin-right:4px"><use href="#icon-calendar"/></svg> Edit History</button>
-<div class="steps-goal-lbl" id="steps-goal-lbl">Goal: 10,000</div>
-</div>
-</div>
-<div class="steps-main">
-<div class="steps-ring-wrap">
-<svg class="steps-ring-svg" height="88" viewbox="0 0 88 88" width="88">
-<defs>
-<lineargradient id="stepsGrad" x1="0%" x2="100%" y1="0%" y2="0%">
-<stop offset="0%" stop-color="#4D8DFF"></stop>
-<stop offset="100%" stop-color="#7EC8FF"></stop>
-</lineargradient>
-</defs>
-<circle class="steps-ring-bg" cx="44" cy="44" r="36" stroke-width="8"></circle>
-<circle class="steps-ring-fill" cx="44" cy="44" id="steps-ring-fill" r="36" stroke-dasharray="226" stroke-dashoffset="226" stroke-width="8"></circle>
-</svg>
-<div class="steps-ring-num">
-<div class="steps-ring-val" id="steps-ring-val">0</div>
-<div class="steps-ring-unit">steps</div>
-</div>
-</div>
-<div class="steps-right">
-<div class="steps-pct" id="steps-pct">0% of goal</div>
-<div class="steps-bar-track"><div class="steps-bar-fill" id="steps-bar-fill" style="width:0%"></div></div>
-<div class="steps-input-row">
-<input class="steps-inp" id="steps-inp" placeholder="e.g. 8500" type="number"/>
-<button class="steps-save-btn" onclick="saveSteps()">Save</button>
-</div>
-</div>
-</div>
-<div class="steps-week" id="steps-week"></div>
 </div>
 
 <!-- 7-day activity history -->
@@ -3443,20 +3464,16 @@ textarea.auto-grow{overflow:hidden;resize:none}
     <div class="bowl-progress-bar">
       <div class="bowl-progress-fill" id="bowl-progress-fill" style="width:0%"></div>
       <div class="bowl-progress-ticks">
-        <div class="bowl-progress-tick" style="flex:4"></div>
-        <div class="bowl-progress-tick" style="flex:3"></div>
-        <div class="bowl-progress-tick" style="flex:3"></div>
+        <div class="bowl-progress-tick" style="flex:1"></div>
+        <div class="bowl-progress-tick" style="flex:1"></div>
+        <div class="bowl-progress-tick" style="flex:1"></div>
+        <div class="bowl-progress-tick" style="flex:1"></div>
       </div>
     </div>
     <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:var(--muted);font-weight:700;padding:0 2px">
-      <span>🥉 100</span><span>🥈 250</span><span>🥇 450</span>
+      <span>500</span><span>1000</span><span>1500</span><span>2000</span>
     </div>
   </div>
-
-  <!-- Today's ball dock (legacy single-draw compat, hidden) -->
-  <div id="bowl-today-dock" style="display:none"></div>
-  <!-- Tomorrow dock -->
-  <div id="bowl-tomorrow-dock" style="display:none"></div>
 
   <!-- History -->
   <div class="bowl-history">
@@ -4323,11 +4340,11 @@ const CONFIG = {
 /* Gym/HIIT (I) moved to Bowl challenge system — no longer in fixed habits.
    Legacy days with I ticked keep their rating; removing from STEPS just means
    new days don't require it for "perfect day" completion. */
-const STEPS_WEEK = ['A','B','C','D','E','F','G','S','T','U','V','W','J','K','N','O'];
-const STEPS_FRI  = ['B','C','D','K','N'];
-const STEPS_SAT  = ['A','B','C','D','G','Q','K','N','R'];
+const STEPS_WEEK = ['A','B','D','E','F','G','S','T','U','V','W','J','K','N','O'];
+const STEPS_FRI  = ['B','D','K','N'];
+const STEPS_SAT  = ['A','B','D','G','Q','K','N','R'];
 /* Eid Al-Fitr 2026 — 17 Mar to 23 Mar: wellness-only essentials */
-const STEPS_EID  = ['B','C','K','N'];
+const STEPS_EID  = ['B','K','N'];
 let STEPS      = STEPS_WEEK; // updated at runtime by applyDaySchedule()
 
 function isEidDay(d){
@@ -5328,12 +5345,12 @@ function updProg(s){
 /* Phase requirements — reward only unlocks when ALL steps in its phase are done */
 const RWDS_REQ = {
   B: ['A','B'],
-  E: ['A','B','C','D','E'],
+  E: ['A','B','D','E'],
   H: ['F','G'],
   W: ['S','T','U','V','W'],
   I: ['I'],
   L: ['J','I','K'],
-  P: ['A','B','C','D','E','F','G','S','T','U','V','W','I','J','K','N','O']
+  P: ['A','B','D','E','F','G','S','T','U','V','W','I','J','K','N','O']
 };
 
 function updRwds(s){
@@ -7648,24 +7665,24 @@ function epdLoad(){
     ];
   } else if(dow === 5){
     phases = [
-      { label:'☀️ Morning', steps: daySteps.filter(function(st){ return ['A','B','C','D','E'].indexOf(st)>-1; }) },
+      { label:'☀️ Morning', steps: daySteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
       { label:'🌆 Evening', steps: daySteps.filter(function(st){ return ['J','K'].indexOf(st)>-1; }) },
-      { label:'🌙 Night',   steps: daySteps.filter(function(st){ return ['M','N','O'].indexOf(st)>-1; }) }
+      { label:'🌙 Night',   steps: daySteps.filter(function(st){ return ['N','O'].indexOf(st)>-1; }) }
     ].filter(function(ph){ return ph.steps.length > 0; });
   } else if(dow === 6){
     phases = [
-      { label:'☀️ Morning', steps: daySteps.filter(function(st){ return ['A','B','C','D','E'].indexOf(st)>-1; }) },
-      { label:'🌤️ Mid-Day',  steps: daySteps.filter(function(st){ return ['F','G','H','Q'].indexOf(st)>-1; }) },
+      { label:'☀️ Morning', steps: daySteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
+      { label:'🌤️ Mid-Day',  steps: daySteps.filter(function(st){ return ['F','G','Q'].indexOf(st)>-1; }) },
       { label:'🌆 Evening', steps: daySteps.filter(function(st){ return ['I','J','K'].indexOf(st)>-1; }) },
-      { label:'🌙 Night',   steps: daySteps.filter(function(st){ return ['M','N','O','R'].indexOf(st)>-1; }) }
+      { label:'🌙 Night',   steps: daySteps.filter(function(st){ return ['N','O','R'].indexOf(st)>-1; }) }
     ].filter(function(ph){ return ph.steps.length > 0; });
   } else {
     // Regular weekday — filter daySteps (never hardcode, so any future schedule changes are respected)
     phases = [
-      { label:'☀️ Morning', steps: daySteps.filter(function(st){ return ['A','B','C','D','E'].indexOf(st)>-1; }) },
-      { label:'💼 Office',  steps: daySteps.filter(function(st){ return ['F','G','H'].indexOf(st)>-1; }) },
+      { label:'☀️ Morning', steps: daySteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
+      { label:'💼 Office',  steps: daySteps.filter(function(st){ return ['F','G'].indexOf(st)>-1; }) },
       { label:'🌆 Evening', steps: daySteps.filter(function(st){ return ['S','T','U','V','W','I','J','K'].indexOf(st)>-1; }) },
-      { label:'🌙 Night',   steps: daySteps.filter(function(st){ return ['M','N','O'].indexOf(st)>-1; }) }
+      { label:'🌙 Night',   steps: daySteps.filter(function(st){ return ['N','O'].indexOf(st)>-1; }) }
     ].filter(function(ph){ return ph.steps.length > 0; });
   }
 
@@ -9486,33 +9503,48 @@ function renderReward(){
     const isUnlocked=pts>=REWARD_LEVEL_TARGET;
     if(lbl) lbl.textContent=isUnlocked?'🎉 Level complete — claim it!':'Don\'t break the streak';
 
-    /* ── Reward card ── */
-    let imgHtml='';
-    if(a.imageData) imgHtml='<img src="'+a.imageData+'" alt="'+a.name+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px 10px 0 0">';
-    else if(a.imageUrl) imgHtml='<img src="'+a.imageUrl+'" alt="'+a.name+'" onerror="this.style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;border-radius:10px 10px 0 0">';
-
-    html+='<div style="background:rgba(255,255,255,.05);border:1px solid rgba(107,182,255,.18);border-radius:12px;overflow:hidden;margin-bottom:14px">';
-    /* Image */
-    if(imgHtml) html+='<div style="width:100%;height:180px;overflow:hidden;cursor:pointer" onclick="'+((a.imageData||a.imageUrl)?'rwOpenLightbox(\''+(a.imageData||a.imageUrl)+'\')'  :'')+'">'+imgHtml+'</div>';
-    /* Card body */
-    html+='<div style="padding:14px 16px">';
-    /* Level badge + name */
+    /* ── Hero image card — full width, contain, ambient glow ── */
+    var imgSrc=a.imageData||a.imageUrl||'';
+    html+='<div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:14px;background:rgba(10,15,35,.9);border:1px solid rgba(107,182,255,.18)">';
+    if(imgSrc){
+      /* Ambient glow behind image */
+      html+='<div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 40%,rgba(77,141,255,.12),transparent 70%);pointer-events:none;z-index:0"></div>';
+      /* Image container — object-fit:contain so nothing gets cropped */
+      html+='<div style="width:100%;height:230px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;cursor:pointer;padding:12px" onclick="rwOpenLightbox()">';
+      html+='<img src="'+imgSrc+'" alt="'+a.name+'" onerror="this.style.display=\'none\'" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;filter:drop-shadow(0 4px 24px rgba(77,141,255,.25))">';
+      html+='</div>';
+    }
+    /* Gradient overlay at bottom for text */
+    html+='<div style="'+(imgSrc?'background:linear-gradient(to top,rgba(10,15,35,.95) 0%,rgba(10,15,35,.6) 60%,transparent 100%);margin-top:-60px;position:relative;z-index:2;':'')+'padding:16px 16px 14px">';
+    /* Level badge + price */
     html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">';
     html+='<span style="font-family:var(--font-ui);font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--a2);background:rgba(77,141,255,.15);border:1px solid rgba(107,182,255,.25);border-radius:4px;padding:2px 8px">LEVEL '+(a.levelNum||1)+'</span>';
-    if(a.price) html+='<span style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--gold)">'+a.price+'</span>';
+    if(a.price) html+='<span style="font-family:var(--font-ui);font-size:12px;font-weight:700;color:var(--gold)">'+a.price+'</span>';
     html+='</div>';
-    html+='<div style="font-family:var(--font-ui);font-size:17px;font-weight:800;color:#fff;margin-bottom:4px">'+a.name+'</div>';
-    if(a.why) html+='<div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:8px;font-style:italic">'+a.why+'</div>';
+    /* Name */
+    html+='<div style="font-family:var(--font-ui);font-size:19px;font-weight:800;color:#fff;line-height:1.2;text-shadow:0 2px 12px rgba(0,0,0,.5)">'+a.name+'</div>';
     html+='</div></div>';
 
-    /* ── Stats row ── */
-    html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">';
-    /* Daily streak */
+    /* ── "Why" callout card ── */
+    if(a.why){
+      html+='<div style="background:rgba(77,141,255,.06);border:1px solid rgba(107,182,255,.18);border-radius:10px;padding:14px 16px;margin-bottom:14px;position:relative">';
+      html+='<div style="position:absolute;top:10px;left:14px;font-size:20px;opacity:.25;line-height:1">❝</div>';
+      html+='<div style="font-family:var(--font-ui);font-size:13px;font-weight:600;color:var(--sec);line-height:1.6;padding-left:20px">'+a.why+'</div>';
+      html+='</div>';
+    }
+
+    /* ── Streak centerpiece — big number with flame ── */
+    var streakFlame=dailyStreak>=7;
     var dColor=dailyStreak>=7?'var(--gold)':dailyStreak>=3?'var(--a2)':'rgba(255,255,255,.7)';
-    html+='<div style="background:rgba(255,255,255,.05);border:1px solid rgba(107,182,255,.12);border-radius:10px;padding:10px;text-align:center">';
-    html+='<div style="font-family:var(--font-ui);font-size:20px;font-weight:900;color:'+dColor+'">'+dailyStreak+'</div>';
-    html+='<div style="font-family:var(--font-ui);font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-top:2px">Day Streak</div>';
+    html+='<div style="text-align:center;padding:18px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(107,182,255,.12);border-radius:12px;margin-bottom:14px;position:relative;overflow:hidden">';
+    if(streakFlame) html+='<div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 60%,rgba(255,200,50,.08),transparent 70%);pointer-events:none"></div>';
+    html+='<div style="font-size:'+(streakFlame?'14px':'12px')+';margin-bottom:4px">'+(streakFlame?'🔥':'')+'</div>';
+    html+='<div style="font-family:var(--font-ui);font-size:44px;font-weight:900;color:'+dColor+';line-height:1;letter-spacing:-2px;'+(streakFlame?'text-shadow:0 0 20px rgba(255,200,50,.35)':'')+'">'+dailyStreak+'</div>';
+    html+='<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:6px">Day Streak</div>';
     html+='</div>';
+
+    /* ── Secondary stats row ── */
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">';
     /* Hard streak */
     var hColor=hardStreak>=5?'var(--gold)':hardStreak>=3?'rgba(148,190,255,.9)':'rgba(255,255,255,.5)';
     html+='<div style="background:rgba(255,255,255,.05);border:1px solid rgba(107,182,255,.12);border-radius:10px;padding:10px;text-align:center">';
@@ -9606,20 +9638,32 @@ function renderRewardStrip(){
   const statusLabel=isUnlocked?'🎉 CLAIM IT':'🔥 '+dailyStreak+' day streak';
   el.style.display='block';
   el.innerHTML=
-    '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(107,182,255,.15);border-radius:6px;cursor:pointer" onclick="navTo(PAGE_IDS.indexOf(\'reward\'))">'
-    +(imgSrc?'<div style="width:36px;height:36px;border-radius:6px;overflow:hidden;flex-shrink:0"><img src="'+imgSrc+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'"></div>':'<div style="width:36px;height:36px;border-radius:6px;background:rgba(77,141,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🎁</div>')
+    '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(107,182,255,.15);border-radius:10px;cursor:pointer" onclick="navTo(PAGE_IDS.indexOf(\'reward\'))">'
+    +(imgSrc?'<div style="width:64px;height:64px;border-radius:8px;overflow:hidden;flex-shrink:0;background:rgba(10,15,35,.8);display:flex;align-items:center;justify-content:center"><img src="'+imgSrc+'" style="max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(77,141,255,.2))" onerror="this.style.display=\'none\'"></div>':'<div style="width:64px;height:64px;border-radius:8px;background:rgba(77,141,255,.1);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">🎁</div>')
     +'<div style="flex:1;min-width:0">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
-    +'<span style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55%">'+a.name+'</span>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
+    +'<span style="font-family:var(--font-ui);font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55%">'+a.name+'</span>'
     +'<span style="font-family:var(--font-ui);font-size:9.5px;font-weight:800;letter-spacing:.5px;color:'+statusColor+'">'+statusLabel+'</span>'
     +'</div>'
-    +'<div style="height:5px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">'
+    +'<div style="height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">'
     +'<div style="height:100%;width:'+pct+'%;background:'+(isUnlocked?'linear-gradient(90deg,var(--gold),#ffcc44)':'linear-gradient(90deg,var(--a1),var(--a2))')+';border-radius:99px;transition:width .4s"></div>'
     +'</div>'
-    +'<div style="font-family:var(--font-ui);font-size:9px;color:var(--muted);margin-top:3px">'+pts+' / '+REWARD_LEVEL_TARGET+' pts · Level '+(a.levelNum||1)+'</div>'
+    +'<div style="font-family:var(--font-ui);font-size:9px;color:var(--muted);margin-top:4px">'+pts+' / '+REWARD_LEVEL_TARGET+' pts · Level '+(a.levelNum||1)+'</div>'
     +'</div>'
     +'<div style="font-size:18px;color:var(--muted);flex-shrink:0">›</div>'
     +'</div>';
+}
+
+/* ── Reward image lightbox — fullscreen dark overlay ── */
+function rwOpenLightbox(){
+  var rw=getReward(); if(!rw.active) return;
+  var src=rw.active.imageData||rw.active.imageUrl; if(!src) return;
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:20px;cursor:pointer;animation:rwLbIn .25s ease';
+  overlay.innerHTML='<img src="'+src+'" style="max-width:100%;max-height:90vh;object-fit:contain;border-radius:8px;filter:drop-shadow(0 8px 40px rgba(77,141,255,.3));animation:rwLbZoom .3s cubic-bezier(.34,1.3,.64,1)">'
+    +'<div style="position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;cursor:pointer">✕</div>';
+  overlay.addEventListener('click',function(){ overlay.style.opacity='0';overlay.style.transition='opacity .2s';setTimeout(function(){overlay.remove()},200); });
+  document.body.appendChild(overlay);
 }
 
 /* ── Boot: render reward strip on today page and push to SW ── */
@@ -10439,10 +10483,10 @@ function highlightActivePhase(){
   let s=gs(); const dayData=(s.days&&s.days[todayKey])||{};
   const ts=getTodaySteps();
   const phaseMap=[
-    {label:'Morning',end:9,steps:ts.filter(function(x){return ['A','B','C','D','E'].indexOf(x)>-1;})},
-    {label:'Office',end:17,steps:ts.filter(function(x){return ['F','G','H','Q'].indexOf(x)>-1;})},
+    {label:'Morning',end:9,steps:ts.filter(function(x){return ['A','B','D','E'].indexOf(x)>-1;})},
+    {label:'Office',end:17,steps:ts.filter(function(x){return ['F','G','Q'].indexOf(x)>-1;})},
     {label:'Evening',end:22,steps:ts.filter(function(x){return ['S','T','U','V','W','I','J','K'].indexOf(x)>-1;})},
-    {label:'Night',end:24,steps:ts.filter(function(x){return ['M','N','O','R'].indexOf(x)>-1;})}
+    {label:'Night',end:24,steps:ts.filter(function(x){return ['N','O','R'].indexOf(x)>-1;})}
   ];
   let activeIdx=0;
   for(let i=0;i<phaseMap.length;i++){
@@ -11513,6 +11557,11 @@ function updateXPStrip(){
   if(el) el.textContent=totalXP+' XP';
   el=document.getElementById('xp-strip-tokens');
   if(el) el.textContent='🏅 '+(bp.tokens||0);
+  /* Mirror into inline streak-bar XP tile */
+  el=document.getElementById('xp-inline-lvl');
+  if(el) el.textContent='LVL '+info.levelIdx+' · '+info.level.name;
+  el=document.getElementById('xp-inline-amt');
+  if(el) el.textContent=totalXP+' XP';
 }
 
 /* ── XP Popup on habit tick ── */
@@ -12753,7 +12802,7 @@ function bowlPlaySingleAnimation(theme, done){
   }
 
   if(window._gbSetExcited){
-    window._gbSetExcited(theme.id, 2200, function(){
+    window._gbSetExcited(theme.id, 4500, function(){
       /* Launch through tube 0 (left tube acts as the single tube now) */
       finishAnim();
     });
@@ -12771,6 +12820,8 @@ function _bowlAnimResume(){
 
 /* Choose a tier and complete the challenge */
 function bowlChooseTier(tier){
+  var tierLabelsConf={easy:'Easy (+10 pts)',medium:'Medium (+30 pts)',hard:'Hard (+60 pts)'};
+  if(!confirm('Complete '+tierLabelsConf[tier]+'?')) return;
   var todayKey2=localKey(today);
   var b=getBowl();
   var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
@@ -12806,20 +12857,20 @@ function bowlChooseTier(tier){
   var TONE_COLORS={strawberry:'#4a7ee8',bubblegum:'#7ab0f8',tangerine:'#5a90f0',banana:'#90c4ff',apple:'#3060cc',cotton:'#b8d8ff',blueberry:'#4d8fff',grape:'#6888e8'};
   var ballColor=TONE_COLORS[theme.tone]||'#4d8fff';
   if(window._gbSetExcited){
-    window._gbSetExcited(null, 1200, function(){
+    window._gbSetExcited(null, 2500, function(){
     });
   } else {
-    if(typeof _playBallsShaking==='function') _playBallsShaking(1200);
+    if(typeof _playBallsShaking==='function') _playBallsShaking(2500);
   }
   /* Celebration */
   var tierEmoji={easy:'✓',medium:'🔥',hard:'⚡'};
   var tierLabel={easy:'Easy',medium:'Medium',hard:'Hard'};
   var celTitle=document.getElementById('bowl-celebrate-title');
   var celSub=document.getElementById('bowl-celebrate-sub');
-  if(celTitle) celTitle.textContent=tierLabel[tier]+' Challenge Done!';
+  if(celTitle) celTitle.textContent=theme.name+' — '+tierLabel[tier]+' Done!';
   if(celSub) celSub.textContent='+'+dd.pts+' pts · +'+dd.xp+' XP earned.';
   var cel=document.getElementById('bowl-celebrate');
-  if(cel) cel.classList.add('on');
+  if(cel){ cel.classList.add('on'); setTimeout(function(){ bowlCloseCelebrate(); }, 3500); }
   if(navigator.vibrate) navigator.vibrate([10,20,10,20,10]);
   toast(tierEmoji[tier]+' '+tierLabel[tier]+' completed! +'+dd.pts+' pts');
   if(typeof checkAllMilestones==='function') setTimeout(checkAllMilestones,300);
@@ -12831,33 +12882,34 @@ function bowlChooseTier(tier){
 }
 
 /* Undo a mistakenly chosen tier — reverses pts + XP */
-function bowlUndoTier(){
-  var todayKey2=localKey(today);
+function bowlUndoTier(dateKey){
+  var targetDate=dateKey||localKey(today);
   var b=getBowl();
-  var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
+  var dd=b.dailyDraws.find(function(x){ return x.date===targetDate; });
   if(!dd||!dd.chosenTier){ toast('Nothing to undo.'); return; }
+  if(dd.chosenTier==='skipped'){ /* undo skip too */}
   var xpToRemove=dd.xp||0;
   var tier=dd.chosenTier;
   /* Wipe completion fields */
-  delete dd.chosenTier;
-  delete dd.pts;
-  delete dd.xp;
-  delete dd.doneAt;
+  dd.chosenTier=null;
+  dd.pts=0;
+  dd.xp=0;
+  dd.doneAt=null;
   setBowl(b);
   /* Reverse XP */
   if(xpToRemove>0){
     var s2=gs();
     if(s2.battlepass){
       s2.battlepass.totalXP=Math.max(0,(s2.battlepass.totalXP||0)-xpToRemove);
-      if(s2.battlepass.dailyXP && s2.battlepass.dailyXP[todayKey2]!==undefined){
-        s2.battlepass.dailyXP[todayKey2]=Math.max(0,(s2.battlepass.dailyXP[todayKey2]||0)-xpToRemove);
+      if(s2.battlepass.dailyXP && s2.battlepass.dailyXP[targetDate]!==undefined){
+        s2.battlepass.dailyXP[targetDate]=Math.max(0,(s2.battlepass.dailyXP[targetDate]||0)-xpToRemove);
       }
       ss(s2,true);
       if(typeof updateXPStrip==='function') updateXPStrip();
     }
   }
-  var tierLabels={easy:'Easy',medium:'Medium',hard:'Hard'};
-  toast('↩ '+tierLabels[tier]+' undone — pick again.');
+  var tierLabels={easy:'Easy',medium:'Medium',hard:'Hard',skipped:'Skip'};
+  toast('↩ '+(tierLabels[tier]||tier)+' undone — pick again.');
   setTimeout(function(){ renderBowl(); },120);
 }
 
@@ -12868,9 +12920,22 @@ function bowlRerollTheme(){
   var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
   if(!dd){ toast('Draw a challenge first.'); return; }
   if(dd.chosenTier){ toast('Already completed — can\'t reroll.'); return; }
-  dd.rerolls=(dd.rerolls||0)+1;
-  /* TESTING: reroll limiter disabled — all rerolls free */
-  toast('Rerolled!');
+  var rerollCount=(dd.rerolls||0)+1;
+  /* 3 free rerolls per day, then costs XP */
+  if(rerollCount>3){
+    var s2=gs();
+    var totalXP=(s2.battlepass&&s2.battlepass.totalXP)||0;
+    if(totalXP<BOWL_REROLL_COST){ toast('Need '+BOWL_REROLL_COST+' XP to reroll ('+totalXP+' available).'); return; }
+    s2.battlepass.totalXP=totalXP-BOWL_REROLL_COST;
+    ss(s2,true);
+    if(typeof updateXPStrip==='function') updateXPStrip();
+    toast('Rerolled! (−'+BOWL_REROLL_COST+' XP)');
+  } else {
+    toast('Rerolled! ('+(3-rerollCount)+' free left today)');
+  }
+  dd.rerolls=rerollCount;
+  /* Store previous theme for undo */
+  dd.prevThemeId=dd.themeId;
   var newTheme=bowlPickTheme(dd.themeId);
   if(!newTheme){ toast('No other themes available.'); setBowl(b); return; }
   dd.themeId=newTheme.id;
@@ -12878,14 +12943,45 @@ function bowlRerollTheme(){
   /* Animate reroll */
   _bowlAnimResume();
   if(typeof _playGumballCrank==='function') _playGumballCrank();
-  var TONE_COLORS={strawberry:'#4a7ee8',bubblegum:'#7ab0f8',tangerine:'#5a90f0',banana:'#90c4ff',apple:'#3060cc',cotton:'#b8d8ff',blueberry:'#4d8fff',grape:'#6888e8'};
-  var _rColor=TONE_COLORS[newTheme.tone]||'#6B9FFF';
   if(window._gbSetExcited){
-    window._gbSetExcited(null, 1200, function(){
-    });
+    window._gbSetExcited(null, 2500, function(){});
   } else {
-    if(typeof _playBallsShaking==='function') _playBallsShaking(1200);
+    if(typeof _playBallsShaking==='function') _playBallsShaking(2500);
   }
+  renderBowl();
+}
+
+/* Undo last reroll — restore previous challenge */
+function bowlUndoReroll(){
+  var todayKey2=localKey(today);
+  var b=getBowl();
+  var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
+  if(!dd||!dd.prevThemeId){ toast('Nothing to undo.'); return; }
+  if(dd.chosenTier){ toast('Already completed — can\'t undo reroll.'); return; }
+  var prevTheme=bowlGetLibBall(dd.prevThemeId);
+  if(!prevTheme||prevTheme.deleted){ toast('Previous challenge no longer exists.'); return; }
+  dd.themeId=dd.prevThemeId;
+  delete dd.prevThemeId;
+  dd.rerolls=Math.max(0,(dd.rerolls||1)-1);
+  setBowl(b);
+  toast('↩ Restored: '+prevTheme.name);
+  renderBowl();
+}
+
+/* Skip today's challenge — marks as intentionally passed (0 pts, no streak break) */
+function bowlSkipToday(){
+  var todayKey2=localKey(today);
+  var b=getBowl();
+  var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
+  if(!dd){ toast('No challenge drawn.'); return; }
+  if(dd.chosenTier){ toast('Already completed.'); return; }
+  if(!confirm('Skip today\'s challenge? It will be marked as skipped (0 pts, no streak break).')) return;
+  dd.chosenTier='skipped';
+  dd.pts=0;
+  dd.xp=0;
+  dd.doneAt=Date.now();
+  setBowl(b);
+  toast('Skipped — no penalty. Come back tomorrow.');
   renderBowl();
 }
 
@@ -12912,29 +13008,14 @@ function bowlCycleCompletions(){
   var b=getBowl();
   var todayKey2=localKey(today);
   var totalPts=0, completed=0, drawn=0;
-  /* New daily draws */
   b.dailyDraws.forEach(function(dd){
     if(cycleStart && dd.date<cycleStart) return;
     if(dd.date>todayKey2) return;
     drawn++;
-    if(dd.chosenTier){
+    if(dd.chosenTier&&dd.chosenTier!=='skipped'){
       completed++;
       totalPts+=dd.pts||0;
     }
-  });
-  /* Legacy triple draws — count completed vials as 10 pts each for backward compat */
-  b.tripleDraws.forEach(function(td){
-    if(cycleStart && td.date<cycleStart) return;
-    if(td.date>todayKey2) return;
-    if(td.easyDone===true) totalPts+=10;
-    if(td.mediumDone===true) totalPts+=10;
-    if(td.hardDone===true) totalPts+=10;
-  });
-  /* Legacy single draws */
-  b.draws.forEach(function(d){
-    if(cycleStart && d.date<cycleStart) return;
-    if(d.date>todayKey2) return;
-    if(d.completed) totalPts+=10;
   });
   return {pts:totalPts, completed:completed, drawn:drawn};
 }
@@ -13019,7 +13100,8 @@ function renderBowl(){
   /* ── Dynamic subtitle ── */
   var bowlSubEl=document.querySelector('.bowl-sub');
   if(bowlSubEl){
-    if(dd&&dd.chosenTier) bowlSubEl.textContent='Challenge complete! You chose '+dd.chosenTier+' for +'+dd.pts+' pts.';
+    if(dd&&dd.chosenTier&&dd.chosenTier!=='skipped') bowlSubEl.textContent='Challenge complete! You chose '+dd.chosenTier+' for +'+dd.pts+' pts.';
+    else if(dd&&dd.chosenTier==='skipped') bowlSubEl.textContent='Challenge skipped today. Come back tomorrow.';
     else if(dd) bowlSubEl.textContent='Challenge drawn — pick your difficulty below.';
     else bowlSubEl.textContent='Pull the crank — one challenge, three difficulty tiers. You choose.';
   }
@@ -13037,7 +13119,12 @@ function renderBowl(){
       if(dd.chosenTier){
         crankHint.textContent='Done for today. Come back tomorrow for a new challenge.';
       } else {
-        crankHint.innerHTML='<button class="bowl-reroll-btn" onclick="bowlRerollTheme()">↺ Reroll Theme</button>';
+        var _hintH='<div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap">';
+        _hintH+='<button class="bowl-reroll-btn" onclick="bowlRerollTheme()">↺ Reroll</button>';
+        if(dd.prevThemeId) _hintH+='<button class="bowl-reroll-btn" style="background:rgba(255,255,255,.06);border-color:rgba(127,178,255,.25);color:var(--sec)" onclick="bowlUndoReroll()">↩ Undo</button>';
+        _hintH+='<button class="bowl-reroll-btn" style="background:rgba(255,100,100,.08);border-color:rgba(255,100,100,.25);color:rgba(255,130,120,.85)" onclick="bowlSkipToday()">Skip today</button>';
+        _hintH+='</div>';
+        crankHint.innerHTML=_hintH;
       }
     }
   } else {
@@ -13067,7 +13154,7 @@ function renderBowl(){
         h+='<div style="font-family:var(--font-ui);font-size:18px;font-weight:900;color:#fff;letter-spacing:-.3px">'+theme.name+'</div>';
         h+='</div>';
 
-        if(dd.chosenTier){
+        if(dd.chosenTier&&dd.chosenTier!=='skipped'){
           /* Already completed — show result */
           var tierColors={easy:'#4ade80',medium:'#fb923c',hard:'#ff6b8a'};
           var tierLabels={easy:'Easy',medium:'Medium',hard:'Hard'};
@@ -13076,12 +13163,18 @@ function renderBowl(){
           h+='<div style="font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:'+tc+';margin-bottom:6px">✓ '+tierLabels[dd.chosenTier]+' Completed</div>';
           h+='<div style="font-size:13px;color:rgba(200,225,255,.8);margin-bottom:8px">'+theme[dd.chosenTier].desc+'</div>';
           h+='<div style="font-size:22px;font-weight:900;color:'+tc+'">+'+dd.pts+' pts</div>';
-          h+='<div style="font-size:11px;color:var(--muted);margin-top:4px">+'+dd.xp+' XP earned</div>';
           h+='</div>';
           h+='<button onclick="bowlUndoTier()" style="display:block;width:100%;margin-top:8px;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:10px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;letter-spacing:.3px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:background .15s">↩ Undo — picked by mistake</button>';
+        } else if(dd.chosenTier==='skipped'){
+          h+='<div style="background:rgba(255,100,100,.06);border:1px solid rgba(255,100,100,.2);border-radius:12px;padding:16px;text-align:center">';
+          h+='<div style="font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,180,120,.7);margin-bottom:4px">Skipped</div>';
+          h+='<div style="font-size:11px;color:var(--muted)">No points earned</div>';
+          h+='</div>';
+          h+='<button onclick="bowlUndoTier()" style="display:block;width:100%;margin-top:8px;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:10px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;letter-spacing:.3px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:background .15s">↩ Undo skip — do it after all</button>';
         } else {
           /* Tier picker — 3 cards */
           var tiers=['easy','medium','hard'];
+          var _hardStrk=typeof getRwHardStreak==='function'?getRwHardStreak():0;
           var tierMeta={
             easy:{label:'Easy',color:'rgba(107,182,255,.9)',bg:'rgba(18,38,80,.88)',border:'rgba(107,182,255,.28)',glow:'rgba(77,141,255,.35)'},
             medium:{label:'Medium',color:'rgba(148,200,255,.95)',bg:'rgba(12,30,75,.90)',border:'rgba(77,141,255,.35)',glow:'rgba(77,141,255,.45)'},
@@ -13091,11 +13184,14 @@ function renderBowl(){
             var m=tierMeta[t];
             var td=theme[t];
             if(!td) return;
+            var displayPts=td.pts;
+            var bonusTag='';
+            if(t==='hard'&&_hardStrk>=3){ displayPts=td.pts+10; bonusTag=' <span style="font-size:10px;color:var(--gold)">(+10 streak)</span>'; }
             h+='<button onclick="bowlChooseTier(\''+t+'\');this.style.transform=\'scale(.96)\'" style="display:block;width:calc(100% - 24px);margin-left:auto;margin-right:auto;background:linear-gradient(160deg,'+m.bg+',rgba(8,16,30,.95));border:1px solid '+m.border+';border-radius:10px;padding:9px 11px;margin-bottom:6px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden">';
             h+='<div style="position:absolute;top:0;left:-80%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);animation:vbtn-gleam 4s ease-in-out infinite"></div>';
             h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">';
             h+='<span style="font-family:var(--font-ui);font-size:9.5px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:'+m.color+'">'+m.label+'</span>';
-            h+='<div style="font-family:\'Roboto Mono\',monospace;font-size:15px;font-weight:700;color:'+m.color+';width:48px;text-align:right;flex-shrink:0;line-height:1">+'+td.pts+'</div>';
+            h+='<div style="font-family:\'Roboto Mono\',monospace;font-size:15px;font-weight:700;color:'+m.color+';text-align:right;flex-shrink:0;line-height:1">+'+displayPts+bonusTag+'</div>';
             h+='</div>';
             h+='<div style="font-size:11px;color:rgba(200,225,255,.72);line-height:1.35">'+td.desc+'</div>';
             h+='</button>';
@@ -13120,32 +13216,165 @@ function renderBowl(){
     else pSub.textContent=cs.pts+' / '+REWARD_LEVEL_TARGET+' pts · every Hard counts.';
   }
 
-  /* ── History — last 14 days ── */
+  /* ── History — last 14 calendar days (not just draws) ── */
   var histEl=document.getElementById('bowl-history-row');
   if(histEl){
-    var recent=b.dailyDraws.slice(-14);
-    if(!recent.length){
-      histEl.innerHTML='<div style="font-size:11px;color:var(--muted);font-style:italic">No draws yet. Pull the crank to get started.</div>';
-    } else {
-      var tierDots={easy:'rgba(107,182,255,.9)',medium:'rgba(148,200,255,.95)',hard:'rgba(200,225,255,1)'};
-      histEl.innerHTML=recent.map(function(dd2){
-        var done=!!dd2.chosenTier;
-        var isPast=dd2.date<todayKey2;
-        var isToday=dd2.date===todayKey2;
-        var cls=done?'done':isToday?'pending':isPast?'miss':'pending';
-        var theme=bowlGetLibBall(dd2.themeId);
-        var icon=theme?bowlBallSvg(theme.icon,13):'?';
-        var dt=new Date(dd2.date+'T12:00:00');
-        var lbl=dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-        var dotColor=done?tierDots[dd2.chosenTier]||'#4ade80':'';
-        var tierBadge=done?'<div style="position:absolute;bottom:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:'+dotColor+';border:1.5px solid rgba(8,16,30,.9)"></div>':'';
-        return '<div class="bowl-history-cell '+cls+'" title="'+lbl+(done?' — '+dd2.chosenTier+' +'+dd2.pts+'pts':' — skipped')+'" style="color:#fff;display:flex;align-items:center;justify-content:center;position:relative">'+icon+tierBadge+'</div>';
-      }).join('');
+    var tierDots={easy:'rgba(107,182,255,.9)',medium:'rgba(148,200,255,.95)',hard:'rgba(200,225,255,1)',skipped:'rgba(255,180,120,.6)'};
+    var cells=[];
+    for(var _di=13;_di>=0;_di--){
+      var _dd=new Date(today.getTime()-_di*86400000);
+      var _dk=localKey(_dd);
+      var draw=b.dailyDraws.find(function(x){ return x.date===_dk; });
+      var done=draw&&draw.chosenTier&&draw.chosenTier!=='skipped';
+      var skipped=draw&&draw.chosenTier==='skipped';
+      var isPast=_dk<todayKey2;
+      var isToday=_dk===todayKey2;
+      var cls=done?'done':skipped?'miss':(draw&&!draw.chosenTier&&isToday)?'pending':(draw&&!draw.chosenTier&&isPast)?'miss':(!draw&&isPast)?'':'pending';
+      if(!draw&&isPast) cls='';
+      if(!draw&&isToday) cls='';
+      var theme=draw?bowlGetLibBall(draw.themeId):null;
+      var icon=theme?bowlBallSvg(theme.icon,13):'';
+      var lbl=_dd.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+      var dotColor=done?tierDots[draw.chosenTier]||'#4ade80':'';
+      var tierBadge=done?'<div style="position:absolute;bottom:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:'+dotColor+';border:1.5px solid rgba(8,16,30,.9)"></div>':'';
+      var dayNum=_dd.getDate();
+      var content=draw?icon:'<span style="font-size:9px;color:rgba(255,255,255,.25)">'+dayNum+'</span>';
+      var tapAction=draw?'bowlShowDayDetail(\''+_dk+'\')':'';
+      var cursor=draw?'cursor:pointer;':'cursor:default;opacity:.35;';
+      cells.push('<div class="bowl-history-cell '+cls+'" onclick="'+tapAction+'" title="'+lbl+'" style="color:#fff;display:flex;align-items:center;justify-content:center;position:relative;'+cursor+'">'+content+tierBadge+'</div>');
     }
+    /* Lifetime stats row */
+    var _eC=0,_mC=0,_hC=0,_sC=0;
+    b.dailyDraws.forEach(function(d){
+      if(d.chosenTier==='easy') _eC++;
+      else if(d.chosenTier==='medium') _mC++;
+      else if(d.chosenTier==='hard') _hC++;
+      else if(d.chosenTier==='skipped') _sC++;
+    });
+    var statsRow='<div style="display:flex;gap:8px;margin-top:10px;font-size:10px;font-family:var(--font-ui);font-weight:700">';
+    statsRow+='<span style="color:rgba(107,182,255,.9)">'+_eC+' Easy</span>';
+    statsRow+='<span style="color:rgba(148,200,255,.95)">'+_mC+' Med</span>';
+    statsRow+='<span style="color:rgba(200,225,255,1)">'+_hC+' Hard</span>';
+    if(_sC) statsRow+='<span style="color:rgba(255,180,120,.6)">'+_sC+' Skip</span>';
+    statsRow+='</div>';
+    histEl.innerHTML=cells.join('')+statsRow;
   }
 }
 
-/* ── Library editor ── */
+/* ── Day detail modal — tap a history dot to see/complete/undo ── */
+function bowlShowDayDetail(dateKey){
+  var b=getBowl();
+  var dd=b.dailyDraws.find(function(x){ return x.date===dateKey; });
+  if(!dd) return;
+  var theme=bowlGetLibBall(dd.themeId);
+  var todayKey2=localKey(today);
+  var isPast=dateKey<todayKey2;
+  var isToday=dateKey===todayKey2;
+  var dt=new Date(dateKey+'T12:00:00');
+  var dayLabel=dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+  var tierLabels={easy:'Easy',medium:'Medium',hard:'Hard',skipped:'Skipped'};
+  var tierColors={easy:'rgba(107,182,255,.9)',medium:'rgba(148,200,255,.95)',hard:'rgba(200,225,255,1)',skipped:'rgba(255,180,120,.6)'};
+
+  var h='<div style="padding:18px 16px 24px">';
+  h+='<div style="text-align:center;margin-bottom:14px">';
+  h+='<div style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">'+dayLabel+'</div>';
+  h+='<div style="font-family:var(--font-ui);font-size:17px;font-weight:900;color:#fff">'+(theme?theme.name:'Unknown Challenge')+'</div>';
+  h+='</div>';
+
+  if(dd.chosenTier&&dd.chosenTier!=='skipped'){
+    /* Completed — show result + undo */
+    var tc=tierColors[dd.chosenTier]||'#fff';
+    h+='<div style="background:rgba(10,35,15,.6);border:1px solid rgba(74,222,128,.25);border-radius:10px;padding:14px;text-align:center;margin-bottom:10px">';
+    h+='<div style="font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:'+tc+'">✓ '+tierLabels[dd.chosenTier]+' completed</div>';
+    h+='<div style="font-size:20px;font-weight:900;color:'+tc+';margin-top:4px">+'+dd.pts+' pts</div>';
+    if(dd.xp) h+='<div style="font-size:11px;color:var(--muted);margin-top:2px">+'+dd.xp+' XP</div>';
+    h+='</div>';
+    /* Allow undo for today and yesterday */
+    var ydayKey=localKey(new Date(today.getTime()-86400000));
+    if(isToday||dateKey===ydayKey){
+      h+='<button onclick="bowlUndoTier(\''+dateKey+'\');bowlCloseDayDetail()" style="width:100%;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;cursor:pointer;min-height:40px">↩ Undo completion</button>';
+    }
+  } else if(dd.chosenTier==='skipped'){
+    h+='<div style="text-align:center;padding:12px;color:rgba(255,180,120,.7);font-size:12px;font-weight:700">Skipped</div>';
+    if(isToday){
+      h+='<button onclick="bowlUndoTier(\''+dateKey+'\');bowlCloseDayDetail()" style="width:100%;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;cursor:pointer;min-height:40px">↩ Undo skip</button>';
+    }
+  } else if(isPast){
+    /* Missed / uncompleted past day — offer retroactive completion */
+    h+='<div style="text-align:center;padding:8px;color:rgba(255,130,120,.7);font-size:11px;margin-bottom:10px">Not completed</div>';
+    if(theme&&!theme.deleted){
+      h+='<div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:10px">Did you actually do this? Mark it complete:</div>';
+      var tiers=['easy','medium','hard'];
+      tiers.forEach(function(t){
+        var td=theme[t];
+        if(!td) return;
+        h+='<button onclick="bowlRetroComplete(\''+dateKey+'\',\''+t+'\');bowlCloseDayDetail()" style="display:block;width:100%;margin-bottom:6px;padding:10px 12px;background:rgba(18,38,80,.7);border:1px solid rgba(107,182,255,.2);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:12px;font-weight:700;cursor:pointer;text-align:left;min-height:40px">';
+        h+='<span style="color:'+tierColors[t]+'">'+tierLabels[t]+'</span> · +'+td.pts+' pts</button>';
+      });
+    }
+  } else {
+    /* Today, pending */
+    h+='<div style="text-align:center;padding:8px;color:var(--gold);font-size:11px">Pending — pick a tier on the main page</div>';
+  }
+  h+='<button onclick="bowlCloseDayDetail()" style="width:100%;margin-top:12px;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.12);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;min-height:40px">Close</button>';
+  h+='</div>';
+
+  /* Reuse bowl modal overlay */
+  var bg=document.getElementById('bowl-day-detail-bg');
+  var modal=document.getElementById('bowl-day-detail');
+  if(!bg){
+    bg=document.createElement('div');
+    bg.id='bowl-day-detail-bg';
+    bg.className='bowl-modal-bg';
+    bg.onclick=function(){ bowlCloseDayDetail(); };
+    document.body.appendChild(bg);
+    modal=document.createElement('div');
+    modal.id='bowl-day-detail';
+    modal.className='bowl-modal';
+    modal.style.maxHeight='70vh';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML=h;
+  bg.classList.add('on');
+  modal.classList.add('on');
+}
+
+function bowlCloseDayDetail(){
+  var bg=document.getElementById('bowl-day-detail-bg');
+  var modal=document.getElementById('bowl-day-detail');
+  if(bg) bg.classList.remove('on');
+  if(modal) modal.classList.remove('on');
+}
+
+/* Retroactive completion for a past day */
+function bowlRetroComplete(dateKey, tier){
+  var b=getBowl();
+  var dd=b.dailyDraws.find(function(x){ return x.date===dateKey; });
+  if(!dd){ toast('Draw not found.'); return; }
+  if(dd.chosenTier){ toast('Already completed.'); return; }
+  var theme=bowlGetLibBall(dd.themeId);
+  if(!theme){ toast('Theme not found.'); return; }
+  var tierData=theme[tier];
+  if(!tierData){ toast('Invalid tier.'); return; }
+  dd.chosenTier=tier;
+  dd.pts=tierData.pts;
+  var xpMap={easy:BOWL_XP_EASY,medium:BOWL_XP_MEDIUM,hard:BOWL_XP_HARD};
+  dd.xp=xpMap[tier]||0;
+  dd.doneAt=Date.now();
+  dd.retroactive=true;
+  setBowl(b);
+  /* Award XP */
+  var s2=gs();
+  if(!s2.battlepass) s2.battlepass={totalXP:0,tokens:0,tokensLifetime:0,milestones:{},tokenHistory:[],tokenShop:[],manualWeight:CONFIG.DEFAULT_WEIGHT,dailyXP:{}};
+  if(!s2.battlepass.dailyXP) s2.battlepass.dailyXP={};
+  s2.battlepass.dailyXP[dateKey]=(s2.battlepass.dailyXP[dateKey]||0)+dd.xp;
+  s2.battlepass.totalXP=(s2.battlepass.totalXP||0)+dd.xp;
+  ss(s2,true);
+  if(typeof updateXPStrip==='function') updateXPStrip();
+  var tierLabels={easy:'Easy',medium:'Medium',hard:'Hard'};
+  toast('✓ '+tierLabels[tier]+' marked complete for '+dateKey+' (+'+dd.pts+' pts)');
+  renderBowl();
+}
 let _bowlEditingId=null;
 let _bowlEditingTone='strawberry';
 let _bowlEditingWeight=2;
@@ -13226,8 +13455,9 @@ function bowlAddBallModal(){
   document.getElementById('bowl-modal-title').textContent='Add a Ball';
   document.getElementById('bowl-modal-name').value='';
   document.getElementById('bowl-modal-icon').value='🎯';
-  document.getElementById('bowl-modal-desc').value='';
-  document.getElementById('bowl-modal-min').value='';
+  document.getElementById('bowl-modal-easy-desc').value='';
+  document.getElementById('bowl-modal-medium-desc').value='';
+  document.getElementById('bowl-modal-hard-desc').value='';
   document.getElementById('bowl-modal-delete').style.display='none';
   bowlRenderToneGrid();
   bowlPickWeight(2);
@@ -13248,8 +13478,9 @@ function bowlEditBall(id){
   document.getElementById('bowl-modal-title').textContent='Edit Ball';
   document.getElementById('bowl-modal-name').value=ball.name;
   document.getElementById('bowl-modal-icon').value=ball.icon;
-  document.getElementById('bowl-modal-desc').value=ball.desc;
-  document.getElementById('bowl-modal-min').value=ball.min;
+  document.getElementById('bowl-modal-easy-desc').value=(ball.easy&&ball.easy.desc)||ball.desc||'';
+  document.getElementById('bowl-modal-medium-desc').value=(ball.medium&&ball.medium.desc)||ball.desc||'';
+  document.getElementById('bowl-modal-hard-desc').value=(ball.hard&&ball.hard.desc)||ball.desc||'';
   document.getElementById('bowl-modal-delete').style.display='';
   bowlRenderToneGrid();
   bowlPickWeight(_bowlEditingWeight);
@@ -13301,25 +13532,31 @@ function bowlCloseModal(){
 function bowlSaveBall(){
   const name=(document.getElementById('bowl-modal-name').value||'').trim();
   const icon=(document.getElementById('bowl-modal-icon').value||'').trim()||'🎯';
-  const desc=(document.getElementById('bowl-modal-desc').value||'').trim();
-  const min=(document.getElementById('bowl-modal-min').value||'').trim();
+  const easyDesc=(document.getElementById('bowl-modal-easy-desc').value||'').trim();
+  const mediumDesc=(document.getElementById('bowl-modal-medium-desc').value||'').trim();
+  const hardDesc=(document.getElementById('bowl-modal-hard-desc').value||'').trim();
   if(!name){ toast('Ball needs a name'); return; }
-  if(!desc){ toast('Ball needs a description'); return; }
-  if(!min){ toast('Ball needs a minimum version'); return; }
+  if(!easyDesc){ toast('Easy tier needs a description'); return; }
+  if(!mediumDesc){ toast('Medium tier needs a description'); return; }
+  if(!hardDesc){ toast('Hard tier needs a description'); return; }
   
   const b=getBowl();
   if(_bowlEditingId){
     const ball=b.library.find(function(x){ return x.id===_bowlEditingId; });
     if(ball){
-      ball.name=name; ball.icon=icon; ball.desc=desc; ball.min=min;
+      ball.name=name; ball.icon=icon;
+      ball.desc=easyDesc; ball.min=easyDesc;
       ball.tone=_bowlEditingTone; ball.weight=_bowlEditingWeight;
+      ball.easy={desc:easyDesc,pts:(ball.easy&&ball.easy.pts)||10};
+      ball.medium={desc:mediumDesc,pts:(ball.medium&&ball.medium.pts)||30};
+      ball.hard={desc:hardDesc,pts:(ball.hard&&ball.hard.pts)||60};
     }
     setBowl(b);
     toast('✓ Ball updated');
   } else {
     if(b.library.filter(function(x){ return !x.deleted; }).length>=100){ toast('Max 100 balls reached — delete one first'); return; }
     const id='ball_'+Date.now().toString(36);
-    b.library.push({id:id, name:name, icon:icon, desc:desc, min:min, tone:_bowlEditingTone, weight:_bowlEditingWeight, easy:{desc:desc,pts:10}, medium:{desc:desc,pts:30}, hard:{desc:desc,pts:60}});
+    b.library.push({id:id, name:name, icon:icon, desc:easyDesc, min:easyDesc, tone:_bowlEditingTone, weight:_bowlEditingWeight, easy:{desc:easyDesc,pts:10}, medium:{desc:mediumDesc,pts:30}, hard:{desc:hardDesc,pts:60}});
     setBowl(b);
     toast('✓ Ball added to the bowl');
   }
@@ -13338,7 +13575,7 @@ function bowlDeleteBall(){
   if(activeCount<=3){ toast('Need at least 3 balls (one per tier)'); return; }
   /* Need at least 3 themes */
   const todayKey2=localKey(today);
-  const tmrwKey=bowlTomorrowKey();
+  const tmrwKey=localKey(new Date(today.getTime()+86400000));
   /* Check legacy single draws */
   const pendingDraw=b.draws.find(function(d){
     return d.ballId===_bowlEditingId && (d.date===todayKey2||d.date===tmrwKey) && !d.completed;
@@ -13405,12 +13642,16 @@ function bowlDeleteBall(){
     <input class="bowl-modal-input small" id="bowl-modal-icon" placeholder="🏃" maxlength="4" oninput="bowlPreviewUpdate()">
   </div>
   <div class="bowl-modal-field">
-    <label class="bowl-modal-lbl">Description (what full effort looks like)</label>
-    <input class="bowl-modal-input" id="bowl-modal-desc" placeholder="e.g. 5km steady pace run, 30 min" maxlength="120">
+    <label class="bowl-modal-lbl">Easy tier (10 pts)</label>
+    <input class="bowl-modal-input" id="bowl-modal-easy-desc" placeholder="e.g. 10 pushups right now" maxlength="160">
   </div>
   <div class="bowl-modal-field">
-    <label class="bowl-modal-lbl">Min version (what still counts)</label>
-    <input class="bowl-modal-input" id="bowl-modal-min" placeholder="e.g. 15 min jog around the block" maxlength="120">
+    <label class="bowl-modal-lbl">Medium tier (30 pts)</label>
+    <input class="bowl-modal-input" id="bowl-modal-medium-desc" placeholder="e.g. 3 sets of 10, rest 60s" maxlength="160">
+  </div>
+  <div class="bowl-modal-field">
+    <label class="bowl-modal-lbl">Hard tier (60 pts)</label>
+    <input class="bowl-modal-input" id="bowl-modal-hard-desc" placeholder="e.g. Max reps × 3 sets, log numbers" maxlength="160">
   </div>
   <div class="bowl-modal-field">
     <label class="bowl-modal-lbl">Candy color</label>
@@ -14515,7 +14756,7 @@ window.finMonthNav = function(delta){
 
   /* ── Fixed ball count: always 80–90 balls, independent of habit library ── */
   var _isMobile = /iPhone|Android|Mobile/i.test(navigator.userAgent);
-  var FIXED_BALL_COUNT = _isMobile ? 48 : 85;
+  var FIXED_BALL_COUNT = _isMobile ? 65 : 85;
 
   /* ── Logical draw size — always 340×390, CSS scales via style ── */
   var W = 340, H = 390;
@@ -14744,7 +14985,7 @@ window.finMonthNav = function(delta){
   var _cooldownIds = [];
   var _excited = false;
   var _excitedEnd = 0;
-  var _excitedDurMs = 3200;
+  var _excitedDurMs = 5000;
   var _excitedCb = null;
   var _dispensing = false;
   var _dispenseStart = 0;
@@ -15538,7 +15779,7 @@ window.finMonthNav = function(delta){
       _raf = requestAnimationFrame(loop);
     }
     _excited = true;
-    _excitedDurMs = durationMs || 3200;
+    _excitedDurMs = durationMs || 5000;
     _excitedEnd = performance.now() + _excitedDurMs;
     _excitedCb = cb || null;
     _dispensing = false;

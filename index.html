@@ -14552,6 +14552,7 @@ window.finMonthNav = function(delta){
     canvas.height = Math.round(cssH * dpr);
     ctx.setTransform(1,0,0,1,0,0);
     ctx.scale(dpr * cssW/W, dpr * cssH/H);
+    _machineBgDirty = true;
   }
   window.addEventListener('resize', resizeCanvas);
 
@@ -14750,6 +14751,7 @@ window.finMonthNav = function(delta){
   var _chosenBallIdx = -1;
   var _glowPhase = 0;
   var _lastLoopT = 0;
+  var _simTime = 0;
   var _shakeActive = false;
   var _shakeStart = 0;
 
@@ -14763,8 +14765,8 @@ window.finMonthNav = function(delta){
       _balls.push({
         x: GX + Math.cos(angle)*dist*0.88,
         y: GY + 14 + Math.sin(angle)*dist*0.50,
-        vx:(Math.random()-0.5)*1.2,
-        vy:(Math.random()-0.5)*1.2,
+        vx:(Math.random()-0.5)*0.3,
+        vy:(Math.random()-0.5)*0.3,
         r: r0 + Math.random()*1.4,
         col: PALETTE[i % PALETTE.length],
         phase: Math.random()*Math.PI*2,
@@ -14786,8 +14788,10 @@ window.finMonthNav = function(delta){
   }
 
   /* ── Physics update ── */
-  function update(t){
+  function update(t, dt){
     var isExcited = _excited;
+    /* dt-scale: normalize to 60fps baseline (16.667ms) so physics is framerate-independent */
+    var dtScale = (dt || 16.667) / 16.667;
     /* During excited: ramp intensity over time for dramatic buildup */
     var excitedProg = 0;
     if(isExcited && _excitedEnd > 0){
@@ -14795,32 +14799,39 @@ window.finMonthNav = function(delta){
       var excitedElapsed = t - (_excitedEnd - _excitedDurMs);
       excitedProg = Math.min(1, Math.max(0, excitedElapsed / _excitedDurMs));
     }
-    /* Intensity curve: gentle start → peak at 60% → strong finish */
+    /* Intensity curve: gentle start -> peak at 60% -> strong finish */
     var exciteIntensity = isExcited ? (excitedProg < 0.3 ? excitedProg / 0.3 * 0.7 : excitedProg < 0.7 ? 0.7 + (excitedProg - 0.3) * 0.75 : 1.0) : 0;
-    var gravity = isExcited ? 0.18 + exciteIntensity * 0.22 : 0.09;
-    var damping = isExcited ? 0.930 + (1 - exciteIntensity) * 0.015 : 0.968;
+    var gravity = isExcited ? 0.18 + exciteIntensity * 0.22 : 0.06;
+    var damping = isExcited ? 0.930 + (1 - exciteIntensity) * 0.015 : 0.90;
+    /* Framerate-independent damping: raise to dtScale power */
+    var dampFactor = dtScale === 1 ? damping : Math.pow(damping, dtScale);
 
     for(var i=0; i<_balls.length; i++){
       var b = _balls[i];
       if(_dispensing && i === _chosenBallIdx) continue;
-      b.vy += gravity;
-      b.x  += b.vx;
-      b.y  += b.vy;
-      b.vx *= damping;
-      b.vy *= damping;
-      /* Continuous energy injection during excited — intensity ramps up over the shaking */
+      b.vy += gravity * dtScale;
+      b.x  += b.vx * dtScale;
+      b.y  += b.vy * dtScale;
+      b.vx *= dampFactor;
+      b.vy *= dampFactor;
+      /* Continuous energy injection during excited -- intensity ramps up over the shaking */
       if(isExcited){
         var ei = exciteIntensity;
-        b.vx += Math.sin(t*0.003 + b.phase) * (0.15 + ei * 0.35);
-        b.vy += Math.cos(t*0.0025 + b.phase*1.3) * (0.12 + ei * 0.28) - 0.05 * ei;
+        b.vx += Math.sin(_simTime*3.0 + b.phase) * (0.15 + ei * 0.35) * dtScale;
+        b.vy += Math.cos(_simTime*2.5 + b.phase*1.3) * (0.12 + ei * 0.28) * dtScale - 0.05 * ei * dtScale;
       } else {
-        /* Gentle idle sway — organic micro-drift per ball using unique phase */
+        /* Gentle idle sway -- fast reversal + tiny force = barely-perceptible liquid float */
         var ph = b.phase;
-        b.vx += Math.sin(t*0.00055 + ph)*0.058 + Math.sin(t*0.00110 + ph*0.7)*0.024;
-        b.vy += Math.cos(t*0.00065 + ph*1.4)*0.042 + Math.cos(t*0.00095 + ph*1.1)*0.018;
+        b.vx += (Math.sin(_simTime*1.8 + ph)*0.004 + Math.sin(_simTime*2.8 + ph*0.7)*0.002) * dtScale;
+        b.vy += (Math.cos(_simTime*2.0 + ph*1.4)*0.003 + Math.cos(_simTime*2.4 + ph*1.1)*0.001) * dtScale;
       }
-      /* Speed cap — prevents runaway velocity */
-      var maxSpd = isExcited ? 12 : 4.5;
+      /* Velocity dead-zone: kill micro-jitter from collision settling */
+      if(!isExcited){
+        var spd2 = b.vx*b.vx + b.vy*b.vy;
+        if(spd2 < 0.01){ b.vx = 0; b.vy = 0; }
+      }
+      /* Speed cap -- prevents runaway velocity */
+      var maxSpd = isExcited ? 12 : 0.8;
       var spd = Math.hypot(b.vx, b.vy);
       if(spd > maxSpd){ var sc = maxSpd/spd; b.vx *= sc; b.vy *= sc; }
     }
@@ -14844,30 +14855,89 @@ window.finMonthNav = function(delta){
           }
         }
       }
-      /* Ball–ball — skip when idle on mobile for perf */
-      if(isExcited || _dispensing || !_isMobile)
-      for(var i=0; i<_balls.length; i++){
-        if(_dispensing && i===_chosenBallIdx) continue;
-        var b=_balls[i];
-        for(var j=i+1; j<_balls.length; j++){
-          if(_dispensing && j===_chosenBallIdx) continue;
-          var c=_balls[j];
-          var ex=c.x-b.x, ey=c.y-b.y, ed=Math.hypot(ex,ey);
-          var md=b.r+c.r;
-          if(ed<md && ed>0.01){
-            var ov=(md-ed)*0.5, nx2=ex/ed, ny2=ey/ed;
-            b.x-=nx2*ov; b.y-=ny2*ov;
-            c.x+=nx2*ov; c.y+=ny2*ov;
-            var rel=b.vx*nx2+b.vy*ny2-(c.vx*nx2+c.vy*ny2);
-            if(rel>0){
-              /* Ball-ball clank — key by sorted pair so throttle works both ways */
-              var _pKey = i+'_'+j;
-              if(rel>0.8){ _triggerClank(_pKey, Math.min(1, rel*0.22)); }
-              var f=rel*0.45; b.vx-=f*nx2; b.vy-=f*ny2; c.vx+=f*nx2; c.vy+=f*ny2;
+      /* Ball-ball collision: skip idle on mobile; use spatial grid when excited on mobile */
+      if(isExcited || _dispensing || !_isMobile){
+        if(_isMobile && isExcited){
+          /* Spatial grid hash -- O(n) instead of O(n^2) for excited mobile */
+          var _gcell = 20;
+          var _goff_x = GX - 170, _goff_y = GY - 195;
+          var _gcols = 17, _grows = 20;
+          var _grid = {};
+          for(var i=0; i<_balls.length; i++){
+            if(_dispensing && i===_chosenBallIdx) continue;
+            var _cx = (((_balls[i].x - _goff_x) / _gcell) | 0);
+            var _cy = (((_balls[i].y - _goff_y) / _gcell) | 0);
+            if(_cx < 0) _cx = 0; if(_cx >= _gcols) _cx = _gcols - 1;
+            if(_cy < 0) _cy = 0; if(_cy >= _grows) _cy = _grows - 1;
+            var _gk = _cx + _cy * _gcols;
+            if(!_grid[_gk]) _grid[_gk] = [];
+            _grid[_gk].push(i);
+          }
+          for(var _gk in _grid){
+            var _gki = +_gk;
+            var _gy = (_gki / _gcols) | 0;
+            var _gx = _gki - _gy * _gcols;
+            /* Check this cell + 4 forward neighbors (right, below-left, below, below-right) */
+            var _nbrs = [_gki];
+            if(_gx + 1 < _gcols) _nbrs.push(_gki + 1);
+            if(_gy + 1 < _grows){
+              _nbrs.push(_gki + _gcols);
+              if(_gx > 0) _nbrs.push(_gki + _gcols - 1);
+              if(_gx + 1 < _gcols) _nbrs.push(_gki + _gcols + 1);
+            }
+            var _cell = _grid[_gki];
+            for(var _ni = 0; _ni < _nbrs.length; _ni++){
+              var _ncell = _grid[_nbrs[_ni]];
+              if(!_ncell) continue;
+              var _sameCell = (_nbrs[_ni] === _gki);
+              for(var _ai = 0; _ai < _cell.length; _ai++){
+                var _startJ = _sameCell ? _ai + 1 : 0;
+                for(var _bj = _startJ; _bj < _ncell.length; _bj++){
+                  var bi = _cell[_ai], ci = _ncell[_bj];
+                  var b = _balls[bi], c = _balls[ci];
+                  var ex=c.x-b.x, ey=c.y-b.y, ed=Math.hypot(ex,ey);
+                  var md=b.r+c.r;
+                  if(ed<md && ed>0.01){
+                    var ov=(md-ed)*0.5, nx2=ex/ed, ny2=ey/ed;
+                    b.x-=nx2*ov; b.y-=ny2*ov;
+                    c.x+=nx2*ov; c.y+=ny2*ov;
+                    var rel=b.vx*nx2+b.vy*ny2-(c.vx*nx2+c.vy*ny2);
+                    if(rel>0){
+                      var _pKey = bi < ci ? bi+'_'+ci : ci+'_'+bi;
+                      if(rel>0.8){ _triggerClank(_pKey, Math.min(1, rel*0.22)); }
+                      var f=rel*0.45; b.vx-=f*nx2; b.vy-=f*ny2; c.vx+=f*nx2; c.vy+=f*ny2;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } else {
+          /* Desktop or dispensing: standard O(n^2) -- fine for 85 balls at 60fps */
+          for(var i=0; i<_balls.length; i++){
+            if(_dispensing && i===_chosenBallIdx) continue;
+            var b=_balls[i];
+            for(var j=i+1; j<_balls.length; j++){
+              if(_dispensing && j===_chosenBallIdx) continue;
+              var c=_balls[j];
+              var ex=c.x-b.x, ey=c.y-b.y, ed=Math.hypot(ex,ey);
+              var md=b.r+c.r;
+              if(ed<md && ed>0.01){
+                var ov=(md-ed)*0.5, nx2=ex/ed, ny2=ey/ed;
+                b.x-=nx2*ov; b.y-=ny2*ov;
+                c.x+=nx2*ov; c.y+=ny2*ov;
+                var rel=b.vx*nx2+b.vy*ny2-(c.vx*nx2+c.vy*ny2);
+                if(rel>0){
+                  var _pKey = i+'_'+j;
+                  if(rel>0.8){ _triggerClank(_pKey, Math.min(1, rel*0.22)); }
+                  var f=rel*0.45; b.vx-=f*nx2; b.vy-=f*ny2; c.vx+=f*nx2; c.vy+=f*ny2;
+                }
+              }
             }
           }
         }
       }
+
     }
 
     /* Dispense: chosen ball floats up to center of globe, then fades out */
@@ -14942,120 +15012,103 @@ window.finMonthNav = function(delta){
     ctx.closePath();
   }
 
-  /* ── Draw full machine — REFINED ── */
-  function drawMachine(t){
-    ctx.clearRect(0,0,W,H);
+  /* ── Pre-baked static machine chrome ── */
+  var _machineBgUnder = null;
+  var _machineBgUnderCtx = null;
+  var _machineBgOver = null;
+  var _machineBgOverCtx = null;
+  var _machineBgDirty = true;
 
-    /* ── AMBIENT GLOW behind globe — richer layered halo ── */
+  function _drawStaticUnder(){
+    /* ── AMBIENT GLOW behind globe ── */
     var ambG = ctx.createRadialGradient(GX, GY, GR*0.3, GX, GY, GR*2.0);
     ambG.addColorStop(0, 'rgba(50,110,240,0.16)');
     ambG.addColorStop(0.35, 'rgba(30,75,200,0.09)');
     ambG.addColorStop(0.7, 'rgba(20,50,160,0.04)');
     ambG.addColorStop(1, 'rgba(15,35,120,0)');
     ctx.beginPath(); ctx.arc(GX,GY,GR*2.0,0,Math.PI*2); ctx.fillStyle=ambG; ctx.fill();
-    /* Secondary warm under-glow */
     var ambG2 = ctx.createRadialGradient(GX, GY+GR*0.6, 0, GX, GY+GR*0.4, GR*1.4);
     ambG2.addColorStop(0, 'rgba(80,140,255,0.06)');
     ambG2.addColorStop(1, 'rgba(20,40,120,0)');
     ctx.beginPath(); ctx.arc(GX,GY+GR*0.4,GR*1.4,0,Math.PI*2); ctx.fillStyle=ambG2; ctx.fill();
 
-    /* ── TOP CAP — gem-like faceted knob ── */
+    /* ── TOP CAP ── */
     var kx=GX, ky=GY-GR-22;
-    /* Outer glow ring */
     ctx.beginPath(); ctx.arc(kx,ky,18,0,Math.PI*2);
     var kglow=ctx.createRadialGradient(kx,ky,8,kx,ky,18);
     kglow.addColorStop(0,'rgba(100,170,255,0.18)'); kglow.addColorStop(1,'rgba(30,60,160,0)');
     ctx.fillStyle=kglow; ctx.fill();
-    /* Base ring — chrome seat */
     ctx.beginPath(); ctx.arc(kx,ky,14,0,Math.PI*2);
     var kring=ctx.createRadialGradient(kx-3,ky-4,0,kx,ky,14);
     kring.addColorStop(0,'rgba(120,180,255,0.30)'); kring.addColorStop(0.6,'rgba(50,100,200,0.15)'); kring.addColorStop(1,'rgba(20,40,120,0.06)');
     ctx.fillStyle=kring; ctx.fill();
-    /* Knob body — deeper blue gem */
     var kg=ctx.createRadialGradient(kx-4,ky-5,0,kx+1,ky+2,12);
     kg.addColorStop(0,'#c4e0ff'); kg.addColorStop(0.18,'#6aacf0'); kg.addColorStop(0.45,'#3070d8'); kg.addColorStop(0.75,'#1848a8'); kg.addColorStop(1,'#0a1e60');
     ctx.beginPath(); ctx.arc(kx,ky,11,0,Math.PI*2); ctx.fillStyle=kg; ctx.fill();
-    /* Chrome edge — double ring */
     ctx.beginPath(); ctx.arc(kx,ky,12,0,Math.PI*2);
     ctx.strokeStyle='rgba(100,160,255,0.30)'; ctx.lineWidth=2; ctx.stroke();
     ctx.beginPath(); ctx.arc(kx,ky,11,0,Math.PI*2);
     ctx.strokeStyle='rgba(140,200,255,0.50)'; ctx.lineWidth=0.8; ctx.stroke();
-    /* Hot specular — tighter, brighter */
     var ksp=ctx.createRadialGradient(kx-4,ky-4,0,kx-2,ky-2,5);
     ksp.addColorStop(0,'rgba(255,255,255,0.98)'); ksp.addColorStop(0.3,'rgba(220,240,255,0.40)'); ksp.addColorStop(0.7,'rgba(150,200,255,0.08)'); ksp.addColorStop(1,'rgba(120,180,255,0)');
     ctx.beginPath(); ctx.arc(kx,ky,11,0,Math.PI*2); ctx.fillStyle=ksp; ctx.fill();
-    /* Secondary bottom-right sparkle on knob */
     ctx.beginPath(); ctx.arc(kx+3,ky+3,2.5,0,Math.PI*2);
     ctx.fillStyle='rgba(180,220,255,0.18)'; ctx.fill();
 
-    /* ── TOP CHROME BAR — premium beveled plate ── */
+    /* ── TOP CHROME BAR ── */
     var bY=GY-GR-10, bW=158, bH=12, bX=GX-bW/2;
     var bg2=ctx.createLinearGradient(bX,bY,bX,bY+bH);
     bg2.addColorStop(0,'#546e98'); bg2.addColorStop(0.15,'#3e5878'); bg2.addColorStop(0.5,'#2a4060'); bg2.addColorStop(0.85,'#1c3050'); bg2.addColorStop(1,'#14243e');
     rr(bX,bY,bW,bH,6); ctx.fillStyle=bg2; ctx.fill();
-    /* Top bevel highlight — sharper */
     var bs=ctx.createLinearGradient(bX,bY,bX,bY+3);
     bs.addColorStop(0,'rgba(200,230,255,0.50)'); bs.addColorStop(1,'rgba(180,220,255,0)');
     rr(bX+2,bY+0.5,bW-4,3,2); ctx.fillStyle=bs; ctx.fill();
-    /* Bottom bevel shadow */
     rr(bX+3,bY+bH-3,bW-6,3,3);
     ctx.fillStyle='rgba(0,8,30,0.25)'; ctx.fill();
-    /* Left edge highlight */
     ctx.beginPath(); ctx.moveTo(bX+2,bY+3); ctx.lineTo(bX+2,bY+bH-3);
     ctx.strokeStyle='rgba(140,200,255,0.14)'; ctx.lineWidth=0.8; ctx.stroke();
-    /* Panel line — center horizontal */
     ctx.beginPath(); ctx.moveTo(bX+20,bY+bH/2); ctx.lineTo(bX+bW-20,bY+bH/2);
     ctx.strokeStyle='rgba(30,60,120,0.18)'; ctx.lineWidth=0.5; ctx.stroke();
-    /* Refined screws — more realistic phillips head */
     [bX+14,bX+bW-14].forEach(function(sx){
-      /* Screw recess shadow */
       ctx.beginPath(); ctx.arc(sx,bY+5.5,3.8,0,Math.PI*2);
       ctx.fillStyle='rgba(0,8,30,0.15)'; ctx.fill();
-      /* Screw body */
       var scg=ctx.createRadialGradient(sx-1.2,bY+4.5,0,sx,bY+5.5,3.2);
       scg.addColorStop(0,'#3a5070'); scg.addColorStop(0.5,'#243854'); scg.addColorStop(1,'#0e1828');
       ctx.beginPath(); ctx.arc(sx,bY+5.5,3,0,Math.PI*2); ctx.fillStyle=scg; ctx.fill();
-      /* Chrome rim */
       ctx.beginPath(); ctx.arc(sx,bY+5.5,3,0,Math.PI*2);
       ctx.strokeStyle='rgba(100,160,240,0.40)'; ctx.lineWidth=0.7; ctx.stroke();
-      /* Phillips cross slots */
       ctx.save(); ctx.strokeStyle='rgba(60,110,180,0.28)'; ctx.lineWidth=0.7;
       ctx.beginPath(); ctx.moveTo(sx-2,bY+5.5); ctx.lineTo(sx+2,bY+5.5); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(sx,bY+3.5); ctx.lineTo(sx,bY+7.5); ctx.stroke();
-      /* Specular glint on screw */
       ctx.beginPath(); ctx.arc(sx-1,bY+4.2,1,0,Math.PI*2);
       ctx.fillStyle='rgba(200,230,255,0.35)'; ctx.fill();
       ctx.restore();
     });
 
-    /* neck — refined metallic taper with highlight */
+    /* ── NECK ── */
     ctx.beginPath();
     ctx.moveTo(GX-10,bY+bH); ctx.lineTo(GX-8,GY-GR+2);
     ctx.lineTo(GX+8,GY-GR+2); ctx.lineTo(GX+10,bY+bH);
     var neckG=ctx.createLinearGradient(GX-10,bY+bH,GX+10,bY+bH);
     neckG.addColorStop(0,'#142840'); neckG.addColorStop(0.3,'#1e3a5e'); neckG.addColorStop(0.5,'#264870'); neckG.addColorStop(0.7,'#1e3a5e'); neckG.addColorStop(1,'#0e2038');
     ctx.fillStyle=neckG; ctx.fill();
-    /* Neck left highlight */
     ctx.beginPath();
     ctx.moveTo(GX-9,bY+bH+1); ctx.lineTo(GX-7.5,GY-GR+3);
     ctx.strokeStyle='rgba(140,200,255,0.18)'; ctx.lineWidth=0.8; ctx.stroke();
-    /* Neck right shadow */
     ctx.beginPath();
     ctx.moveTo(GX+9,bY+bH+1); ctx.lineTo(GX+7.5,GY-GR+3);
     ctx.strokeStyle='rgba(0,0,0,0.20)'; ctx.lineWidth=0.8; ctx.stroke();
 
-    /* ── GLOBE SHADOW — more natural ── */
+    /* ── GLOBE SHADOW ── */
     var gs2=ctx.createRadialGradient(GX,GY+6,0,GX,GY+4,GR*1.2);
     gs2.addColorStop(0,'rgba(0,6,20,0.42)'); gs2.addColorStop(0.6,'rgba(0,4,14,0.15)'); gs2.addColorStop(1,'rgba(0,6,20,0)');
     ctx.beginPath(); ctx.arc(GX,GY+6,GR*1.08,0,Math.PI*2); ctx.fillStyle=gs2; ctx.fill();
 
-    /* ── GLOBE OUTER CHROME RING — premium multi-layer ── */
-    /* Outer glow ring — wider */
+    /* ── GLOBE CHROME RING ── */
     ctx.beginPath(); ctx.arc(GX,GY,GR+10,0,Math.PI*2);
     var outerGlow=ctx.createRadialGradient(GX,GY,GR+2,GX,GY,GR+12);
     outerGlow.addColorStop(0,'rgba(80,150,255,0.22)'); outerGlow.addColorStop(1,'rgba(30,60,160,0)');
     ctx.fillStyle=outerGlow; ctx.fill();
-    /* Chrome bezel — richer with more stops */
     var or2=ctx.createRadialGradient(GX-GR*0.28,GY-GR*0.28,GR*0.08,GX,GY,GR+6);
     or2.addColorStop(0,'rgba(100,170,255,0.08)');
     or2.addColorStop(0.55,'rgba(50,100,210,0.18)');
@@ -15065,46 +15118,20 @@ window.finMonthNav = function(delta){
     or2.addColorStop(1,'rgba(8,20,70,0.75)');
     ctx.beginPath(); ctx.arc(GX,GY,GR+5,0,Math.PI*2); ctx.fillStyle=or2; ctx.fill();
 
-    /* ── GLOBE BODY — deep void interior ── */
+    /* ── GLOBE BODY ── */
     var gb2=ctx.createRadialGradient(GX-GR*0.15,GY-GR*0.18,GR*0.05,GX+GR*0.08,GY+GR*0.12,GR);
     gb2.addColorStop(0,'#122a52'); gb2.addColorStop(0.2,'#0c2040'); gb2.addColorStop(0.5,'#061430'); gb2.addColorStop(0.8,'#030c1e'); gb2.addColorStop(1,'#020814');
     ctx.beginPath(); ctx.arc(GX,GY,GR,0,Math.PI*2); ctx.fillStyle=gb2; ctx.fill();
-    /* Subtle nebula glow inside globe — gives life to the interior */
     var nebula=ctx.createRadialGradient(GX+GR*0.15,GY+GR*0.3,0,GX,GY,GR*0.9);
     nebula.addColorStop(0,'rgba(25,60,160,0.10)'); nebula.addColorStop(0.5,'rgba(15,40,120,0.04)'); nebula.addColorStop(1,'rgba(0,0,0,0)');
     ctx.beginPath(); ctx.arc(GX,GY,GR,0,Math.PI*2); ctx.fillStyle=nebula; ctx.fill();
-    /* Secondary warm nebula — adds dimension */
     var nebula2=ctx.createRadialGradient(GX-GR*0.3,GY-GR*0.2,0,GX,GY,GR*0.7);
     nebula2.addColorStop(0,'rgba(40,80,200,0.06)'); nebula2.addColorStop(1,'rgba(0,0,0,0)');
     ctx.beginPath(); ctx.arc(GX,GY,GR,0,Math.PI*2); ctx.fillStyle=nebula2; ctx.fill();
+  }
 
-    /* ── BALLS (clipped) ── */
-    ctx.save();
-    ctx.beginPath(); ctx.arc(GX,GY,GR-3,0,Math.PI*2); ctx.clip();
-    /* depth sort back-to-front */
-    var sorted = _balls.slice().sort(function(a,b2){ return a.y - b2.y; });
-    for(var i=0; i<sorted.length; i++){
-      var b = sorted[i];
-      var isChosen = (_dispensing && _balls.indexOf(b) === _chosenBallIdx);
-      if(isChosen) continue;
-      drawBall(b, false);
-    }
-    /* Chosen ball drawn on top with glow */
-    if(_dispensing && _chosenBallIdx>=0 && _chosenBallIdx<_balls.length){
-      var cb2=_balls[_chosenBallIdx];
-      var pProg = Math.min(1,(t-_dispenseStart)/500);
-      ctx.save();
-      ctx.globalAlpha = pProg * 0.65;
-      var glow=ctx.createRadialGradient(cb2.x,cb2.y,0,cb2.x,cb2.y,cb2.r*3.2);
-      glow.addColorStop(0,'rgba(160,220,255,0.90)'); glow.addColorStop(0.4,'rgba(100,180,255,0.30)'); glow.addColorStop(1,'rgba(60,140,255,0)');
-      ctx.beginPath(); ctx.arc(cb2.x,cb2.y,cb2.r*3.2,0,Math.PI*2); ctx.fillStyle=glow; ctx.fill();
-      ctx.restore();
-      drawBall(cb2, false);
-    }
-    ctx.restore();
-
-    /* ── GLASS OVERLAYS — premium realistic glass ── */
-    /* Inner vignette — heavier at edges for real glass bowl depth */
+  function _drawStaticOver(){
+    /* ── GLASS OVERLAYS ── */
     var iv=ctx.createRadialGradient(GX,GY,GR*0.40,GX,GY,GR);
     iv.addColorStop(0,'rgba(0,0,0,0)');
     iv.addColorStop(0.55,'rgba(0,3,12,0.12)');
@@ -15112,7 +15139,6 @@ window.finMonthNav = function(delta){
     iv.addColorStop(0.90,'rgba(0,6,22,0.55)');
     iv.addColorStop(1,'rgba(0,8,28,0.72)');
     ctx.beginPath(); ctx.arc(GX,GY,GR,0,Math.PI*2); ctx.fillStyle=iv; ctx.fill();
-    /* Extra inner edge shadows — desktop only (expensive on mobile) */
     if(!_isMobile){
     ctx.save();
     ctx.beginPath(); ctx.arc(GX,GY,GR,0,Math.PI*2); ctx.clip();
@@ -15129,152 +15155,108 @@ window.finMonthNav = function(delta){
     ris.addColorStop(0,'rgba(0,4,18,0.30)'); ris.addColorStop(1,'rgba(0,0,0,0)');
     ctx.beginPath(); ctx.arc(GX+GR*0.55,GY,GR*0.55,0,Math.PI*2); ctx.fillStyle=ris; ctx.fill();
     ctx.restore();
-    } /* end !_isMobile inner shadows */
-    /* Curved window reflection — wider, more natural */
+    }
     var cw=ctx.createRadialGradient(GX-GR*0.35,GY-GR*0.38,0,GX-GR*0.18,GY-GR*0.18,GR*0.75);
     cw.addColorStop(0,'rgba(180,225,255,0.14)'); cw.addColorStop(0.5,'rgba(120,190,255,0.05)'); cw.addColorStop(1,'rgba(60,130,255,0)');
     ctx.beginPath(); ctx.arc(GX,GY,GR,0,Math.PI*2); ctx.fillStyle=cw; ctx.fill();
     ctx.save();
     ctx.beginPath(); ctx.arc(GX,GY,GR,0,Math.PI*2); ctx.clip();
-    /* Primary specular streak — elegant curved highlight */
     ctx.beginPath();
     ctx.ellipse(GX-GR*0.35,GY-GR*0.44,GR*0.32,GR*0.09,-Math.PI/4.8,0,Math.PI*2);
     var ps=ctx.createLinearGradient(GX-GR*0.65,GY-GR*0.62,GX-GR*0.05,GY-GR*0.24);
     ps.addColorStop(0,'rgba(255,255,255,0.02)'); ps.addColorStop(0.2,'rgba(255,255,255,0.55)'); ps.addColorStop(0.5,'rgba(255,255,255,0.30)'); ps.addColorStop(0.75,'rgba(255,255,255,0.08)'); ps.addColorStop(1,'rgba(255,255,255,0)');
     ctx.fillStyle=ps; ctx.fill();
-    /* Secondary thin streak — parallel, slightly offset */
     ctx.beginPath();
     ctx.ellipse(GX-GR*0.20,GY-GR*0.54,GR*0.20,GR*0.022,-Math.PI/5,0,Math.PI*2);
     ctx.fillStyle='rgba(255,255,255,0.22)'; ctx.fill();
-    /* Third faint reflection arc — lower right for realism */
     ctx.beginPath();
     ctx.ellipse(GX+GR*0.15,GY+GR*0.42,GR*0.22,GR*0.015,Math.PI/6,0,Math.PI*2);
     ctx.fillStyle='rgba(200,230,255,0.06)'; ctx.fill();
-    /* Top-right sparkle dot — brighter */
     ctx.beginPath();
     ctx.ellipse(GX+GR*0.42,GY-GR*0.52,GR*0.06,GR*0.028,Math.PI/5,0,Math.PI*2);
     ctx.fillStyle='rgba(255,255,255,0.42)'; ctx.fill();
-    /* Secondary sparkle — opposite side for depth */
     ctx.beginPath();
     ctx.ellipse(GX-GR*0.52,GY-GR*0.25,GR*0.035,GR*0.018,-Math.PI/7,0,Math.PI*2);
     ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.fill();
     ctx.restore();
-    /* Chrome rim — multi-layer for precision */
+    /* Chrome rim */
     ctx.beginPath(); ctx.arc(GX,GY,GR+0.5,0,Math.PI*2);
     ctx.strokeStyle='rgba(90,160,255,0.28)'; ctx.lineWidth=2.5; ctx.stroke();
     ctx.beginPath(); ctx.arc(GX,GY,GR+2.5,0,Math.PI*2);
     ctx.strokeStyle='rgba(50,100,220,0.12)'; ctx.lineWidth=3; ctx.stroke();
-    /* Extra outer chrome highlight — top arc only */
     ctx.save();
     ctx.beginPath(); ctx.arc(GX,GY,GR+1,Math.PI*1.15,Math.PI*1.85);
     ctx.strokeStyle='rgba(180,220,255,0.15)'; ctx.lineWidth=1.5; ctx.stroke();
     ctx.restore();
 
-    /* ── Excited pulse glow — refined breathing ── */
-    if(_excited){
-      var ePulse = 0.5 + 0.5*Math.sin(_glowPhase);
-      ctx.save();
-      ctx.globalAlpha = ePulse * 0.22;
-      ctx.beginPath(); ctx.arc(GX,GY,GR+10,0,Math.PI*2);
-      ctx.strokeStyle='rgba(140,210,255,1)'; ctx.lineWidth=12; ctx.stroke();
-      ctx.restore();
-      /* Inner excited glow */
-      ctx.save();
-      ctx.globalAlpha = ePulse * 0.08;
-      var eGlow=ctx.createRadialGradient(GX,GY,GR*0.3,GX,GY,GR);
-      eGlow.addColorStop(0,'rgba(100,180,255,1)'); eGlow.addColorStop(1,'rgba(60,120,255,0)');
-      ctx.beginPath(); ctx.arc(GX,GY,GR,0,Math.PI*2); ctx.fillStyle=eGlow; ctx.fill();
-      ctx.restore();
-    }
-
-    /* ── COLLAR — refined tapered transition with chrome accent ── */
+    /* ── COLLAR ── */
     var colY=GY+GR+2, colW=140, colH=14, colX=GX-colW/2;
-    /* Shadow beneath globe */
     ctx.beginPath();
     ctx.moveTo(GX-18,colY); ctx.lineTo(GX-colW/2+6,colY+colH);
     ctx.lineTo(GX+colW/2-6,colY+colH); ctx.lineTo(GX+18,colY);
     ctx.fillStyle='rgba(4,10,22,0.35)'; ctx.fill();
-    /* Collar body — richer metallic gradient */
     var cg3=ctx.createLinearGradient(colX,colY,colX,colY+colH);
     cg3.addColorStop(0,'#4a6890'); cg3.addColorStop(0.2,'#3a5478'); cg3.addColorStop(0.5,'#283e5c'); cg3.addColorStop(0.8,'#1a2e48'); cg3.addColorStop(1,'#101e36');
     rr(colX,colY,colW,colH,6); ctx.fillStyle=cg3; ctx.fill();
-    /* Collar top edge highlight — brighter */
     rr(colX+3,colY+1,colW-6,3.5,2.5);
     var ch2=ctx.createLinearGradient(colX,colY,colX,colY+5);
     ch2.addColorStop(0,'rgba(170,220,255,0.40)'); ch2.addColorStop(1,'rgba(140,200,255,0)');
     ctx.fillStyle=ch2; ctx.fill();
-    /* Collar left edge highlight */
     ctx.beginPath(); ctx.moveTo(colX+2,colY+3); ctx.lineTo(colX+2,colY+colH-3);
     ctx.strokeStyle='rgba(140,200,255,0.12)'; ctx.lineWidth=0.7; ctx.stroke();
 
-    /* ── DISPENSER BODY — slimmer, more elegant with mechanical detail ── */
+    /* ── DISPENSER BODY ── */
     var dbY=colY+colH-1, dbW=110, dbH=50, dbX=GX-dbW/2;
     var dbg=ctx.createLinearGradient(dbX,dbY,dbX,dbY+dbH);
     dbg.addColorStop(0,'#324a6e'); dbg.addColorStop(0.15,'#283e5c'); dbg.addColorStop(0.45,'#1e3252'); dbg.addColorStop(0.75,'#142640'); dbg.addColorStop(1,'#0c1a2e');
     rr(dbX,dbY,dbW,dbH,8); ctx.fillStyle=dbg; ctx.fill();
-    /* Left edge highlight */
     var dsh2=ctx.createLinearGradient(dbX,dbY,dbX+5,dbY);
     dsh2.addColorStop(0,'rgba(120,180,255,0.16)'); dsh2.addColorStop(1,'rgba(100,160,255,0)');
     rr(dbX,dbY+2,3,dbH-4,2); ctx.fillStyle=dsh2; ctx.fill();
-    /* Right edge shadow */
     var drs=ctx.createLinearGradient(dbX+dbW-5,dbY,dbX+dbW,dbY);
     drs.addColorStop(0,'rgba(0,0,0,0)'); drs.addColorStop(1,'rgba(0,0,0,0.12)');
     rr(dbX+dbW-3,dbY+2,3,dbH-4,2); ctx.fillStyle=drs; ctx.fill();
-    /* Panel lines — finer with alternating opacity */
     for(var gi=0; gi<3; gi++){
       var gy3=dbY+10+gi*9;
       ctx.beginPath(); ctx.moveTo(dbX+12,gy3); ctx.lineTo(dbX+dbW-12,gy3);
       ctx.strokeStyle='rgba(50,90,170,'+(0.12+gi*0.03)+')'; ctx.lineWidth=0.5; ctx.stroke();
     }
-    /* Corner rivets on dispenser body */
     [[dbX+10,dbY+8],[dbX+dbW-10,dbY+8],[dbX+10,dbY+dbH-8],[dbX+dbW-10,dbY+dbH-8]].forEach(function(rv){
       ctx.beginPath(); ctx.arc(rv[0],rv[1],2,0,Math.PI*2);
       var rvg=ctx.createRadialGradient(rv[0]-0.5,rv[1]-0.5,0,rv[0],rv[1],2);
       rvg.addColorStop(0,'#3a5878'); rvg.addColorStop(1,'#0e1828');
       ctx.fillStyle=rvg; ctx.fill();
       ctx.strokeStyle='rgba(100,160,240,0.28)'; ctx.lineWidth=0.5; ctx.stroke();
-      /* Rivet specular dot */
       ctx.beginPath(); ctx.arc(rv[0]-0.5,rv[1]-0.5,0.7,0,Math.PI*2);
       ctx.fillStyle='rgba(200,230,255,0.30)'; ctx.fill();
     });
 
-    /* ── COIN/TOKEN SLOT — mechanical detail on front ── */
+    /* ── COIN SLOT ── */
     var csW=34,csH=6,csX=GX-csW/2,csY=dbY+6;
-    /* Slot plate background — raised plate effect */
     rr(csX-4,csY-3,csW+8,csH+6,3);
     var csPl=ctx.createLinearGradient(csX-4,csY-3,csX-4,csY+csH+3);
     csPl.addColorStop(0,'rgba(60,100,180,0.18)'); csPl.addColorStop(0.5,'rgba(30,60,130,0.12)'); csPl.addColorStop(1,'rgba(15,30,80,0.20)');
     ctx.fillStyle=csPl; ctx.fill();
     rr(csX-4,csY-3,csW+8,csH+6,3);
     ctx.strokeStyle='rgba(80,140,220,0.22)'; ctx.lineWidth=0.5; ctx.stroke();
-    /* Coin slot opening */
     rr(csX,csY,csW,csH,3); ctx.fillStyle='#020810'; ctx.fill();
     var csg2=ctx.createLinearGradient(csX,csY,csX,csY+csH);
     csg2.addColorStop(0,'rgba(40,90,200,0.22)'); csg2.addColorStop(1,'rgba(0,0,0,0)');
     rr(csX,csY,csW,csH,3); ctx.fillStyle=csg2; ctx.fill();
     rr(csX,csY,csW,csH,3); ctx.strokeStyle='rgba(60,120,210,0.30)'; ctx.lineWidth=0.6; ctx.stroke();
-    /* Coin slot inner bevel */
     ctx.beginPath(); ctx.moveTo(csX+3,csY+1); ctx.lineTo(csX+csW-3,csY+1);
     ctx.strokeStyle='rgba(100,170,255,0.18)'; ctx.lineWidth=0.4; ctx.stroke();
-
-    /* Dispenser slot — original position preserved */
+    /* Dispenser slot */
     var slW=54,slH=9,slX=GX-slW/2,slY3=dbY+16;
     rr(slX,slY3,slW,slH,4.5); ctx.fillStyle='#030a16'; ctx.fill();
     var slg=ctx.createLinearGradient(slX,slY3,slX,slY3+slH);
     slg.addColorStop(0,'rgba(35,85,200,0.18)'); slg.addColorStop(1,'rgba(0,0,0,0)');
     rr(slX,slY3,slW,slH,4.5); ctx.fillStyle=slg; ctx.fill();
     rr(slX,slY3,slW,slH,4.5); ctx.strokeStyle='rgba(45,90,190,0.24)'; ctx.lineWidth=0.7; ctx.stroke();
-    /* Dispenser slot inner highlight */
     ctx.beginPath(); ctx.moveTo(slX+5,slY3+1.5); ctx.lineTo(slX+slW-5,slY3+1.5);
     ctx.strokeStyle='rgba(100,170,255,0.14)'; ctx.lineWidth=0.4; ctx.stroke();
-    /* Status dots — slightly animated feel */
-    for(var di=0; di<5; di++){
-      ctx.beginPath(); ctx.arc(GX-20+di*10,dbY+dbH-9,1.5,0,Math.PI*2);
-      var dotAlpha = 0.20 + di*0.05 + Math.sin(t*0.003+di)*0.04;
-      ctx.fillStyle='rgba(60,100,190,'+dotAlpha+')'; ctx.fill();
-    }
 
-    /* ── SYMMETRIC SIDE BOLTS — replaces old crank, keeps machine balanced ── */
+    /* ── SIDE BOLTS ── */
     [dbX+6, dbX+dbW-6].forEach(function(bx){
       var by=dbY+dbH/2;
       ctx.beginPath(); ctx.arc(bx,by,5,0,Math.PI*2);
@@ -15286,40 +15268,140 @@ window.finMonthNav = function(delta){
       ctx.fillStyle='rgba(180,220,255,0.35)'; ctx.fill();
     });
 
-    /* ── FEET — wider base, more grounded ── */
+    /* ── FEET ── */
     [GX-38,GX+38].forEach(function(fx){
       var fy=dbY+dbH-2;
       var fg=ctx.createLinearGradient(fx-12,fy,fx-12,fy+14);
       fg.addColorStop(0,'#2a4468'); fg.addColorStop(0.3,'#1e3252'); fg.addColorStop(0.7,'#142640'); fg.addColorStop(1,'#0a1420');
       rr(fx-12,fy,24,14,6); ctx.fillStyle=fg; ctx.fill();
-      /* Top edge highlight — brighter */
       ctx.beginPath(); ctx.moveTo(fx-8,fy+2.5); ctx.lineTo(fx+8,fy+2.5);
       ctx.strokeStyle='rgba(120,180,255,0.22)'; ctx.lineWidth=0.9; ctx.stroke();
-      /* Left edge sheen */
       ctx.beginPath(); ctx.moveTo(fx-10,fy+4); ctx.lineTo(fx-10,fy+10);
       ctx.strokeStyle='rgba(100,170,255,0.10)'; ctx.lineWidth=0.6; ctx.stroke();
-      /* Base shadow line */
       ctx.beginPath(); ctx.moveTo(fx-10,fy+12); ctx.lineTo(fx+10,fy+12);
       ctx.strokeStyle='rgba(0,0,0,0.24)'; ctx.lineWidth=0.7; ctx.stroke();
-      /* Ground shadow */
       ctx.beginPath(); ctx.ellipse(fx,fy+14,14,3,0,0,Math.PI*2);
       ctx.fillStyle='rgba(0,4,14,0.18)'; ctx.fill();
     });
+  }
+
+  function _prebakeMachineBg(){
+    var pw = canvas.width, ph = canvas.height;
+    if(!pw || !ph) return;
+    var sx = pw / W, sy = ph / H;
+    if(!_machineBgUnder){
+      _machineBgUnder = document.createElement('canvas');
+      _machineBgUnderCtx = _machineBgUnder.getContext('2d');
+    }
+    _machineBgUnder.width = pw; _machineBgUnder.height = ph;
+    if(!_machineBgOver){
+      _machineBgOver = document.createElement('canvas');
+      _machineBgOverCtx = _machineBgOver.getContext('2d');
+    }
+    _machineBgOver.width = pw; _machineBgOver.height = ph;
+    var origCtx = ctx;
+    ctx = _machineBgUnderCtx;
+    ctx.setTransform(sx, 0, 0, sy, 0, 0);
+    _drawStaticUnder();
+    ctx = _machineBgOverCtx;
+    ctx.setTransform(sx, 0, 0, sy, 0, 0);
+    _drawStaticOver();
+    ctx = origCtx;
+    _machineBgDirty = false;
+  }
+
+  /* ── Draw full machine -- uses pre-baked chrome layers ── */
+  function drawMachine(t){
+    ctx.clearRect(0,0,W,H);
+    if(_machineBgDirty) _prebakeMachineBg();
+
+    /* Blit static under layer (ambient, knob, bar, neck, globe body) */
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    ctx.drawImage(_machineBgUnder, 0, 0);
+    ctx.restore();
+
+    /* ── BALLS (clipped to globe) ── */
+    ctx.save();
+    ctx.beginPath(); ctx.arc(GX,GY,GR-3,0,Math.PI*2); ctx.clip();
+    var sorted = _balls.slice().sort(function(a,b2){ return a.y - b2.y; });
+    for(var i=0; i<sorted.length; i++){
+      var b = sorted[i];
+      var isChosen = (_dispensing && _balls.indexOf(b) === _chosenBallIdx);
+      if(isChosen) continue;
+      drawBall(b, false);
+    }
+    if(_dispensing && _chosenBallIdx>=0 && _chosenBallIdx<_balls.length){
+      var cb2=_balls[_chosenBallIdx];
+      var pProg = Math.min(1,(t-_dispenseStart)/500);
+      ctx.save();
+      ctx.globalAlpha = pProg * 0.65;
+      var glow=ctx.createRadialGradient(cb2.x,cb2.y,0,cb2.x,cb2.y,cb2.r*3.2);
+      glow.addColorStop(0,'rgba(160,220,255,0.90)'); glow.addColorStop(0.4,'rgba(100,180,255,0.30)'); glow.addColorStop(1,'rgba(60,140,255,0)');
+      ctx.beginPath(); ctx.arc(cb2.x,cb2.y,cb2.r*3.2,0,Math.PI*2); ctx.fillStyle=glow; ctx.fill();
+      ctx.restore();
+      drawBall(cb2, false);
+    }
+    ctx.restore();
+
+    /* Blit static over layer (glass, chrome rim, collar, dispenser, feet) */
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    ctx.drawImage(_machineBgOver, 0, 0);
+    ctx.restore();
+
+    /* ── Excited pulse glow (dynamic) ── */
+    if(_excited){
+      var ePulse = 0.5 + 0.5*Math.sin(_glowPhase);
+      ctx.save();
+      ctx.globalAlpha = ePulse * 0.22;
+      ctx.beginPath(); ctx.arc(GX,GY,GR+10,0,Math.PI*2);
+      ctx.strokeStyle='rgba(140,210,255,1)'; ctx.lineWidth=12; ctx.stroke();
+      ctx.restore();
+      ctx.save();
+      ctx.globalAlpha = ePulse * 0.08;
+      var eGlow=ctx.createRadialGradient(GX,GY,GR*0.3,GX,GY,GR);
+      eGlow.addColorStop(0,'rgba(100,180,255,1)'); eGlow.addColorStop(1,'rgba(60,120,255,0)');
+      ctx.beginPath(); ctx.arc(GX,GY,GR,0,Math.PI*2); ctx.fillStyle=eGlow; ctx.fill();
+      ctx.restore();
+    }
+
+    /* ── Status dots (dynamic - subtle pulse) ── */
+    var colY=GY+GR+2, colH=14;
+    var dbY=colY+colH-1, dbH=50;
+    for(var di=0; di<5; di++){
+      ctx.beginPath(); ctx.arc(GX-20+di*10,dbY+dbH-9,1.5,0,Math.PI*2);
+      var dotAlpha = 0.20 + di*0.05 + Math.sin(_simTime*3.0+di)*0.04;
+      ctx.fillStyle='rgba(60,100,190,'+dotAlpha+')'; ctx.fill();
+    }
   }
 
   /* ── RAF loop ── */
   var _raf = null;
   var _gbPaused = false;
   var _shakeWrapCached = null;
-  var _fpsInterval = _isMobile ? 1000/30 : 0;
+  var _fpsInterval = 0;
   var _lastFpsT = 0;
+  var _fpsProbeDeltas = [];
+  var _fpsProbed = !_isMobile; /* desktop: skip probe, run uncapped */
   function loop(t){
     if(_gbPaused){ _raf=null; return; }
     _raf = requestAnimationFrame(loop);
-    if(_isMobile && t - _lastFpsT < _fpsInterval) return;
+    /* Adaptive FPS: collect first 10 frame deltas on mobile, then decide */
+    if(_isMobile && !_fpsProbed){
+      if(_lastFpsT > 0) _fpsProbeDeltas.push(t - _lastFpsT);
+      _lastFpsT = t;
+      if(_fpsProbeDeltas.length >= 10){
+        var sorted = _fpsProbeDeltas.slice().sort(function(a,b){ return a - b; });
+        var median = sorted[5];
+        _fpsInterval = (median > 22) ? (1000/30) : 0;
+        _fpsProbed = true;
+      }
+      return; /* skip rendering during probe frames */
+    }
+    if(_fpsInterval > 0 && t - _lastFpsT < _fpsInterval) return;
     _lastFpsT = t;
     var dt = _lastLoopT ? Math.min(t - _lastLoopT, 50) : 16;
     _lastLoopT = t;
+    _simTime += dt * 0.001;
     if(_excited) _glowPhase += dt * 0.008;
     if(_dispensing && t - _dispenseStart > 2000){
       _dispensing = false;
@@ -15339,7 +15421,7 @@ window.finMonthNav = function(delta){
         setTimeout(cb, 1400);
       }
     }
-    update(t);
+    update(t, dt);
     drawMachine(t);
     /* Screen shake — desktop only (mobile skips DOM thrash) */
     if(!_isMobile && _shakeActive){
@@ -15372,6 +15454,74 @@ window.finMonthNav = function(delta){
     _gbPaused = false;
     _raf = requestAnimationFrame(loop);
   };
+
+  /* ── Touch / click ripple on globe ── */
+  function _playGlassPing(){
+    var ac = _getAC();
+    if(!ac || !_soundEnabled) return;
+    var now = ac.currentTime;
+    /* Crystal glass ping: 3 layered sine tones with fast attack + 0.6s ring-out */
+    var freqs = [1520, 1840, 2180];
+    var master = ac.createGain();
+    master.gain.setValueAtTime(0.18, now);
+    master.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+    master.connect(ac.destination);
+    for(var fi = 0; fi < freqs.length; fi++){
+      var osc = ac.createOscillator();
+      var g = ac.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freqs[fi], now);
+      /* Slight detuning for shimmer */
+      osc.frequency.exponentialRampToValueAtTime(freqs[fi] * 0.995, now + 0.6);
+      g.gain.setValueAtTime(fi === 0 ? 0.6 : 0.3, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.5 + fi * 0.05);
+      osc.connect(g); g.connect(master);
+      osc.start(now); osc.stop(now + 0.65);
+    }
+  }
+
+  function _handleGlobeTap(e){
+    if(_excited || _dispensing) return false;
+    /* Convert page coords to logical canvas coords */
+    var rect = canvas.getBoundingClientRect();
+    var px, py;
+    if(e.changedTouches && e.changedTouches.length > 0){
+      px = e.changedTouches[0].clientX - rect.left;
+      py = e.changedTouches[0].clientY - rect.top;
+    } else {
+      px = e.clientX - rect.left;
+      py = e.clientY - rect.top;
+    }
+    /* Map CSS coords to logical W x H space */
+    var lx = px / rect.width * W;
+    var ly = py / rect.height * H;
+    /* Check if inside globe */
+    var dx = lx - GX, dy = ly - GY;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    if(dist > GR) return false;
+    /* Nudge nearby balls outward from touch point (~60px radius) */
+    var rippleR = 60;
+    for(var i = 0; i < _balls.length; i++){
+      var b = _balls[i];
+      var bx = b.x - lx, by = b.y - ly;
+      var bd = Math.sqrt(bx * bx + by * by);
+      if(bd < rippleR && bd > 0.1){
+        var force = (1 - bd / rippleR) * 3.5;
+        b.vx += (bx / bd) * force;
+        b.vy += (by / bd) * force;
+      }
+    }
+    _playGlassPing();
+    return true;
+  }
+  /* Globe tap uses the wrap div since canvas has pointer-events:none */
+  var _tapWrap = document.getElementById('bowl-machine-wrap');
+  if(_tapWrap){
+    _tapWrap.addEventListener('click', function(e){ _handleGlobeTap(e); }, false);
+    _tapWrap.addEventListener('touchend', function(e){
+      if(_handleGlobeTap(e)) e.preventDefault();
+    }, {passive: false});
+  }
 
   /* ── Public API ── */
 

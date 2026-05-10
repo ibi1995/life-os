@@ -14514,7 +14514,8 @@ window.finMonthNav = function(delta){
   var ctx = canvas.getContext('2d');
 
   /* ── Fixed ball count: always 80–90 balls, independent of habit library ── */
-  var FIXED_BALL_COUNT = 85;
+  var _isMobile = /iPhone|Android|Mobile/i.test(navigator.userAgent);
+  var FIXED_BALL_COUNT = _isMobile ? 48 : 85;
 
   /* ── Logical draw size — always 340×390, CSS scales via style ── */
   var W = 340, H = 390;
@@ -14824,7 +14825,7 @@ window.finMonthNav = function(delta){
       if(spd > maxSpd){ var sc = maxSpd/spd; b.vx *= sc; b.vy *= sc; }
     }
 
-    var PASSES = isExcited ? 3 : 2;
+    var PASSES = isExcited ? 2 : 1;
     for(var p=0; p<PASSES; p++){
       /* Globe wall */
       for(var i=0; i<_balls.length; i++){
@@ -14843,7 +14844,8 @@ window.finMonthNav = function(delta){
           }
         }
       }
-      /* Ball–ball — brute force O(n²) is fine for 85 balls, zero GC pressure */
+      /* Ball–ball — skip when idle on mobile for perf */
+      if(isExcited || _dispensing || !_isMobile)
       for(var i=0; i<_balls.length; i++){
         if(_dispensing && i===_chosenBallIdx) continue;
         var b=_balls[i];
@@ -15110,26 +15112,24 @@ window.finMonthNav = function(delta){
     iv.addColorStop(0.90,'rgba(0,6,22,0.55)');
     iv.addColorStop(1,'rgba(0,8,28,0.72)');
     ctx.beginPath(); ctx.arc(GX,GY,GR,0,Math.PI*2); ctx.fillStyle=iv; ctx.fill();
-    /* Extra inner edge shadow — reinforces bowl curvature at rim */
+    /* Extra inner edge shadows — desktop only (expensive on mobile) */
+    if(!_isMobile){
     ctx.save();
     ctx.beginPath(); ctx.arc(GX,GY,GR,0,Math.PI*2); ctx.clip();
-    /* Top inner shadow arc */
     var tis=ctx.createRadialGradient(GX,GY-GR*0.85,GR*0.2,GX,GY-GR*0.6,GR*0.6);
     tis.addColorStop(0,'rgba(0,4,18,0.35)'); tis.addColorStop(1,'rgba(0,0,0,0)');
     ctx.beginPath(); ctx.arc(GX,GY-GR*0.6,GR*0.6,0,Math.PI*2); ctx.fillStyle=tis; ctx.fill();
-    /* Bottom inner shadow — heavier */
     var bis=ctx.createRadialGradient(GX,GY+GR*0.80,GR*0.15,GX,GY+GR*0.55,GR*0.6);
     bis.addColorStop(0,'rgba(0,4,18,0.40)'); bis.addColorStop(1,'rgba(0,0,0,0)');
     ctx.beginPath(); ctx.arc(GX,GY+GR*0.55,GR*0.6,0,Math.PI*2); ctx.fillStyle=bis; ctx.fill();
-    /* Left inner shadow crescent */
     var lis=ctx.createRadialGradient(GX-GR*0.85,GY,GR*0.15,GX-GR*0.55,GY,GR*0.55);
     lis.addColorStop(0,'rgba(0,4,18,0.30)'); lis.addColorStop(1,'rgba(0,0,0,0)');
     ctx.beginPath(); ctx.arc(GX-GR*0.55,GY,GR*0.55,0,Math.PI*2); ctx.fillStyle=lis; ctx.fill();
-    /* Right inner shadow crescent */
     var ris=ctx.createRadialGradient(GX+GR*0.85,GY,GR*0.15,GX+GR*0.55,GY,GR*0.55);
     ris.addColorStop(0,'rgba(0,4,18,0.30)'); ris.addColorStop(1,'rgba(0,0,0,0)');
     ctx.beginPath(); ctx.arc(GX+GR*0.55,GY,GR*0.55,0,Math.PI*2); ctx.fillStyle=ris; ctx.fill();
     ctx.restore();
+    } /* end !_isMobile inner shadows */
     /* Curved window reflection — wider, more natural */
     var cw=ctx.createRadialGradient(GX-GR*0.35,GY-GR*0.38,0,GX-GR*0.18,GY-GR*0.18,GR*0.75);
     cw.addColorStop(0,'rgba(180,225,255,0.14)'); cw.addColorStop(0.5,'rgba(120,190,255,0.05)'); cw.addColorStop(1,'rgba(60,130,255,0)');
@@ -15311,9 +15311,14 @@ window.finMonthNav = function(delta){
   var _raf = null;
   var _gbPaused = false;
   var _shakeWrapCached = null;
+  var _fpsInterval = _isMobile ? 1000/30 : 0;
+  var _lastFpsT = 0;
   function loop(t){
     if(_gbPaused){ _raf=null; return; }
-    var dt = _lastLoopT ? Math.min(t - _lastLoopT, 50) : 16; /* cap dt to avoid jumps on tab-resume */
+    _raf = requestAnimationFrame(loop);
+    if(_isMobile && t - _lastFpsT < _fpsInterval) return;
+    _lastFpsT = t;
+    var dt = _lastLoopT ? Math.min(t - _lastLoopT, 50) : 16;
     _lastLoopT = t;
     if(_excited) _glowPhase += dt * 0.008;
     if(_dispensing && t - _dispenseStart > 2000){
@@ -15336,8 +15341,8 @@ window.finMonthNav = function(delta){
     }
     update(t);
     drawMachine(t);
-    /* Screen shake — driven by main loop, no extra RAF */
-    if(_shakeActive){
+    /* Screen shake — desktop only (mobile skips DOM thrash) */
+    if(!_isMobile && _shakeActive){
       if(!_shakeWrapCached) _shakeWrapCached = document.getElementById('bowl-machine-wrap');
       var _shakeWrap = _shakeWrapCached;
       if(_shakeWrap){
@@ -15354,7 +15359,6 @@ window.finMonthNav = function(delta){
         }
       }
     }
-    _raf = requestAnimationFrame(loop);
   }
   _raf = requestAnimationFrame(loop);
 

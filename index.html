@@ -14801,8 +14801,8 @@ window.finMonthNav = function(delta){
     }
     /* Intensity curve: gentle start -> peak at 60% -> strong finish */
     var exciteIntensity = isExcited ? (excitedProg < 0.3 ? excitedProg / 0.3 * 0.7 : excitedProg < 0.7 ? 0.7 + (excitedProg - 0.3) * 0.75 : 1.0) : 0;
-    var gravity = isExcited ? 0.18 + exciteIntensity * 0.22 : 0.06;
-    var damping = isExcited ? 0.930 + (1 - exciteIntensity) * 0.015 : 0.90;
+    var gravity = isExcited ? 0.18 + exciteIntensity * 0.22 : 0.05;
+    var damping = isExcited ? 0.930 + (1 - exciteIntensity) * 0.015 : 0.92;
     /* Framerate-independent damping: raise to dtScale power */
     var dampFactor = dtScale === 1 ? damping : Math.pow(damping, dtScale);
 
@@ -14820,18 +14820,18 @@ window.finMonthNav = function(delta){
         b.vx += Math.sin(_simTime*3.0 + b.phase) * (0.15 + ei * 0.35) * dtScale;
         b.vy += Math.cos(_simTime*2.5 + b.phase*1.3) * (0.12 + ei * 0.28) * dtScale - 0.05 * ei * dtScale;
       } else {
-        /* Gentle idle sway -- fast reversal + tiny force = barely-perceptible liquid float */
+        /* ── Idle: gentle sway so balls aren't frozen dead ── */
         var ph = b.phase;
-        b.vx += (Math.sin(_simTime*1.8 + ph)*0.004 + Math.sin(_simTime*2.8 + ph*0.7)*0.002) * dtScale;
-        b.vy += (Math.cos(_simTime*2.0 + ph*1.4)*0.003 + Math.cos(_simTime*2.4 + ph*1.1)*0.001) * dtScale;
+        b.vx += (Math.sin(_simTime*1.8 + ph)*0.006 + Math.sin(_simTime*2.8 + ph*0.7)*0.003) * dtScale;
+        b.vy += (Math.cos(_simTime*2.0 + ph*1.4)*0.004 + Math.cos(_simTime*2.4 + ph*1.1)*0.002) * dtScale;
       }
       /* Velocity dead-zone: kill micro-jitter from collision settling */
       if(!isExcited){
         var spd2 = b.vx*b.vx + b.vy*b.vy;
-        if(spd2 < 0.01){ b.vx = 0; b.vy = 0; }
+        if(spd2 < 0.002){ b.vx = 0; b.vy = 0; }
       }
       /* Speed cap -- prevents runaway velocity */
-      var maxSpd = isExcited ? 12 : 0.8;
+      var maxSpd = isExcited ? 12 : 1.0;
       var spd = Math.hypot(b.vx, b.vy);
       if(spd > maxSpd){ var sc = maxSpd/spd; b.vx *= sc; b.vy *= sc; }
     }
@@ -14855,10 +14855,9 @@ window.finMonthNav = function(delta){
           }
         }
       }
-      /* Ball-ball collision: skip idle on mobile; use spatial grid when excited on mobile */
-      if(isExcited || _dispensing || !_isMobile){
-        if(_isMobile && isExcited){
-          /* Spatial grid hash -- O(n) instead of O(n^2) for excited mobile */
+      /* Ball-ball collision: use spatial grid on mobile (idle + excited), O(n^2) on desktop */
+      if(_isMobile){
+          /* Spatial grid hash -- O(n) instead of O(n^2), safe for mobile at 30fps */
           var _gcell = 20;
           var _goff_x = GX - 170, _goff_y = GY - 195;
           var _gcols = 17, _grows = 20;
@@ -14877,7 +14876,6 @@ window.finMonthNav = function(delta){
             var _gki = +_gk;
             var _gy = (_gki / _gcols) | 0;
             var _gx = _gki - _gy * _gcols;
-            /* Check this cell + 4 forward neighbors (right, below-left, below, below-right) */
             var _nbrs = [_gki];
             if(_gx + 1 < _gcols) _nbrs.push(_gki + 1);
             if(_gy + 1 < _grows){
@@ -14903,8 +14901,11 @@ window.finMonthNav = function(delta){
                     c.x+=nx2*ov; c.y+=ny2*ov;
                     var rel=b.vx*nx2+b.vy*ny2-(c.vx*nx2+c.vy*ny2);
                     if(rel>0){
-                      var _pKey = bi < ci ? bi+'_'+ci : ci+'_'+bi;
-                      if(rel>0.8){ _triggerClank(_pKey, Math.min(1, rel*0.22)); }
+                      /* Only play clanks during excited/dispensing — idle is silent */
+                      if((isExcited || _dispensing) && rel>0.8){
+                        var _pKey = bi < ci ? bi+'_'+ci : ci+'_'+bi;
+                        _triggerClank(_pKey, Math.min(1, rel*0.22));
+                      }
                       var f=rel*0.45; b.vx-=f*nx2; b.vy-=f*ny2; c.vx+=f*nx2; c.vy+=f*ny2;
                     }
                   }
@@ -14912,7 +14913,7 @@ window.finMonthNav = function(delta){
               }
             }
           }
-        } else {
+      } else {
           /* Desktop or dispensing: standard O(n^2) -- fine for 85 balls at 60fps */
           for(var i=0; i<_balls.length; i++){
             if(_dispensing && i===_chosenBallIdx) continue;
@@ -14936,7 +14937,6 @@ window.finMonthNav = function(delta){
             }
           }
         }
-      }
 
     }
 

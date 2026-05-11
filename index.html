@@ -15811,6 +15811,7 @@ window.finMonthNav = function(delta){
       el = el.parentElement;
     }
     if(!btn) return;
+    alert('CRANK HIT. disabled=' + btn.disabled + ' busy=' + _crankBusy + ' bowlManualDraw=' + (typeof bowlManualDraw));
     if(btn.disabled || _crankBusy) return;
     _crankBusy = true;
     setTimeout(function(){ _crankBusy = false; }, 900);

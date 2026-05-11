@@ -12536,9 +12536,10 @@ const BOWL_TONE_PALETTE = [
 
 function getBowl(){
   let s=gs();
+  var _BSS = (typeof BOWL_SYSTEM_START !== 'undefined') ? BOWL_SYSTEM_START : '2026-04-18';
   if(!s.bowl){
     s.bowl={
-      systemStart: BOWL_SYSTEM_START,
+      systemStart: _BSS,
       library: JSON.parse(JSON.stringify(BOWL_DEFAULT_LIBRARY)),
       draws: [],      /* legacy single draws */
       tripleDraws: [], /* legacy triple draws — kept for history */
@@ -12552,7 +12553,7 @@ function getBowl(){
   if(!s.bowl.tripleDraws) s.bowl.tripleDraws=[];
   if(!s.bowl.dailyDraws) s.bowl.dailyDraws=[];
   if(!s.bowl.rerollsByCycle) s.bowl.rerollsByCycle={};
-  if(!s.bowl.systemStart) s.bowl.systemStart=BOWL_SYSTEM_START;
+  if(!s.bowl.systemStart) s.bowl.systemStart=_BSS;
   /* Migration: upgrade library to theme format if needed */
   if(!s.bowl._themeLibMigrated){
     s.bowl.library=JSON.parse(JSON.stringify(BOWL_DEFAULT_LIBRARY));
@@ -12642,7 +12643,7 @@ function bowlManualDraw(){
   /* Already drawn today? */
   var existing = bowlFindDailyDraw(todayKey2);
   if(existing){
-    alert('DEBUG: already drawn today. themeId=' + existing.themeId + ' chosenTier=' + existing.chosenTier);
+
     toast('Already drawn today — pick your tier below');
     renderBowl();
     return;
@@ -12651,11 +12652,11 @@ function bowlManualDraw(){
   /* Draw a theme */
   var theme = bowlDrawTheme('manual');
   if(!theme){
-    alert('DEBUG: bowlDrawTheme returned null. library length=' + getBowl().library.length);
+
     toast('No themes available — add some in Settings');
     return;
   }
-  alert('DEBUG: theme drawn OK: ' + theme.id + ' rendering in 1200ms');
+
 
   /* Immediate UI feedback — disable crank, show spinning state */
   var btn = document.getElementById('bowl-crank-btn');
@@ -15814,7 +15815,7 @@ window.finMonthNav = function(delta){
       el = el.parentElement;
     }
     if(!btn) return;
-    alert('CRANK HIT. disabled=' + btn.disabled + ' busy=' + _crankBusy + ' bowlManualDraw=' + (typeof bowlManualDraw));
+
     if(btn.disabled || _crankBusy) return;
     _crankBusy = true;
     setTimeout(function(){ _crankBusy = false; }, 900);
@@ -15823,11 +15824,7 @@ window.finMonthNav = function(delta){
              : (window._getAudioCtx ? window._getAudioCtx() : null);
       if(ac && ac.state === 'suspended') ac.resume().catch(function(){});
     }catch(_){}
-    try {
-      if(typeof bowlManualDraw === 'function') bowlManualDraw();
-    } catch(err) {
-      alert('bowlManualDraw CRASHED: ' + err.message + ' | ' + err.stack);
-    }
+    if(typeof bowlManualDraw === 'function') bowlManualDraw();
   });
 
   /* 2. Crank row z-index — sits above challenge area */

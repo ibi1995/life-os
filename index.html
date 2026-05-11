@@ -12,7 +12,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-10-b'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-11-audit'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -116,10 +116,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .ph-line{flex:1;height:1px;background:linear-gradient(90deg,var(--div),transparent)}
 
 /* ─── HABIT CARD ─── */
-/* Gym/HIIT habit (I) moved to Bowl challenge system — card hidden but DOM kept for legacy tick compatibility */
-#hI{display:none !important}
-/* Breakfast (C) removed — card hidden but DOM kept for legacy compatibility */
-#hC{display:none !important}
 
 /* ═══════════════════ BOWL PAGE (GUMBALL MACHINE) ═══════════════════ */
 #pg-bowl{padding:8px 0 0}
@@ -150,225 +146,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   pointer-events:none;
   filter:drop-shadow(0 8px 24px rgba(8,24,80,0.45));
 }
-/* ── Canvas vial overlay: now a clean standalone 3-column card row below canvas ── */
-.bowl-canvas-vials-row{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:8px;
-  padding:0 4px;
-  width:100%;
-  max-width:100%;
-  margin-left:auto;
-  margin-right:auto;
-  position:relative;
-  z-index:3;
-  box-sizing:border-box;
-  align-items:stretch;
-}
-.bowl-canvas-vial-col{
-  display:flex;
-  flex-direction:column;
-  align-items:stretch;
-  min-width:0;
-}
+/* ── Canvas vial overlay: removed (old vial system) ── */
 
-/* ═══ VIAL CARD — self-contained, full column width ═══ */
-.bowl-canvas-vial-content{
-  pointer-events:all;
-  width:100%;
-  display:flex;
-  flex-direction:column;
-  align-items:stretch;
-  position:relative;
-  background:transparent;
-  border:none;
-  flex:1;
-  min-height:0;
-}
-
-
-/* Ball sits at top of card, centered, normal flow */
-.bowl-vial-ball{
-  position:relative;
-  top:auto;left:auto;
-  transform:scale(0.3);
-  opacity:0;
-  width:44px;height:44px;
-  border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  color:#fff;
-  align-self:center;
-  margin:0 auto 6px;
-  flex-shrink:0;
-  filter:drop-shadow(0 4px 12px rgba(0,0,0,.55));
-}
-/* Diff header also zero — already on canvas */
-.bowl-vial-diff-hdr{ display:none; }
-
-/* Card: ball at top center, then challenge content left-aligned below */
-.bowl-vial-bottom{
-  width:100%;
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  padding:12px 8px 10px;
-  margin-top:0;
-  border-radius:12px;
-  position:relative;
-  overflow:hidden;
-  text-align:center;
-  min-height:0;
-}
-.bowl-canvas-vial-content.diff-easy .bowl-vial-bottom{
-  background:linear-gradient(160deg,rgba(18,38,80,.88),rgba(10,22,55,.94));
-  border:1px solid rgba(107,182,255,.28);
-  box-shadow:0 6px 24px rgba(4,12,50,.6),0 0 0 1px rgba(107,182,255,.07),inset 0 1px 0 rgba(140,200,255,.14);
-  border-radius:14px;
-}
-.bowl-canvas-vial-content.diff-medium .bowl-vial-bottom{
-  background:linear-gradient(160deg,rgba(12,30,75,.90),rgba(8,18,60,.95));
-  border:1px solid rgba(77,141,255,.35);
-  box-shadow:0 6px 24px rgba(4,12,50,.65),0 0 0 1px rgba(77,141,255,.10),inset 0 1px 0 rgba(107,170,255,.18);
-  border-radius:14px;
-}
-.bowl-canvas-vial-content.diff-hard .bowl-vial-bottom{
-  background:linear-gradient(160deg,rgba(8,20,65,.92),rgba(5,12,50,.96));
-  border:1px solid rgba(148,190,255,.42);
-  box-shadow:0 6px 28px rgba(4,12,50,.7),0 0 0 1px rgba(148,190,255,.12),inset 0 1px 0 rgba(180,215,255,.22);
-  border-radius:14px;
-}
-/* Shimmer sweep across top of bottom card */
-.bowl-vial-bottom::before{
-  content:'';position:absolute;top:0;left:-100%;width:60%;height:1.5px;
-  animation:vial-shimmer 4s ease-in-out infinite;animation-play-state:var(--shimmer-play,running);pointer-events:none;
-}
-.bowl-canvas-vial-content.diff-easy .bowl-vial-bottom::before{background:linear-gradient(90deg,transparent,rgba(107,182,255,.45),transparent);animation-delay:0s}
-.bowl-canvas-vial-content.diff-medium .bowl-vial-bottom::before{background:linear-gradient(90deg,transparent,rgba(77,141,255,.55),transparent);animation-delay:1.4s}
-.bowl-canvas-vial-content.diff-hard .bowl-vial-bottom::before{background:linear-gradient(90deg,transparent,rgba(180,215,255,.65),transparent);animation-delay:2.8s}
-@keyframes vial-shimmer{0%{left:-60%}60%{left:120%}100%{left:120%}}
-@keyframes vial-ball-bounce{0%{transform:scale(0)}35%{transform:scale(1.2)}65%{transform:scale(0.9)}100%{transform:scale(1)}}
-
-.bowl-canvas-vial-content.completed .bowl-vial-bottom{
-  background:linear-gradient(160deg,rgba(12,32,75,.92),rgba(8,20,58,.95))!important;
-  border-color:rgba(107,182,255,.5)!important;
-  box-shadow:0 6px 24px rgba(4,12,50,.6),0 0 22px rgba(77,141,255,.12),inset 0 1px 0 rgba(148,200,255,.2)!important;
-}
-
-/* Difficulty pill */
-.bowl-vial-diff-hdr{
-  font-family:var(--font-ui);
-  font-size:8.5px;font-weight:900;letter-spacing:1px;text-transform:uppercase;
-  padding:2px 9px;border-radius:4px;margin-bottom:5px;flex-shrink:0;
-  position:relative;z-index:2;
-}
-.bowl-vial-diff-hdr.easy{
-  color:rgba(200,230,255,.9);background:linear-gradient(135deg,rgba(40,80,160,.8),rgba(60,110,200,.7));
-  border:1px solid rgba(107,182,255,.35);
-  box-shadow:0 2px 8px rgba(40,100,220,.3),inset 0 1px 0 rgba(255,255,255,.15);
-}
-.bowl-vial-diff-hdr.medium{
-  color:rgba(210,235,255,.95);background:linear-gradient(135deg,rgba(30,60,140,.85),rgba(50,90,180,.75));
-  border:1px solid rgba(77,141,255,.45);
-  box-shadow:0 2px 8px rgba(50,110,240,.35),inset 0 1px 0 rgba(255,255,255,.18);
-}
-.bowl-vial-diff-hdr.hard{
-  color:#fff;background:linear-gradient(135deg,rgba(18,40,110,.9),rgba(35,65,160,.85));
-  border:1px solid rgba(148,190,255,.55);
-  box-shadow:0 2px 10px rgba(80,140,255,.45),inset 0 1px 0 rgba(255,255,255,.22);
-}
-
-/* Ball shine */
-.bowl-vial-ball::before{
-  content:'';position:absolute;top:8%;left:18%;width:42%;height:28%;border-radius:50%;
-  background:radial-gradient(ellipse,rgba(255,255,255,.92) 0%,rgba(255,255,255,.25) 55%,transparent 80%);
-  pointer-events:none;
-}
-.bowl-vial-ball.visible{opacity:1;transform:scale(1) rotate(0deg)}
-.bowl-vial-ball.done-ball{
-  opacity:.7;
-  filter:brightness(1.1) drop-shadow(0 0 12px rgba(77,141,255,.65)) drop-shadow(0 2px 8px rgba(0,0,0,.4));
-}
-
-/* Content inside bottom card */
-.bowl-vial-content{display:flex;flex-direction:column;align-items:center;width:100%;flex:1;text-align:center;}
-.bowl-vial-empty{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:5px;padding:8px 0 6px;text-align:center;width:100%;
-}
-.bowl-vial-empty-ring{
-  width:28px;height:28px;border-radius:50%;
-  border:1.5px dashed rgba(127,178,255,.22);
-  display:flex;align-items:center;justify-content:center;
-  font-size:12px;color:rgba(127,178,255,.28);
-}
-.bowl-vial-empty-lbl{
-  font-family:var(--font-ui);font-size:8px;font-weight:700;letter-spacing:.6px;
-  text-transform:uppercase;color:rgba(127,178,255,.28);text-align:center;
-}
-
-/* Challenge title */
-.bowl-vial-name{
-  font-family:var(--font-ui);font-size:11px;font-weight:900;
-  color:#fff;line-height:1.25;margin-bottom:4px;letter-spacing:-.1px;
-  text-shadow:0 1px 4px rgba(0,0,0,.9);
-}
-/* Description */
-.bowl-vial-desc{
-  font-size:9.5px;color:rgba(200,225,255,.78);
-  line-height:1.45;margin-bottom:4px;
-  text-shadow:0 1px 3px rgba(0,0,0,.8);
-}
-/* Min effort */
-.bowl-vial-min{
-  font-size:9.5px;font-weight:800;font-family:var(--font-ui);
-  letter-spacing:.1px;margin-bottom:9px;
-  text-shadow:0 1px 4px rgba(0,0,0,.8);
-}
-.bowl-canvas-vial-content.diff-easy .bowl-vial-min{color:rgba(107,182,255,.9)}
-.bowl-canvas-vial-content.diff-medium .bowl-vial-min{color:rgba(148,200,255,.95)}
-.bowl-canvas-vial-content.diff-hard .bowl-vial-min{color:rgba(200,225,255,1)}
-.bowl-canvas-vial-content.completed .bowl-vial-min{color:rgba(140,210,255,.7)}
-
-/* Done button */
-.bowl-vial-btn{
-  width:100%;border:none;border-radius:7px;
-  color:#fff;font-family:var(--font-ui);font-size:9.5px;font-weight:900;
-  padding:9px 4px;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;
-  min-height:34px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
-  position:relative;overflow:hidden;margin-top:auto;
-  transition:transform .15s,box-shadow .15s;
-}
-.bowl-canvas-vial-content.diff-easy .bowl-vial-btn:not(.done){
-  background:linear-gradient(135deg,rgba(40,80,180,.85),rgba(60,110,220,.8));
-  border:1px solid rgba(107,182,255,.3);
-  box-shadow:0 3px 12px rgba(40,100,220,.35),inset 0 1px 0 rgba(255,255,255,.18);
-}
-.bowl-canvas-vial-content.diff-medium .bowl-vial-btn:not(.done){
-  background:linear-gradient(135deg,rgba(30,65,165,.9),rgba(50,95,210,.85));
-  border:1px solid rgba(77,141,255,.4);
-  box-shadow:0 3px 14px rgba(50,110,240,.4),inset 0 1px 0 rgba(255,255,255,.2);
-}
-.bowl-canvas-vial-content.diff-hard .bowl-vial-btn:not(.done){
-  background:linear-gradient(135deg,rgba(18,45,130,.95),rgba(35,70,175,.9));
-  border:1px solid rgba(148,190,255,.5);
-  box-shadow:0 3px 16px rgba(80,140,255,.45),inset 0 1px 0 rgba(255,255,255,.22);
-}
-.bowl-vial-btn:not(.done)::after{
-  content:'';position:absolute;top:0;left:-80%;width:40%;height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);
-  animation:vbtn-gleam 3s ease-in-out infinite;
-}
+/* ─── HABIT CARD ─── */
+/* vbtn-gleam: used by bowlChooseTier tier button shimmer */
 @keyframes vbtn-gleam{0%{left:-40%}55%{left:130%}100%{left:130%}}
-.bowl-vial-btn:active:not(.done){transform:scale(.96);box-shadow:none}
-.bowl-vial-btn.done{
-  background:rgba(77,141,255,.12);border:1px solid rgba(107,182,255,.32);
-  color:rgba(148,200,255,.85);cursor:default;
-  box-shadow:none;font-size:9px;letter-spacing:.6px;pointer-events:none;
-}
-.bowl-vial-btn.done::after{display:none}
-
-.bowl-vial-reroll{width:100%;margin-top:5px;background:rgba(255,217,125,.08);border:1px solid rgba(255,217,125,.25);border-radius:5px;color:var(--gold);font-family:var(--font-ui);font-size:9px;font-weight:700;padding:5px 4px;cursor:pointer;min-height:28px;-webkit-tap-highlight-color:transparent}
 .bowl-dock-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .bowl-dock-tag{font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--a2);background:rgba(77,141,255,.18);border:1px solid rgba(107,182,255,.3);border-radius:4px;padding:3px 8px}
 .bowl-dock-date{font-family:var(--font-ui);font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.3px;text-transform:uppercase}
@@ -526,6 +308,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .hc-list .hc:last-child{border-bottom:none}
 .hc-list .hc:first-child .hc-main{border-radius:14px 14px 0 0}
 .hc-list .hc:last-child .hc-main{border-radius:0 0 14px 14px}
+/* Phase headers inside hc-list need explicit padding since overflow:hidden collapses margins */
+.hc-list .ph{padding:16px 18px 6px;margin:0}
 .opt-badge,.fri-opt-badge{display:none!important}
 
 /* ─── REWARD ─── */
@@ -543,7 +327,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 /* ─── PROGRESS BAR: relative position for overflow menu ─── */
 .prog{position:relative}
-.today-overflow.on{display:block!important}
+.today-overflow{display:none}
+.today-overflow.on{display:block}
 .today-overflow button:hover{background:rgba(255,255,255,.1)}
 
 /* ─── DIM COMPLETED PHASES — makes uncompleted habits pop ─── */
@@ -1216,6 +1001,7 @@ textarea.big:focus{border-bottom-color:var(--a2)}
   scroll-behavior:auto;
 }
 .pg.active{ display:block }
+/* Page entrance animation — applied by _onPageEnter via pg-enter-animate class, not on .active directly */
 @media(min-width:680px){.pg{padding:24px 24px 100px;}}
 @media(min-width:1024px){.pg{padding-left:max(24px,calc((100% - 760px) / 2));padding-right:max(24px,calc((100% - 760px) / 2));}}
 .pg-inner{width:100%;}
@@ -1406,8 +1192,8 @@ button,a,[role="button"],.hc-main,.hc-chk,.tab,.bn-tab,.epd-habit,.wk-day{-webki
 .fab-income-pill:active{transform:scale(.93)}
 
 /* ─── Page entrance animation — opacity ONLY, no scale (scale = zoom bug) ─── */
-@keyframes pg-enter{from{opacity:.5}to{opacity:1}}
-.pg-enter-animate{animation:pg-enter .18s ease-out both}
+@keyframes pg-enter{from{opacity:.4;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+.pg-enter-animate{animation:pg-enter .2s ease-out both;pointer-events:auto}
 
 /* ─── Toggle switch upgrade ─── */
 .tog-sl{transition:background .28s cubic-bezier(.4,0,.2,1),border-color .28s!important}
@@ -3062,8 +2848,6 @@ textarea.auto-grow{overflow:hidden;resize:none}
 </div>
 </div>
 <div class="nav-date" id="nav-date"></div>
-<!-- Settings quick-access: only on mobile (desktop uses the Settings tab; mobile uses bottom nav) -->
-<button onclick="navTo(PAGE_IDS.indexOf('settings'))" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:6px;flex-shrink:0;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:color .2s" title="Settings" aria-label="Settings" class="nav-settings-btn"><svg class="svg-icon" style="font-size:20px"><use href="#icon-settings"/></svg></button>
 </nav>
 <!-- ══════════════════════════ BOTTOM NAV (mobile) -->
 <nav class="bottom-nav" id="bottom-nav" aria-label="Main navigation">
@@ -3073,7 +2857,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <button class="bn-tab" id="bn-bowl" onclick="navTo(2)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-bowl"/></svg></div><div class="bn-lbl">Bowl</div></button>
 <button class="bn-tab" id="bn-finance" onclick="navTo(3)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-finance"/></svg></div><div class="bn-lbl">Finance</div></button>
 <button class="bn-tab" id="bn-reward" onclick="navTo(4)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-gift"/></svg></div><div class="bn-lbl">Reward</div></button>
-<button class="bn-tab" id="bn-settings" onclick="navTo(5)"><div class="bn-icon">⚙️</div><div class="bn-lbl">Settings</div></button>
+<button class="bn-tab" id="bn-settings" onclick="navTo(5)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-settings"/></svg></div><div class="bn-lbl">Settings</div></button>
 </div>
 </nav>
 <div class="ptr-indicator" id="ptr-indicator">
@@ -3081,6 +2865,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <span>Release to refresh</span>
 </div>
 <div class="pages-viewport" id="pages-viewport"><div class="pages-track" id="pages-track"><div class="pg" id="pg-today">
+<div class="pg-inner">
 <!-- Fix 5: Data backup notice (shown once per week) -->
 <div id="backup-notice" style="display:none;background:linear-gradient(135deg,rgba(77,141,255,.1),rgba(30,70,200,.07));border:1px solid rgba(107,182,255,.2);border-radius:6px;padding:11px 14px;margin-bottom:10px;align-items:center;gap:10px">
   <span style="font-size:18px;flex-shrink:0">💾</span>
@@ -3129,7 +2914,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div style="font-size:13px;font-weight:800;color:#FF8B8B;margin-bottom:3px">Yesterday was a miss.</div>
 <div style="font-size:11.5px;color:rgba(255,180,160,.8);line-height:1.5">Yesterday is done. <strong style="color:#FF9E8B">Today is the rule.</strong><br>Never miss twice. Show up now.</div>
 </div>
-<button onclick="document.getElementById('nmt-overlay').style.display='none'" style="background:rgba(255,100,80,.2);border:1px solid rgba(255,100,80,.3);border-radius:6px;color:#FF8B8B;font-size:18px;padding:6px 10px;cursor:pointer;flex-shrink:0">✓</button>
+<button onclick="document.getElementById('nmt-overlay').style.display='none';try{localStorage.setItem('lifeOS_nmt_dismissed',localKey(today));}catch(e){}" style="background:rgba(255,100,80,.2);border:1px solid rgba(255,100,80,.3);border-radius:6px;color:#FF8B8B;font-size:18px;padding:6px 10px;cursor:pointer;flex-shrink:0">✓</button>
 </div>
 </div>
 
@@ -3137,9 +2922,9 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div class="prog">
 <div class="prog-lbl">Today</div>
 <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
-<div class="prog-ct" id="prog-ct">0 / 16</div>
+<div class="prog-ct" id="prog-ct">0 / —</div>
 <button id="today-overflow-btn" onclick="document.getElementById('today-overflow-menu').classList.toggle('on')" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px 2px;margin-left:6px;flex-shrink:0" title="More options">⋯</button>
-<div id="today-overflow-menu" class="today-overflow" style="display:none;position:absolute;right:16px;top:52px;background:rgba(15,30,100,.96);border:1px solid var(--bdr);border-radius:6px;padding:6px;box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:50;backdrop-filter:blur(20px)">
+<div id="today-overflow-menu" class="today-overflow" style="position:absolute;right:16px;top:52px;background:rgba(15,30,100,.96);border:1px solid var(--bdr);border-radius:6px;padding:6px;box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:50;backdrop-filter:blur(20px)">
   <button onclick="resetDay();document.getElementById('today-overflow-menu').classList.remove('on')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--sec);font-family:var(--font-ui);font-size:12px;font-weight:600;padding:10px 14px;cursor:pointer;border-radius:6px;white-space:nowrap">🔄 Reset Today</button>
   <button onclick="openEditDay();document.getElementById('today-overflow-menu').classList.remove('on')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--sec);font-family:var(--font-ui);font-size:12px;font-weight:600;padding:10px 14px;cursor:pointer;border-radius:6px;white-space:nowrap">✏️ Edit Past Day</button>
   <div style="height:1px;background:var(--div);margin:4px 8px"></div>
@@ -3173,8 +2958,9 @@ textarea.auto-grow{overflow:hidden;resize:none}
   <div class="streak-tile">
     <span style="font-size:20px">⚡</span>
     <div>
-      <div class="streak-tile-lbl" id="xp-inline-lvl">LVL 1 · RECRUIT</div>
+      <div class="streak-tile-lbl">XP</div>
       <div class="streak-tile-val" id="xp-inline-amt" style="color:var(--gold)">0 XP</div>
+      <div style="font-family:var(--font-ui);font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.3px;text-transform:uppercase;margin-top:1px" id="xp-inline-lvl">LVL 1 · RECRUIT</div>
     </div>
   </div>
 
@@ -3198,13 +2984,12 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div style="font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Today's 3 Tasks</div>
 <div id="np-tasks"></div>
 </div>
-<div class="day-mode-banner" id="day-mode-banner"><div class="dmb-icon">🛋️</div><div><div class="dmb-text">Friday — Sloth Day</div><div class="dmb-sub">No pressure. Just the essentials.</div></div></div>
+<div class="day-mode-banner" id="day-mode-banner"><div class="dmb-icon"></div><div><div class="dmb-text" id="dmb-text"></div><div class="dmb-sub" id="dmb-sub"></div></div></div>
 <div class="hc-list">
 <div class="ph" id="ph-morning"><div class="ph-dot" style="color:var(--a2)"></div><div class="ph-lbl">Morning</div><div class="ph-line"></div></div>
 <div class="hc hide-fri" id="hA"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'A')}"><div class="hc-chk" onclick="tickDone(event,'A')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Wake Up — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'A')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">A</span><span class="hc-name">Wake Up</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">7:00 AM</span></div><div class="hc-action">Feet on floor in 60 sec. Drink a full glass of water.</div></div></div></div>
 <div class="hc" id="hB"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'B')}"><div class="hc-chk" onclick="tickDone(event,'B')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Morning Walk — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'B')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">B</span><span class="hc-name">Morning Walk</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">7:05 AM</span></div><div class="hc-action">30 min outside. No phone. Silence resets the mind.</div></div></div></div>
 
-<div class="hc" id="hC"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'C')}"><div class="hc-chk" onclick="tickDone(event,'C')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Breakfast — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'C')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">C</span><span class="hc-name">Breakfast</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">7:40 AM</span></div><div class="hc-action">One portion. No screen. Fork down between every bite. Stop at 80% full.</div></div></div></div>
 <div class="hc" id="hD"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'D')}"><div class="hc-chk" onclick="tickDone(event,'D')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Brush and Face — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'D')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">D</span><span class="hc-name">Brush + Face</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">8:00 AM</span></div><div class="hc-action">2 min brush, wash face. One positive thing in the mirror.</div></div></div></div>
 <div class="hc week-only" id="hE"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'E')}"><div class="hc-chk" onclick="tickDone(event,'E')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Set 3 Priorities — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'E')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">E</span><span class="hc-name">Set 3 Priorities</span><span class="hc-time">8:15 AM</span></div><div class="hc-action">Write 3 tasks on paper. If only these 3 — is today a win?</div></div></div></div>
 
@@ -3213,7 +2998,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div class="hc week-only" id="hF"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'F')}"><div class="hc-chk" onclick="tickDone(event,'F')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Deep Work — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'F')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">F</span><span class="hc-name">Deep Work</span><span class="hc-time">9:00 AM</span></div><div class="hc-action">Before email — Priority 1. Protect the first 90 min. Phone in bag.</div></div></div></div>
 <div class="hc hide-fri" id="hG"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'G')}"><div class="hc-chk" onclick="tickDone(event,'G')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Mid-Morning Walk — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'G')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">G</span><span class="hc-name">Mid-Morning Walk</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">11:00 AM</span></div><div class="hc-action">20 min outside. No screens. Brain recharge block.</div></div></div></div>
 
-<div class="ph" id="ph-evening"><div class="ph-dot" style="color:var(--muted)"></div><div class="ph-lbl">Evening</div><div class="ph-line"></div></div>
+<div class="ph" id="ph-evening"><div class="ph-dot" style="color:var(--muted)"></div><div class="ph-lbl">Afternoon / Evening</div><div class="ph-line"></div></div>
 <div class="hc week-only" id="hJ"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'J')}"><div class="hc-chk" onclick="tickDone(event,'J')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Arrive Home — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'J')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">J</span><span class="hc-name">Arrive Home</span><span class="hc-time">5:30 PM</span></div><div class="hc-action">Change clothes immediately. Sit 5 min. Do nothing. Breathe.</div></div></div></div>
 <div class="hc not-eid" id="hS"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'S')}"><div class="hc-chk" onclick="tickDone(event,'S')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Chest Stretch — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'S')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">S</span><span class="hc-name">Chest Stretch</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:15 PM</span></div><div class="hc-action">Doorframe stretch. Forearms on frame, elbows 90°. Lean forward. 30s × 3.</div></div></div></div>
 <div class="hc not-eid" id="hT"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'T')}"><div class="hc-chk" onclick="tickDone(event,'T')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Couch Stretch — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'T')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">T</span><span class="hc-name">Couch Stretch</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:18 PM</span></div><div class="hc-action">Back foot on couch/wall behind you, front knee down. Push hips forward, squeeze rear glute. 60s each side.</div></div></div></div>
@@ -3221,7 +3006,6 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div class="hc not-eid" id="hV"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'V')}"><div class="hc-chk" onclick="tickDone(event,'V')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Chin Tucks — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'V')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">V</span><span class="hc-name">Chin Tucks</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:23 PM</span></div><div class="hc-action">Pull chin straight back — double chin. Hold 5s, release. 10 reps × 3.</div></div></div></div>
 <div class="hc not-eid" id="hW"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'W')}"><div class="hc-chk" onclick="tickDone(event,'W')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Wall Angels — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'W')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">W</span><span class="hc-name">Wall Angels</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:25 PM</span></div><div class="hc-action">Back flat on wall, arms in goalpost. Slide up/down keeping contact. 10 reps × 2.</div></div></div></div>
 
-<div class="hc week-only" id="hI"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'I')}"><div class="hc-chk" onclick="tickDone(event,'I')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Gym / HIIT — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'I')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">I</span><span class="hc-name">Gym / HIIT</span><span class="opt-badge fri-opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:45 PM</span></div><div class="hc-action">Gym: 45–60 min PPL session. OR HIIT: 6 rounds sprint/burpees ~14 min. Either counts — just move.</div></div></div></div>
 
 <div class="hc" id="hK"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'K')}"><div class="hc-chk" onclick="tickDone(event,'K')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Slow Dinner — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'K')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">K</span><span class="hc-name">Slow Dinner</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">7:00 PM</span></div><div class="hc-action">One portion. 20 min minimum. Fork down each bite. No screen.</div></div></div></div>
 
@@ -3272,6 +3056,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div class="heatmap-grid" id="hm-grid"></div>
 </div>
 </div>
+</div><!-- end pg-inner -->
 </div><div class="pg" id="pg-gym">
 <!-- ──────────────── ACTIVITY BOARD ──────────────── -->
 
@@ -3433,6 +3218,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <!-- ══════════════════════════ SCORE PAGE (replaces Review) -->
 </div>
 <div class="pg" id="pg-bowl">
+  <div class="pg-inner">
   <div class="bowl-header">
     <div class="bowl-title">The Gumball Bowl</div>
     <div class="bowl-sub">Pull the crank — one challenge, three difficulty tiers. You choose.</div>
@@ -3480,6 +3266,13 @@ textarea.auto-grow{overflow:hidden;resize:none}
     <div class="bowl-history-hdr">Last 14 Draws</div>
     <div class="bowl-history-row" id="bowl-history-row"></div>
   </div>
+
+  <!-- Manage library shortcut -->
+  <div style="text-align:center;padding:2px 14px 12px">
+    <button onclick="navTo(PAGE_IDS.indexOf('settings'));setTimeout(function(){var el=document.getElementById('bowl-lib-card');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}},300)" style="background:none;border:none;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:.3px;cursor:pointer;padding:6px 0;-webkit-tap-highlight-color:transparent;opacity:.7;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(127,178,255,.3)">Manage Ball Library →</button>
+  </div>
+
+  </div><!-- end pg-inner -->
 
 </div>
 <div class="pg" id="pg-finance">
@@ -4340,7 +4133,7 @@ const CONFIG = {
 /* Gym/HIIT (I) moved to Bowl challenge system — no longer in fixed habits.
    Legacy days with I ticked keep their rating; removing from STEPS just means
    new days don't require it for "perfect day" completion. */
-const STEPS_WEEK = ['A','B','D','E','F','G','S','T','U','V','W','J','K','N','O'];
+const STEPS_WEEK = ['A','B','D','E','F','G','S','T','U','V','W','J','K','N','O']; // C and I removed (ghost habits)
 const STEPS_FRI  = ['B','D','K','N'];
 const STEPS_SAT  = ['A','B','D','G','Q','K','N','R'];
 /* Eid Al-Fitr 2026 — 17 Mar to 23 Mar: wellness-only essentials */
@@ -4678,6 +4471,8 @@ function _onPageEnter(id){
     /* Pause vial shimmer to save GPU */
     document.querySelectorAll('.bowl-vial-bottom').forEach(function(el){ el.style.setProperty('--shimmer-play','paused'); });
   }
+  /* Render reward immediately (no delay) so content is visible before animation completes */
+  if(id==='reward'){ rwCheckNewWeek(); renderReward(); }
   setTimeout(function(){
     if(id==='finance'){ _txShowAll=30; if(typeof _txSearchQuery!=='undefined') _txSearchQuery=''; if(typeof _txFilterType!=='undefined') _txFilterType=''; renderFinance(); }
     if(id!=='finance' && typeof _fnxInsightTimer!=='undefined' && _fnxInsightTimer){ clearInterval(_fnxInsightTimer); _fnxInsightTimer=null; }
@@ -9310,10 +9105,15 @@ function rwHandleTierUpload(inp, tier){
   const file=inp.files[0];
   const reader=new FileReader();
   reader.onload=function(e){
+    const b64=e.target.result;
+    if(b64.length > 200*1024){
+      toast('Image too large — resize it first or choose a smaller one.');
+      return;
+    }
     const thumb=document.getElementById('rw-tier-thumb-'+tier);
     if(thumb){
-      thumb.innerHTML='<img src="'+e.target.result+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:6px">';
-      thumb._imgData=e.target.result;
+      thumb.innerHTML='<img src="'+b64+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:6px">';
+      thumb._imgData=b64;
     }
   };
   reader.readAsDataURL(file);
@@ -10083,6 +9883,8 @@ function checkStreakAtRisk(){
 function checkNeverMissTwice(){
   const overlay = document.getElementById('nmt-overlay');
   if(!overlay) return;
+  /* If already dismissed today, skip */
+  try{ if(localStorage.getItem('lifeOS_nmt_dismissed')===localKey(today)){ overlay.style.display='none'; return; } }catch(e){}
   let s = gs();
   if(!s.days) return;
   /* Check if yesterday was a complete miss (0 habits done) */
@@ -12782,22 +12584,28 @@ function bowlManualDraw(){
 }
 
 /* Animation: single ball through tube 0 (center) */
+/* Shared ball tone colors — mono-blue palette, used by animation and tier completion */
+var BOWL_BALL_COLORS={strawberry:'#4a7ee8',bubblegum:'#7ab0f8',tangerine:'#5a90f0',banana:'#90c4ff',apple:'#3060cc',cotton:'#b8d8ff',blueberry:'#4d8fff',grape:'#6888e8'};
 function bowlPlaySingleAnimation(theme, done){
   var crankBtn=document.getElementById('bowl-crank-btn');
+  var crankHint2=document.getElementById('bowl-crank-hint');
+  var machineWrap2=document.getElementById('bowl-machine-wrap');
   if(crankBtn) crankBtn.disabled=true;
+  /* Visual feedback: pulsing glow on machine + hint text */
+  if(machineWrap2) machineWrap2.style.filter='drop-shadow(0 0 18px rgba(126,200,255,.45))';
+  if(crankHint2){ crankHint2.textContent='Rolling…'; crankHint2.style.color='var(--a2)'; crankHint2.style.animation='phase-pulse 1s ease-in-out infinite'; }
   if(typeof _playGumballCrank==='function') _playGumballCrank();
   var SHAKE_DURATION=2200;
   setTimeout(function(){ if(typeof _playBallsShaking==='function') _playBallsShaking(SHAKE_DURATION); },150);
-  var TONE_COLORS={
-    strawberry:'#FF6B8A',bubblegum:'#FF90BC',tangerine:'#FF9A5C',
-    banana:'#FFD060',apple:'#80D96C',cotton:'#B8E0FF',
-    blueberry:'#6B9FFF',grape:'#A37BFF'
-  };
+  var TONE_COLORS=BOWL_BALL_COLORS;
   var color=TONE_COLORS[theme.tone]||'#6B9FFF';
 
   function finishAnim(){
     if(typeof _stopBallSound==='function') _stopBallSound();
     if(crankBtn) crankBtn.disabled=false;
+    /* Clear rolling feedback */
+    if(machineWrap2) machineWrap2.style.filter='';
+    if(crankHint2){ crankHint2.textContent=''; crankHint2.style.color=''; crankHint2.style.animation=''; }
     if(done) done();
   }
 
@@ -12854,7 +12662,7 @@ function bowlChooseTier(tier){
   /* Animation: crank + shake + tube ball */
   _bowlAnimResume();
   if(typeof _playGumballCrank==='function') _playGumballCrank();
-  var TONE_COLORS={strawberry:'#4a7ee8',bubblegum:'#7ab0f8',tangerine:'#5a90f0',banana:'#90c4ff',apple:'#3060cc',cotton:'#b8d8ff',blueberry:'#4d8fff',grape:'#6888e8'};
+  var TONE_COLORS=BOWL_BALL_COLORS;
   var ballColor=TONE_COLORS[theme.tone]||'#4d8fff';
   if(window._gbSetExcited){
     window._gbSetExcited(null, 2500, function(){
@@ -12870,7 +12678,7 @@ function bowlChooseTier(tier){
   if(celTitle) celTitle.textContent=theme.name+' — '+tierLabel[tier]+' Done!';
   if(celSub) celSub.textContent='+'+dd.pts+' pts · +'+dd.xp+' XP earned.';
   var cel=document.getElementById('bowl-celebrate');
-  if(cel){ cel.classList.add('on'); setTimeout(function(){ bowlCloseCelebrate(); }, 3500); }
+  if(cel){ cel.classList.add('on'); window._celebrateTimer=setTimeout(function(){ bowlCloseCelebrate(); }, 3500); }
   if(navigator.vibrate) navigator.vibrate([10,20,10,20,10]);
   toast(tierEmoji[tier]+' '+tierLabel[tier]+' completed! +'+dd.pts+' pts');
   if(typeof checkAllMilestones==='function') setTimeout(checkAllMilestones,300);
@@ -12998,7 +12806,9 @@ function bowlCurrentCycleKey(){
 /* Count completed draws within current reward cycle */
 function bowlCloseCelebrate(){
   var cel=document.getElementById('bowl-celebrate');
-  if(cel) cel.classList.remove('on');
+  if(!cel || !cel.classList.contains('on')) return;
+  if(window._celebrateTimer){ clearTimeout(window._celebrateTimer); window._celebrateTimer=null; }
+  cel.classList.remove('on');
 }
 
 /* Count accumulated points within current reward cycle */
@@ -14830,20 +14640,17 @@ window.finMonthNav = function(delta){
      Triggered on ball-ball and ball-wall collisions.
   ═══════════════════════════════════════════ */
   var _ac = null; /* AudioContext — reuses shared instance */
-  var _soundEnabled = false;
   var _lastClankTime = {}; /* throttle per ball pair */
   var _lastWallTime  = {}; /* throttle per ball wall hit */
 
   function _getAC(){
     if(!_ac && window._getSharedAudioCtx){
       _ac = window._getSharedAudioCtx();
-      if(_ac) _soundEnabled = true;
     }
     if(!_ac){
       try{
         _ac = new (window.AudioContext || window.webkitAudioContext)();
-        _soundEnabled = true;
-      }catch(e){ _soundEnabled = false; }
+      }catch(e){}
     }
     if(_ac && _ac.state === 'suspended'){
       _ac.resume().catch(function(){});
@@ -14858,7 +14665,7 @@ window.finMonthNav = function(delta){
   /* Heavy metallic clank: layered noise burst + pitched metallic ring */
   function _playClank(intensity){
     var ac = _getAC();
-    if(!ac || !_soundEnabled) return;
+    if(!ac || !window._isSoundEnabled()) return;
     var now = ac.currentTime;
     intensity = Math.min(1, Math.max(0.05, intensity || 0.3));
 
@@ -14929,7 +14736,7 @@ window.finMonthNav = function(delta){
   var _rollGain = null;
   function _startRolling(){
     var ac = _getAC();
-    if(!ac || !_soundEnabled || _rollNode) return;
+    if(!ac || !window._isSoundEnabled() || _rollNode) return;
     try{
       var bufLen = ac.sampleRate * 2; /* 2s looping buffer */
       var buf = ac.createBuffer(1, bufLen, ac.sampleRate);
@@ -15699,7 +15506,7 @@ window.finMonthNav = function(delta){
   /* ── Touch / click ripple on globe ── */
   function _playGlassPing(){
     var ac = _getAC();
-    if(!ac || !_soundEnabled) return;
+    if(!ac || !window._isSoundEnabled()) return;
     var now = ac.currentTime;
     /* Crystal glass ping: 3 layered sine tones with fast attack + 0.6s ring-out */
     var freqs = [1520, 1840, 2180];

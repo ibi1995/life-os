@@ -15823,7 +15823,11 @@ window.finMonthNav = function(delta){
              : (window._getAudioCtx ? window._getAudioCtx() : null);
       if(ac && ac.state === 'suspended') ac.resume().catch(function(){});
     }catch(_){}
-    if(typeof bowlManualDraw === 'function') bowlManualDraw();
+    try {
+      if(typeof bowlManualDraw === 'function') bowlManualDraw();
+    } catch(err) {
+      alert('bowlManualDraw CRASHED: ' + err.message + ' | ' + err.stack);
+    }
   });
 
   /* 2. Crank row z-index — sits above challenge area */

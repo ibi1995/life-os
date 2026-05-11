@@ -429,11 +429,6 @@ textarea.big:focus{border-bottom-color:var(--a2)}
 .tog-sl::before{content:'';position:absolute;width:20px;height:20px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.25s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
 .tog input:checked+.tog-sl{background:linear-gradient(135deg,var(--a1),var(--a2));border-color:var(--a1)}
 .tog input:checked+.tog-sl::before{transform:translateX(20px)}
-.nh-list{padding:8px 18px 4px}
-.nh-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--div);gap:10px}
-.nh-row:last-child{border-bottom:none}
-.nh-name{font-family:var(--font-ui);font-size:12.5px;font-weight:600;color:var(--sec)}
-.nh-time{font-size:10.5px;color:var(--muted);margin-top:1px}
 .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 18px}
 .abtn{display:flex;align-items:center;justify-content:center;gap:7px;background:rgba(255,255,255,.09);border:1px solid var(--bdr);border-radius:var(--rs);color:#fff;font-family:var(--font-ui);font-size:13px;font-weight:600;padding:12px 14px;cursor:pointer;transition:all .2s;width:100%;letter-spacing:.1px}
 .abtn:hover{background:rgba(255,255,255,.16);border-color:rgba(127,178,255,.4)}
@@ -2928,13 +2923,9 @@ textarea.auto-grow{overflow:hidden;resize:none}
   <button class="comeback-btn" onclick="dismissComeback()">Start today &#8594;</button>
 </div>
 <!-- Never Miss Twice recovery overlay -->
-<div id="nmt-overlay" style="display:none;background:linear-gradient(135deg,rgba(255,100,60,.12),rgba(255,80,80,.08));border:1px solid rgba(255,120,80,.25);border-radius:6px;padding:16px 18px;margin-bottom:12px">
-<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-<div>
-<div style="font-size:13px;font-weight:800;color:#FF8B8B;margin-bottom:3px">Yesterday was a miss.</div>
 <div style="font-size:11.5px;color:rgba(255,180,160,.8);line-height:1.5">Yesterday is done. <strong style="color:#FF9E8B">Today is the rule.</strong><br>Never miss twice. Show up now.</div>
 </div>
-<button onclick="document.getElementById('nmt-overlay').style.display='none';try{localStorage.setItem('lifeOS_nmt_dismissed',localKey(today));}catch(e){}" style="background:rgba(255,100,80,.2);border:1px solid rgba(255,100,80,.3);border-radius:6px;color:#FF8B8B;font-size:18px;padding:6px 10px;cursor:pointer;flex-shrink:0">✓</button>
+
 </div>
 </div>
 
@@ -3000,8 +2991,6 @@ textarea.auto-grow{overflow:hidden;resize:none}
 </div>
 </div>
 <!-- Night preview banner -->
-<div id="np-banner" style="display:none;background:rgba(77,141,255,.07);border:1px solid rgba(107,182,255,.15);border-radius:6px;padding:14px 16px;margin-bottom:12px">
-<div style="font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Today's 3 Tasks</div>
 <div id="np-tasks"></div>
 </div>
 <div class="day-mode-banner" id="day-mode-banner"><div class="dmb-icon"></div><div><div class="dmb-text" id="dmb-text"></div><div class="dmb-sub" id="dmb-sub"></div></div></div>
@@ -3564,13 +3553,9 @@ textarea.auto-grow{overflow:hidden;resize:none}
 </div>
 </div>
 </div>
-<div class="ss-row">
-<div><div class="ss-lbl">Enable All Reminders</div><div class="ss-sub" id="notif-status"><span class="sdot o"></span>Turn on to get notified at each habit time.</div></div>
-<label class="tog"><input id="master-tog" onchange="toggleMaster(this.checked)" type="checkbox"/><span class="tog-sl"></span></label>
+
 </div>
-<div class="ss-row">
-<div><div class="ss-lbl">Test Notification</div><div class="ss-sub">Send a test ping right now.</div></div>
-<button class="abtn" onclick="testNotif()" style="width:auto;padding:7px 16px;font-size:12px">Send Test</button>
+
 </div>
 </div>
 <div class="ss">
@@ -3586,10 +3571,6 @@ textarea.auto-grow{overflow:hidden;resize:none}
   <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.65">Slide to shift your whole day earlier or later. Habit times are <strong style="color:var(--sec)">gentle reminders</strong>, not hard deadlines &#8212; they all move together to match your real routine.</div>
   <div id="schedule-slider-wrap"></div>
 </div>
-</div>
-<div class="ss">
-<div class="ss-hdr">⏰ Per-Habit Schedule</div>
-<div class="nh-list" id="nh-list"></div>
 </div>
 <div class="ss">
 <div class="ss-hdr">🤖 AI Financial Insight</div>
@@ -4525,7 +4506,6 @@ function _onPageEnter(id){
     if(id==='finance'){ _txShowAll=30; if(typeof _txSearchQuery!=='undefined') _txSearchQuery=''; if(typeof _txFilterType!=='undefined') _txFilterType=''; renderFinance(); }
     if(id!=='finance' && typeof _fnxInsightTimer!=='undefined' && _fnxInsightTimer){ clearInterval(_fnxInsightTimer); _fnxInsightTimer=null; }
     if(id==='gym')     renderGym();
-    /* review merged into battlepass — renderWeeklyScore called there */
     if(id==='reward')  { rwCheckNewWeek(); renderReward(); }
     if(id==='bowl')    { renderBowl(); if(typeof bowlRenderLibrary==='function') bowlRenderLibrary(); setTimeout(function(){ if(typeof window._gbResize==='function') window._gbResize(); }, 80); }
     /* battlepass page removed */
@@ -4898,7 +4878,6 @@ document.addEventListener('keydown',function(e){
 function renderTodayPage(){
   checkComebackBanner();
   renderRewardStrip();
-  renderNightPreviewBanner();
   checkStreakAtRisk();
 }
 
@@ -6775,362 +6754,13 @@ const DAY_LABELS_7 = ['Mo','Tu','We','Th','Fr','Sa','Su'];
 const DAY_LABELS_5 = ['Mo','Tu','We','Th','Fr'];
 const DAY_ICONS = ['✓','✓','✓','✓','✓','✓','✓'];
 
-function buildWk(){
-  let s=gs(); if(!s.weekly) s.weekly={};
-  const wk=getWeekKey(today); /* current week's Monday key */
 
-  /* ── One-time migration: old format was s.weekly[habitId]=count (flat number)
-     New format is s.weekly[weekKey][habitId]=count ── */
-  let needsMigration=false;
-  WK.forEach(function(h){ if(typeof s.weekly[h.id]==='number') needsMigration=true; });
-  if(needsMigration){
-    const migrated={};
-    migrated[wk]={};
-    WK.forEach(function(h){
-      if(typeof s.weekly[h.id]==='number') migrated[wk][h.id]=s.weekly[h.id];
-    });
-    s.weekly=migrated;
-    ss(s,true);
-  }
-
-  if(!s.weekly[wk]) s.weekly[wk]={};
-  let el=document.getElementById('wk-grid'); if(!el) return;
-  el.innerHTML='';
-  WK.forEach(function(h){
-    let cur=s.weekly[wk][h.id]||0;
-    const isFull=(cur>=h.days);
-    const lbls=h.days===5?DAY_LABELS_5:DAY_LABELS_7;
-
-    const card=document.createElement('div'); card.className='wk-card';
-
-    let dayBtns='';
-    for(let i=0;i<h.days;i++){
-      const isOn=i<cur;
-      dayBtns+='<div class="wk-day'+(isOn?' on':'')+'" data-id="'+h.id+'" data-i="'+i+'">'+
-        '<div class="wk-day-lbl">'+lbls[i]+'</div>'+
-        '<div class="wk-day-btn">'+(isOn?'✓':'')+'</div>'+
-      '</div>';
-    }
-
-    card.innerHTML=
-      '<div class="wk-name">'+h.name+
-        '<span class="wk-count'+(isFull?' full':'')+'">'+cur+' / '+h.days+'</span>'+
-      '</div>'+
-      '<div class="wk-days">'+dayBtns+'</div>';
-
-    el.appendChild(card);
-  });
-
-  el.querySelectorAll('.wk-day').forEach(function(d){
-    d.addEventListener('click',function(){
-      let id=this.getAttribute('data-id');
-      let i=parseInt(this.getAttribute('data-i'));
-      let s2=gs(); if(!s2.weekly) s2.weekly={};
-      const wk2=getWeekKey(today);
-      if(!s2.weekly[wk2]) s2.weekly[wk2]={};
-      let cur=s2.weekly[wk2][id]||0;
-      s2.weekly[wk2][id]=(i<cur)?i:i+1;
-      ss(s2,true); buildWk();  /* immediate — discrete user action */
-    });
-  });
-  ss(s);
-}
 
 /* ── Life Wheel ── */
 
 /* ── Text / Save ── */
 
-/* ════════════════════════════════════════════
-   NOTIFICATIONS — Service Worker via Blob
-════════════════════════════════════════════ */
-let swReg=null;
-let ntimers=[];
 
-function fmt12(t){ const p=t.split(':'); const hh=parseInt(p[0]); const mm=p[1]; return (hh%12||12)+':'+mm+(hh>=12?' PM':' AM'); }
-
-/* Build SW script as a string — cached after first call */
-let _swScriptCache=null;
-function buildSWScript(){
-  if(_swScriptCache) return _swScriptCache;
-  const schedule=NH.map(function(h){ return {s:h.s,n:h.n,t:h.t,m:h.m}; });
-  let result=`
-const CACHE='lifeOS-2026-04-19-f';
-const URLS=['/'];
-
-/* ── Install: cache the app shell immediately ── */
-self.addEventListener('install',function(e){
-  e.waitUntil(
-    caches.open(CACHE).then(function(c){ return c.addAll(URLS); })
-      .then(function(){ return self.skipWaiting(); })
-  );
-});
-
-/* ── Activate: delete old caches ── */
-self.addEventListener('activate',function(e){
-  e.waitUntil(
-    caches.keys().then(function(keys){
-      return Promise.all(keys.filter(function(k){ return k!==CACHE; }).map(function(k){ return caches.delete(k); }));
-    }).then(function(){ return self.clients.claim(); })
-  );
-});
-
-/* ── Fetch: NETWORK-FIRST for the app shell so new HTML is never shadowed
-   by stale cache. Cache is only used when offline. ── */
-self.addEventListener('fetch',function(e){
-  let url=new URL(e.request.url);
-  if(e.request.mode==='navigate'||(url.pathname==='/'&&e.request.destination==='document')){
-    e.respondWith(
-      fetch(e.request).then(function(response){
-        if(response && response.ok){
-          const clone=response.clone();
-          caches.open(CACHE).then(function(c){ c.put(e.request,clone); });
-        }
-        return response;
-      }).catch(function(){
-        /* Offline fallback */
-        return caches.match(e.request);
-      })
-    );
-    return;
-  }
-  /* External requests (CDN, APIs) — network only, fail gracefully */
-});
-
-const schedule=${JSON.stringify(schedule)};
-let fired={};
-let notifEnabled={};
-let rewardData=null;
-let habitState=null; /* {done:N, total:16, todayPerfect:bool} */
-
-self.addEventListener('message',function(e){
-  if(e.data&&e.data.type==='SCHEDULE'){ notifEnabled=e.data.enabled||{}; fired={}; }
-  if(e.data&&e.data.type==='REWARD'){   rewardData=e.data.reward||null; }
-  if(e.data&&e.data.type==='HABIT'){    habitState=e.data.state||null; }
-  if(e.data&&e.data.type==='TEST'){
-    self.registration.showNotification('My Life OS',{body:'Test notification working! 🔥',icon:'/icon.png',badge:'/icon.png'});
-  }
-});
-
-function fireNotif(title,body,tag,urgent){
-  self.registration.showNotification(title,{
-    body:body,icon:'/icon.png',badge:'/icon.png',tag:tag,
-    requireInteraction:!!urgent,silent:false,
-    vibrate:urgent?[200,100,200]:[100]
-  });
-}
-
-function checkAndFire(){
-  const now=new Date();
-  const hh=now.getHours(); const mm=now.getMinutes();
-  let key=hh+':'+mm;
-  const dow=now.getDay(); // 0=Sun, 1=Mon … 6=Sat
-
-  /* ── Habit reminders (existing per-habit schedule) ── */
-  schedule.forEach(function(h){
-    if(notifEnabled[h.s]===false) return;
-    const p=h.t.split(':');
-    if(parseInt(p[0])===hh && parseInt(p[1])===mm && !fired[h.s+':'+key]){
-      fired[h.s+':'+key]=true;
-      fireNotif('My Life OS — '+h.n,h.m,h.s,false);
-    }
-  });
-
-  /* ── REWARD NOTIFICATIONS ── */
-  if(rewardData&&rewardData.notifOn){
-    const rn=rewardData.name||'your reward';
-    const prog=rewardData.progress||0;
-    let total=rewardData.total||7;
-    const isUnlocked=rewardData.isUnlocked;
-    const weekLost=rewardData.weekLost||false;
-
-    /* 08:00 — Morning motivation (Mon–Sun) */
-    if(hh===8&&mm===0&&!fired['rw-morning:'+key]){
-      fired['rw-morning:'+key]=true;
-      if(isUnlocked){
-        fireNotif('🏆 Reward Unlocked!','You earned "'+rn+'" — go treat yourself! 🎉','rw-morning',false);
-      } else if(!weekLost){
-        const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-        fireNotif('🎁 '+prog+' pts this cycle','Pull the crank and earn pts toward "'+rn+'".','rw-morning',false);
-      }
-    }
-
-    /* 13:00 — Midday check-in (only if today isn't perfect yet) */
-    if(hh===13&&mm===0&&!fired['rw-midday:'+key]){
-      fired['rw-midday:'+key]=true;
-      if(!isUnlocked&&!weekLost){
-        const left10=Math.max(0,10-prog);
-        fireNotif('⏰ Midday check-in','Keep going — every challenge counts toward your tier.','rw-midday',false);
-      }
-    }
-
-    /* 20:00 — Evening progress update */
-    if(hh===20&&mm===0&&!fired['rw-eve:'+key]){
-      fired['rw-eve:'+key]=true;
-      if(isUnlocked){
-        fireNotif('🏆 Reward Unlocked!','You earned "'+rn+'" this week — you deserve it! 🎉','rw-eve',false);
-      } else if(!weekLost){
-        const left=total-prog;
-        fireNotif('🎁 Reward Progress',prog+' pts earned this cycle. Keep going for "'+rn+'"!','rw-eve',false);
-      }
-    }
-
-    /* 22:00 — Urgency alert if TODAY is incomplete (habits still open) */
-    if(hh===22&&mm===0&&!fired['rw-urgent:'+key]){
-      fired['rw-urgent:'+key]=true;
-      if(!isUnlocked&&!weekLost){
-        const left10=Math.max(0,10-prog);
-        fireNotif('⚠️ Challenge pending!','Head to the Bowl and complete today\'s challenge.','rw-urgent',true);
-      }
-    }
-
-    /* Monday 07:30 — New week alert */
-    if(dow===1&&hh===7&&mm===30&&!fired['rw-newweek:'+key]){
-      fired['rw-newweek:'+key]=true;
-      fireNotif('🆕 New Week — New Chance!','Set your reward in My Life OS and earn it this cycle. Complete challenges in the Bowl. You can do this.','rw-newweek',false);
-    }
-
-    /* Sunday 09:00 — Final day urgency */
-    if(dow===0&&hh===9&&mm===0&&!fired['rw-final:'+key]){
-      fired['rw-final:'+key]=true;
-      if(!isUnlocked&&prog===6){
-        fireNotif('🏁 Almost there!',''+prog+'/10 challenges done. Complete one more vial in the Bowl and unlock "'+rn+'"! Don\'t let it slip.','rw-final',true);
-      }
-    }
-  }
-
-  /* Clear fired log at midnight */
-  if(hh===0&&mm===0) fired={};
-}
-
-setInterval(checkAndFire,60000);
-checkAndFire();
-`;
-  _swScriptCache=result;
-  return _swScriptCache;
-}
-function registerSW(){
-  if(!('serviceWorker' in navigator)) return;
-
-  function registerBlob(){
-    /* Skip if a SW is already controlling this page — avoids skipWaiting storm on every load */
-    if(navigator.serviceWorker.controller && swReg){ sendRewardToSW(); return; }
-    /* Blob SW — handles notifications only (no offline caching) */
-    const blob=new Blob([buildSWScript()],{type:'application/javascript'});
-    navigator.serviceWorker.register(URL.createObjectURL(blob),{scope:'./'}).then(function(reg){
-      swReg=reg;
-      let s=gs();
-      if(s.masterNotif && Notification.permission==='granted') sendScheduleToSW();
-      sendRewardToSW();
-    }).catch(function(err){ console.warn('SW blob fallback failed:',err); fallbackTimers(); });
-  }
-
-  /* Only run SW on real deployments — skip entirely in Claude preview / sandboxed iframes */
-  const onNetlify = location.hostname.endsWith('.netlify.app') || location.hostname === 'localhost' || location.protocol === 'https:' && !location.hostname.includes('claudeusercontent');
-  if(!onNetlify){ fallbackTimers(); return; }
-
-  fetch('/sw.js',{method:'HEAD'}).then(function(r){
-    if(!r.ok) throw new Error('sw.js not found');
-    return navigator.serviceWorker.register('/sw.js',{scope:'/'});
-  }).then(function(reg){
-    swReg=reg;
-    let s=gs();
-    if(s.masterNotif && Notification.permission==='granted') sendScheduleToSW();
-    sendRewardToSW();
-  }).catch(function(){
-    /* sw.js not deployed yet — fall back to blob for notifications */
-    registerBlob();
-  });
-}
-
-function sendScheduleToSW(){
-  if(!swReg) return;
-  let s=gs(); const enabled=s.notif||{};
-  const scheduleArr=NH.map(function(h){ return {s:h.s,n:h.n,t:h.t,m:h.m}; });
-  let target=swReg.active||swReg.waiting||swReg.installing;
-  if(target){
-    target.postMessage({type:'SCHEDULE',schedule:scheduleArr,enabled:enabled});
-    sendRewardToSW(target);
-  } else { swReg.addEventListener('updatefound',function(){ sendScheduleToSW(); }); }
-}
-function sendRewardToSW(target){
-  const rw=getReward();
-  if(!rw.active) return;
-  const score=getRwLevelScore();
-  const isUnlocked=score.pts>=REWARD_LEVEL_TARGET;
-  const t=target||(swReg&&(swReg.active||swReg.waiting||swReg.installing));
-  if(!t) return;
-  t.postMessage({type:'REWARD',reward:{name:rw.active.name||'Reward',progress:score.pts,total:REWARD_LEVEL_TARGET,isUnlocked:isUnlocked,notifOn:rw.active.notifOn!==false,weekLost:false}});
-}
-
-function fallbackTimers(){
-  clearTimers();
-  let s=gs(); if(!s.notif) s.notif={};
-  const now=new Date();
-  NH.forEach(function(h){
-    if(s.notif[h.s]===false) return;
-    const p=h.t.split(':'); const fire=new Date(); fire.setHours(parseInt(p[0]),parseInt(p[1]),0,0);
-    if(fire>now){ const ms=fire-now; ntimers.push(setTimeout(function(n){ return function(){ new Notification('My Life OS — '+n.n,{body:n.m}); }; }(h),ms)); }
-  });
-}
-
-function buildNH(){
-  let s=gs(); if(!s.notif) s.notif={};
-  let el=document.getElementById('nh-list'); if(!el) return;
-  el.innerHTML='';
-  NH.forEach(function(h){
-    const enabled=s.notif[h.s]!==false;
-    let row=document.createElement('div'); row.className='nh-row';
-    const cbId='ntog-'+h.s;
-    row.innerHTML='<div><div class="nh-name">'+h.n+'</div><div class="nh-time">'+fmt12(h.t)+' — '+h.m.slice(0,42)+'...</div></div><label class="tog"><input type="checkbox" id="'+cbId+'"'+(enabled?' checked':'')+'>  <span class="tog-sl"></span></label>';
-    el.appendChild(row);
-    document.getElementById(cbId).addEventListener('change',function(){
-      let s2=gs(); if(!s2.notif) s2.notif={};
-      s2.notif[h.s]=this.checked; ss(s2,true); /* immediate */
-      if(s2.masterNotif) sendScheduleToSW();
-    });
-  });
-  const master=document.getElementById('master-tog');
-  let s2=gs(); if(master&&s2.masterNotif){ master.checked=true; setNotifUI(true); }
-  ss(s);
-}
-
-function toggleMaster(on){
-  if(!('Notification' in window)){ toast('Notifications not supported here'); return; }
-  if(on){
-    Notification.requestPermission().then(function(p){
-      if(p==='granted'){
-        let s=gs(); s.masterNotif=true; ss(s);
-        setNotifUI(true); registerSW(); toast('Reminders ON 🔔');
-      } else {
-        document.getElementById('master-tog').checked=false;
-        toast('Please allow notifications in Settings');
-      }
-    });
-  } else {
-    let s=gs(); s.masterNotif=false; ss(s);
-    clearTimers(); setNotifUI(false); toast('Reminders off');
-  }
-}
-
-function setNotifUI(on){
-  let el=document.getElementById('notif-status');
-  if(el) el.innerHTML=on?'<span class="sdot g"></span>Active — notifications will fire even when app is in background.':'<span class="sdot o"></span>Turn on to get notified at each habit time.';
-}
-
-function clearTimers(){ ntimers.forEach(clearTimeout); ntimers=[]; }
-
-function testNotif(){
-  if(!('Notification' in window)){ toast('Not supported'); return; }
-  if(Notification.permission==='granted'){
-    if(swReg&&(swReg.active||swReg.waiting)){
-      let target=swReg.active||swReg.waiting;
-      target.postMessage({type:'TEST'});
-    } else {
-      new Notification('My Life OS',{body:'Test notification working! 🔥'});
-    }
-    toast('Test sent!');
-  } else { toast('Enable notifications first'); }
-}
 
 
 /* ── Yesterday card ── */
@@ -9981,123 +9611,15 @@ function checkStreakAtRisk(){
 }
 
 /* ── Never Miss Twice ── */
-function checkNeverMissTwice(){
-  const overlay = document.getElementById('nmt-overlay');
-  if(!overlay) return;
-  /* If already dismissed today, skip */
-  try{ if(localStorage.getItem('lifeOS_nmt_dismissed')===localKey(today)){ overlay.style.display='none'; return; } }catch(e){}
-  let s = gs();
-  if(!s.days) return;
-  /* Check if yesterday was a complete miss (0 habits done) */
-  const yDate = new Date(today); yDate.setDate(yDate.getDate()-1);
-  const yKey = localKey(yDate);
-  const yDow = yDate.getDay();
-  const yIsOffDay = (yDow===5||yDow===6); /* Fri/Sat off-days don't trigger NMT */
-  if(yIsOffDay){ overlay.style.display='none'; return; }
-  const yData = s.days[yKey];
-  const yDone = yData && typeof yData==='object' ? getStepsForDay(yDate).filter(function(st){ return !!yData[st]; }).length : 0;
-  /* Check if today we haven't started yet */
-  const tdData = s.days[todayKey];
-  const tdDone = tdData && typeof tdData==='object' ? STEPS.filter(function(st){ return !!tdData[st]; }).length : 0;
-  /* Show if: yesterday was missed entirely AND today hasn't started */
-  if(yDone === 0 && tdDone === 0 && yData !== undefined){
-    overlay.style.display = 'block';
-  } else {
-    overlay.style.display = 'none';
-  }
-}
 
-/* ── Night preview save/load ── */
-function saveNightPreview(){
-  let s = gs();
-  if(!s.nightPreview) s.nightPreview = {};
-  s.nightPreview[todayKey] = {
-    t1: (document.getElementById('np-t1')||{}).value||'',
-    t2: (document.getElementById('np-t2')||{}).value||'',
-    t3: (document.getElementById('np-t3')||{}).value||''
-  };
-  ss(s, false); /* quiet save */
-}
 
-function loadNightPreview(){
-  /* Load last night's preview into the habit O fields */
-  let s = gs();
-  if(!s.nightPreview) return;
-  /* Try today's, then yesterday's */
-  const yDate = new Date(today); yDate.setDate(yDate.getDate()-1);
-  let data = s.nightPreview[todayKey] || s.nightPreview[localKey(yDate)];
-  if(!data) return;
-  const t1 = document.getElementById('np-t1');
-  const t2 = document.getElementById('np-t2');
-  const t3 = document.getElementById('np-t3');
-  if(t1) t1.value = data.t1||'';
-  if(t2) t2.value = data.t2||'';
-  if(t3) t3.value = data.t3||'';
-}
 
-function renderNightPreviewBanner(){
-  const banner = document.getElementById('np-banner');
-  const tasksEl = document.getElementById('np-tasks');
-  if(!banner || !tasksEl) return;
-  let s = gs();
-  if(!s.nightPreview) { banner.style.display='none'; return; }
-  /* Show today's preview if written, else yesterday's */
-  const yDate = new Date(today); yDate.setDate(yDate.getDate()-1);
-  let data = s.nightPreview[todayKey] || s.nightPreview[localKey(yDate)];
-  const tasks = data ? [data.t1, data.t2, data.t3].filter(Boolean) : [];
-  if(tasks.length === 0){ banner.style.display='none'; return; }
-  /* Only show in the morning (before 1pm) */
-  const hour = new Date().getHours();
-  if(hour >= 13){ banner.style.display='none'; return; }
-  banner.style.display = 'block';
-  tasksEl.innerHTML = tasks.map(function(t,i){
-    return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12.5px;font-weight:600;color:var(--sec)">'
-      +'<span style="width:16px;height:16px;border-radius:50%;background:rgba(77,141,255,.25);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:var(--a2);flex-shrink:0">'+(i+1)+'</span>'
-      +'<span>'+t+'</span></div>';
-  }).join('');
-}
 
-/* ── Weekly Score page ── */
-function calcWeeklyScore(){
-  let s = gs();
-  let days = s.days || {};
-  /* Get Mon–Sun of current week */
-  const monday = getWeekMonday(today);
-  const scores = { habits:0, gym:0, goals:0 };
-  let perfectDays = 0;
-  for(let i=0;i<7;i++){
-    let d = new Date(monday); d.setDate(monday.getDate()+i);
-    let key = localKey(d);
-    const dd = days[key]||{};
-    if(typeof dd !== 'object') continue;
-    const stepsD = getStepsForDay(d);
-    let n = stepsD.filter(function(st){ return !!dd[st]; }).length;
-    scores.habits += n;
-    if(n===stepsD.length) perfectDays++;
-  }
-  /* Habits: max possible this week, weight 80 */
-  let maxHabits=0;
-  for(let j=0;j<7;j++){ const dj=new Date(monday); dj.setDate(monday.getDate()+j); maxHabits+=getStepsForDay(dj).length; }
-  const habitPct = maxHabits>0?scores.habits/maxHabits:0;
-  /* Gym: sessions this week, max 3 = full marks, weight 20 */
-  let gymSessions = 0;
-  const g = getGym();
-  let sessions = g.sessions || [];
-  sessions.forEach(function(sess){
-    if(sess.date >= localKey(monday) && sess.date <= todayKey) gymSessions++;
-  });
-  const gymPct = Math.min(gymSessions/3, 1);
-  let total = Math.round(habitPct*80 + gymPct*20);
-  return {
-    total: total,
-    habitPct: Math.round(habitPct*100),
-    gymSessions: gymSessions,
-    goalPct: 0,
-    perfectDays: perfectDays,
-    habitsLogged: scores.habits,
-    maxHabits: maxHabits
-  };
-}
+
+
+
+
+
 
 function calcStreakData(){
   let s = gs();
@@ -10120,119 +9642,9 @@ function calcStreakData(){
   return { cur:cur, best:best, tot:tot };
 }
 
-function calcWeekScoreFor(mondayDate){
-  let s = gs();
-  let days = s.days || {};
-  const monday = mondayDate;
-  const sundayKey = localKey(new Date(monday.getFullYear(),monday.getMonth(),monday.getDate()+6));
-  let habits=0, maxH=0;
-  for(let i=0;i<7;i++){
-    let d = new Date(monday); d.setDate(monday.getDate()+i);
-    let key = localKey(d);
-    const dd = days[key]||{};
-    if(typeof dd !== 'object') continue;
-    const stepsD = getStepsForDay(d);
-    maxH += stepsD.length;
-    habits += stepsD.filter(function(st){ return !!dd[st]; }).length;
-  }
-  const habitPct = maxH>0?habits/maxH:0;
-  const g = getGym();
-  const gymCount = (g.sessions||[]).filter(function(sess){ return sess.date >= localKey(monday) && sess.date <= sundayKey; }).length;
-  const gymPct = Math.min(gymCount/3, 1);
-  const f = getF();
-  const goals = f.goals || [];
-  const goalPct = goals.length > 0 ? goals.filter(function(gl){ return gl.saved > 0; }).length / goals.length : 0;
-  return Math.round(habitPct*60 + gymPct*20 + goalPct*20);
-}
 
-function renderWeeklyScore(){
-  let el = document.getElementById('score-content');
-  if(!el) return;
-  const sc = calcWeeklyScore();
-  const st = calcStreakData();
-  const scoreColor = sc.total>=80?'#4ade80':sc.total>=60?'#6BB6FF':sc.total>=40?'#FFD97D':'#FF8B8B';
-  const scoreLabel = sc.total>=80?'Outstanding':sc.total>=60?'Solid week':sc.total>=40?'Keep pushing':'Need more consistency';
-  /* Evidence counter language */
-  const evidenceMsg = st.tot===0
-    ? 'Start today. Your first perfect day is one check away. Every habit you complete counts toward your score.'
-    : st.tot===1
-    ? 'You\'ve shown up 1 time. That\'s the beginning — the hardest part is done.'
-    : 'You\'ve shown up <strong style="color:var(--a2)">'+st.tot+' times</strong>. That\'s not luck — that\'s evidence.';
-  /* Week day mini-row */
-  const monday = getWeekMonday(today);
-  let days = gs().days||{};
-  const dayLabels = ['Mo','Tu','We','Th','Fr','Sa','Su'];
-  const weekHtml = dayLabels.map(function(lbl,i){
-    let d = new Date(monday); d.setDate(monday.getDate()+i);
-    let key = localKey(d);
-    const dd = days[key]||{};
-    const stepsD = getStepsForDay(d);
-    let n = typeof dd==='object' ? stepsD.filter(function(st){ return !!dd[st]; }).length : 0;
-    const isFuture = key > todayKey;
-    let color = isFuture?'rgba(255,255,255,.08)':n===stepsD.length?'#4ade80':n>=Math.ceil(stepsD.length*0.75)?'#6BB6FF':n>=Math.ceil(stepsD.length*0.375)?'#FFD97D':n>0?'rgba(255,140,100,.6)':'rgba(255,255,255,.08)';
-    const isToday = key===todayKey;
-    return '<div style="flex:1;text-align:center">'
-      +'<div style="width:32px;height:32px;border-radius:50%;margin:0 auto 4px;background:'+color+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:'+(n>0&&!isFuture?'#0a0f1e':'rgba(255,255,255,.3)')+(isToday?';box-shadow:0 0 0 2px var(--a1)':'')+'">'+n+'</div>'
-      +'<div style="font-size:9px;color:var(--muted);font-weight:700">'+lbl+'</div>'
-      +'</div>';
-  }).join('');
-  el.innerHTML =
-    '<div class="score-hero">'
-      +'<div class="score-num" style="-webkit-text-fill-color:'+scoreColor+';color:'+scoreColor+'">'+sc.total+'</div>'
-      +'<div class="score-label">Weekly Score</div>'
-      +'<div class="score-week">'+scoreLabel+' · '+localKey(monday)+' week</div>'
-    +'</div>'
-    +'<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:14px 12px 10px;margin-bottom:12px">'
-      +'<div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">This Week</div>'
-      +'<div style="display:flex;gap:4px">'+weekHtml+'</div>'
-    +'</div>'
-    +'<div class="score-breakdown">'
-      +'<div class="sbd-card"><div class="sbd-val" style="color:#6BB6FF">'+sc.habitPct+'%</div><div class="sbd-lbl">Habits</div></div>'
-      +'<div class="sbd-card"><div class="sbd-val" style="color:#4ade80">'+sc.gymSessions+'</div><div class="sbd-lbl">Gym sessions</div></div>'
-      +'<div class="sbd-card"><div class="sbd-val" style="color:#FFD97D">'+sc.perfectDays+'</div><div class="sbd-lbl">Perfect days</div></div>'
-    +'</div>';
-  /* 4-week trend */
-  const trendWeeks=[];
-  for(let tw=3;tw>=0;tw--){
-    const twMon=new Date(monday); twMon.setDate(twMon.getDate()-(tw*7));
-    const twScore=tw===0?sc.total:calcWeekScoreFor(twMon);
-    const twLabel=tw===0?'This wk':twMon.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-    trendWeeks.push({score:twScore,label:twLabel});
-  }
-  const trendMax=Math.max.apply(null,trendWeeks.map(function(t){return t.score;}))||100;
-  const trendHtml=trendWeeks.map(function(tw,i){
-    let h=trendMax>0?Math.max(Math.round(tw.score/trendMax*60),4):4;
-    const barColor=tw.score>=80?'#4ade80':tw.score>=60?'#6BB6FF':tw.score>=40?'#FFD97D':'#FF8B8B';
-    const isThis=i===3;
-    return '<div style="flex:1;text-align:center">'
-      +'<div style="height:70px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:4px">'
-        +'<div style="width:70%;height:'+h+'px;background:'+barColor+';border-radius:6px 4px 0 0;transition:height .4s'+(isThis?';box-shadow:0 0 10px '+barColor+'55':'')+'"></div>'
-      +'</div>'
-      +'<div style="font-family:var(--font-ui);font-size:13px;font-weight:800;color:'+(isThis?barColor:'var(--sec)')+'">'+tw.score+'</div>'
-      +'<div style="font-size:9px;color:var(--muted);margin-top:2px;font-weight:600">'+tw.label+'</div>'
-    +'</div>';
-  }).join('');
-  /* Trend direction */
-  const prevWeekScore=trendWeeks.length>=2?trendWeeks[2].score:0;
-  const trendDelta=sc.total-prevWeekScore;
-  const trendIcon=trendDelta>0?'<span style="color:#4ade80">▲ +'+trendDelta+'</span>':trendDelta<0?'<span style="color:#FF8B8B">▼ '+trendDelta+'</span>':'<span style="color:var(--muted)">— same</span>';
-  el.innerHTML+=
-    '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:14px 12px 10px;margin-bottom:12px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
-        +'<div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">4-Week Trend</div>'
-        +'<div style="font-family:var(--font-ui);font-size:11px;font-weight:700">vs last week: '+trendIcon+'</div>'
-      +'</div>'
-      +'<div style="display:flex;gap:6px">'+trendHtml+'</div>'
-    +'</div>'
-    +'<div class="score-evidence">'
-      +'<div class="score-evidence-num">'+st.tot+'</div>'
-      +'<div class="score-evidence-txt">'+evidenceMsg+'</div>'
-    +'</div>'
-    +'<div class="score-stat-row"><span class="score-stat-lbl">🔥 Current streak</span><span class="score-stat-val">'+st.cur+' days</span></div>'
-    +'<div class="score-stat-row"><span class="score-stat-lbl">🏆 Best streak</span><span class="score-stat-val">'+st.best+' days</span></div>'
-    +'<div class="score-stat-row"><span class="score-stat-lbl">📋 Habits this week</span><span class="score-stat-val">'+sc.habitsLogged+' / '+sc.maxHabits+'</span></div>'
-    +'<div class="score-stat-row"><span class="score-stat-lbl">🎯 Goals with progress</span><span class="score-stat-val">'+sc.goalPct+'%</span></div>';
-}
+
+
 
 /* ── Boot ── */
 
@@ -10369,14 +9781,11 @@ applyDaySchedule();
 initToday();
 buildYesterday();
 setTimeout(buildHeatmap, 0); /* deferred: habit cards render first */
-buildNH();
 
 renderFinStrip();
 initApiKeyUI();
 initReward();
 /* ── Psychological hooks ── */
-checkNeverMissTwice();
-renderNightPreviewBanner();
 checkStreakAtRisk();
 
 /* ── Auto-scroll to current phase + dim completed phases ── */
@@ -10447,7 +9856,6 @@ document.addEventListener('click',function(e){
     },600);
   });
 })();
-loadNightPreview();
 migrateCustomMilestones();
 initTheme();
 /* ── Storage size indicator ── */
@@ -10474,7 +9882,6 @@ initTheme();
 })();
 /* ── Always register SW for offline caching; also re-send schedule if notifs were enabled ── */
 (function(){
-  registerSW(); /* registers for caching; sendScheduleToSW runs inside registerSW */
 })();
 /* ── Init gesture navigation ── */
 (function(){

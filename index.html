@@ -12642,6 +12642,7 @@ function bowlManualDraw(){
   /* Already drawn today? */
   var existing = bowlFindDailyDraw(todayKey2);
   if(existing){
+    alert('DEBUG: already drawn today. themeId=' + existing.themeId + ' chosenTier=' + existing.chosenTier);
     toast('Already drawn today — pick your tier below');
     renderBowl();
     return;
@@ -12650,9 +12651,11 @@ function bowlManualDraw(){
   /* Draw a theme */
   var theme = bowlDrawTheme('manual');
   if(!theme){
+    alert('DEBUG: bowlDrawTheme returned null. library length=' + getBowl().library.length);
     toast('No themes available — add some in Settings');
     return;
   }
+  alert('DEBUG: theme drawn OK: ' + theme.id + ' rendering in 1200ms');
 
   /* Immediate UI feedback — disable crank, show spinning state */
   var btn = document.getElementById('bowl-crank-btn');

@@ -15740,5 +15740,93 @@ window.finMonthNav = function(delta){
   </div>
 </div>
 
+
+<script>
+/* === iOS PATCH — Bowl crank + reward image upload === */
+(function(){
+
+  /* 1. Crank button — iOS needs touchend, not click */
+  function patchCrank(){
+    var btn = document.getElementById('bowl-crank-btn');
+    if(!btn || btn._ios) return;
+    btn._ios = true;
+    var _busy = false;
+    btn.addEventListener('touchend', function(e){
+      e.preventDefault();
+      if(btn.disabled || _busy) return;
+      _busy = true;
+      setTimeout(function(){ _busy = false; }, 900);
+      try{
+        var ac = window._getSharedAudioCtx ? window._getSharedAudioCtx() : null;
+        if(ac && ac.state === 'suspended') ac.resume().catch(function(){});
+      }catch(_){}
+      if(typeof bowlManualDraw === 'function') bowlManualDraw();
+    }, {passive: false});
+  }
+
+  /* Patch now + after each renderBowl re-builds the button */
+  patchCrank();
+  setTimeout(patchCrank, 800);
+  var _rb = window.renderBowl;
+  if(typeof _rb === 'function'){
+    window.renderBowl = function(){
+      _rb.apply(this, arguments);
+      setTimeout(patchCrank, 60);
+    };
+  }
+
+  /* 2. Crank row z-index — sits above challenge area */
+  var cr = document.getElementById('bowl-crank-row');
+  if(cr) cr.style.cssText += ';position:relative;z-index:20';
+
+  /* 3. Bowl resize — wait for layout (iOS offsetWidth=0 on nav) */
+  var _nt = window.navTo;
+  if(typeof _nt === 'function'){
+    window.navTo = function(idx, anim){
+      _nt.apply(this, arguments);
+      if(typeof PAGE_IDS !== 'undefined' && PAGE_IDS[idx] === 'bowl'){
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){
+            if(typeof window._gbResize === 'function') window._gbResize();
+            patchCrank();
+          });
+        });
+      }
+    };
+  }
+
+  /* 4. Image upload — compress via canvas (phone photos are 5MB+) */
+  window.rwHandleTierUpload = function(inp, tier){
+    if(!inp.files || !inp.files[0]) return;
+    var MAX = 480;
+    var img = new Image();
+    img.onload = function(){
+      var w = img.width, h = img.height;
+      var s = Math.min(1, MAX / Math.max(w, h));
+      var cw = Math.round(w*s), ch = Math.round(h*s);
+      var oc = document.createElement('canvas');
+      oc.width = cw; oc.height = ch;
+      oc.getContext('2d').drawImage(img, 0, 0, cw, ch);
+      var b64 = oc.toDataURL('image/jpeg', 0.80);
+      URL.revokeObjectURL(img.src);
+      var thumb = document.getElementById('rw-tier-thumb-' + tier);
+      if(thumb){
+        thumb.innerHTML = '<img src="' + b64 +
+          '" style="width:100%;height:100%;object-fit:cover;border-radius:6px">';
+        thumb._imgData = b64;
+        thumb._imgUrl = null;
+      }
+      if(typeof toast === 'function') toast('Image set ✓');
+    };
+    img.onerror = function(){
+      URL.revokeObjectURL(img.src);
+      if(typeof toast === 'function') toast('Could not load image — try another file');
+    };
+    img.src = URL.createObjectURL(inp.files[0]);
+  };
+
+})();
+</script>
+
 </body>
 </html>

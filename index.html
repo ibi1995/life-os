@@ -4333,8 +4333,20 @@ function _doSave(s){
 }
 
 /* ── Cross-tab sync: if another tab writes to lifeOS, invalidate our cache ── */
+/* NOTE: on iOS Safari, localStorage.setItem fires the storage event in the SAME tab too.
+   We guard against this by only busting the cache when the new value differs from what
+   we just wrote — i.e. it came from a genuinely different tab/context. */
 window.addEventListener('storage', function(e){
-  if(e.key === 'lifeOS') { _stateCache = null; }
+  if(e.key === 'lifeOS'){
+    /* If _stateCache is null already, nothing to do */
+    if(_stateCache === null) return;
+    /* Only bust if the stored value differs from our in-memory state */
+    try{
+      var stored = e.newValue ? JSON.parse(e.newValue) : null;
+      var inMem  = JSON.stringify(_stateCache);
+      if(e.newValue !== inMem) _stateCache = null;
+    }catch(_){ _stateCache = null; }
+  }
 });
 
 /* ── Date arithmetic: timezone-safe day diff ──
@@ -12663,6 +12675,8 @@ function bowlManualDraw(){
   }, 100);
 
   setTimeout(function(){
+    /* Force cache bust before render so iOS stale-read bug does not hide the card */
+    _stateCache = null;
     renderBowl();
   }, 1200);
 }
@@ -13043,6 +13057,16 @@ function renderBowl(){
       challengeArea.innerHTML='<div style="text-align:center;padding:24px 16px;color:var(--muted);font-size:12px;font-style:italic">Pull the crank to draw today\'s challenge.</div>';
     } else {
       var theme=bowlGetLibBall(dd.themeId);
+      /* Safety net: if themeId not found, library may be stale — force reload from defaults */
+      if(!theme){
+        var _b2=getBowl();
+        if(!_b2.library||!_b2.library.length){
+          _b2.library=JSON.parse(JSON.stringify(BOWL_DEFAULT_LIBRARY));
+          _b2._themeLibMigrated=true;
+          setBowl(_b2);
+        }
+        theme=bowlGetLibBall(dd.themeId);
+      }
       if(!theme){
         challengeArea.innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">Challenge theme missing. Try rerolling.</div>';
       } else {

@@ -7280,29 +7280,32 @@ function importData(e){
     try{
       let d=JSON.parse(ev.target.result);
       /* ── Sanitize bowl on import ──
-         1. Always wipe the bowl library so it resets to current BOWL_DEFAULT_LIBRARY defaults.
-         2. Strip dailyDraws entries whose themeId no longer exists in the default library
+         Always runs regardless of whether backup has a bowl key.
+         1. Ensure bowl object exists (backups without bowl get a clean one).
+         2. Always wipe the bowl library so it resets to current BOWL_DEFAULT_LIBRARY defaults.
+         3. Strip dailyDraws entries whose themeId no longer exists in the default library
             (old backups have stale IDs that break renderBowl and silently block the crank).
-         3. Always remove today's draw so the crank works fresh after import. */
-      if(d.bowl){
-        /* Wipe library — getBowl() will repopulate from BOWL_DEFAULT_LIBRARY */
-        delete d.bowl.library;
-        delete d.bowl._themeLibMigrated;
-        /* Get valid IDs from current default library */
-        var validIds = (typeof BOWL_DEFAULT_LIBRARY !== 'undefined')
-          ? BOWL_DEFAULT_LIBRARY.map(function(x){ return x.id; })
-          : [];
-        var todayStr = localKey(today);
-        if(d.bowl.dailyDraws){
-          d.bowl.dailyDraws = d.bowl.dailyDraws.filter(function(dr){
-            /* Remove today's draw (so crank works immediately after import) */
-            if(dr.date === todayStr) return false;
-            /* Remove draws referencing IDs that don't exist in current library */
-            if(validIds.length && validIds.indexOf(dr.themeId) === -1) return false;
-            return true;
-          });
-        }
+         4. Always remove today's draw so the crank works fresh after import. */
+      if(!d.bowl){
+        /* Backup had no bowl — inject a clean stub so the block below always runs */
+        d.bowl = { dailyDraws: [], draws: [], tripleDraws: [], rerollsByCycle: {} };
       }
+      /* Wipe library — getBowl() will repopulate from BOWL_DEFAULT_LIBRARY */
+      delete d.bowl.library;
+      delete d.bowl._themeLibMigrated;
+      /* Get valid IDs from current default library */
+      var validIds = (typeof BOWL_DEFAULT_LIBRARY !== 'undefined')
+        ? BOWL_DEFAULT_LIBRARY.map(function(x){ return x.id; })
+        : [];
+      var todayStr = localKey(today);
+      if(!d.bowl.dailyDraws) d.bowl.dailyDraws = [];
+      d.bowl.dailyDraws = d.bowl.dailyDraws.filter(function(dr){
+        /* Remove today's draw (so crank works immediately after import) */
+        if(dr.date === todayStr) return false;
+        /* Remove draws referencing IDs that don't exist in current library */
+        if(validIds.length && validIds.indexOf(dr.themeId) === -1) return false;
+        return true;
+      });
       _stateCache=null;
       localStorage.setItem('lifeOS',JSON.stringify(d));
       toast('Imported ✓ Refreshing...');

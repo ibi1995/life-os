@@ -15745,35 +15745,31 @@ window.finMonthNav = function(delta){
 /* === iOS PATCH — Bowl crank + reward image upload === */
 (function(){
 
-  /* 1. Crank button — iOS needs touchend, not click */
-  function patchCrank(){
-    var btn = document.getElementById('bowl-crank-btn');
-    if(!btn || btn._ios) return;
-    btn._ios = true;
-    var _busy = false;
-    btn.addEventListener('touchend', function(e){
-      e.preventDefault();
-      if(btn.disabled || _busy) return;
-      _busy = true;
-      setTimeout(function(){ _busy = false; }, 900);
-      try{
-        var ac = window._getSharedAudioCtx ? window._getSharedAudioCtx() : null;
-        if(ac && ac.state === 'suspended') ac.resume().catch(function(){});
-      }catch(_){}
-      if(typeof bowlManualDraw === 'function') bowlManualDraw();
-    }, {passive: false});
-  }
-
-  /* Patch now + after each renderBowl re-builds the button */
-  patchCrank();
-  setTimeout(patchCrank, 800);
-  var _rb = window.renderBowl;
-  if(typeof _rb === 'function'){
-    window.renderBowl = function(){
-      _rb.apply(this, arguments);
-      setTimeout(patchCrank, 60);
-    };
-  }
+  /* 1. Crank button — use event DELEGATION on document so it survives renderBowl() DOM rebuilds.
+        iOS Safari suppresses click after touchend+preventDefault, so we intercept touchend
+        at the document level, check if the target is (or is inside) #bowl-crank-btn, and fire. */
+  var _crankBusy = false;
+  document.addEventListener('touchend', function(e){
+    /* Walk up from the touched element to find the crank button */
+    var el = e.target;
+    var btn = null;
+    while(el && el !== document.body){
+      if(el.id === 'bowl-crank-btn'){ btn = el; break; }
+      el = el.parentElement;
+    }
+    if(!btn) return;                    /* not a crank tap */
+    if(btn.disabled || _crankBusy) return;
+    e.preventDefault();                 /* stop the ghost click */
+    _crankBusy = true;
+    setTimeout(function(){ _crankBusy = false; }, 900);
+    /* Unlock AudioContext on gesture */
+    try{
+      var ac = window._getSharedAudioCtx ? window._getSharedAudioCtx()
+             : (window._getAudioCtx ? window._getAudioCtx() : null);
+      if(ac && ac.state === 'suspended') ac.resume().catch(function(){});
+    }catch(_){}
+    if(typeof bowlManualDraw === 'function') bowlManualDraw();
+  }, {passive: false});
 
   /* 2. Crank row z-index — sits above challenge area */
   var cr = document.getElementById('bowl-crank-row');
@@ -15788,7 +15784,6 @@ window.finMonthNav = function(delta){
         requestAnimationFrame(function(){
           requestAnimationFrame(function(){
             if(typeof window._gbResize === 'function') window._gbResize();
-            patchCrank();
           });
         });
       }

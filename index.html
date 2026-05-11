@@ -7264,7 +7264,39 @@ function exportData(){
 function importData(e){
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=function(ev){ try{ let d=JSON.parse(ev.target.result); _stateCache=null; localStorage.setItem('lifeOS',JSON.stringify(d)); toast('Imported ✓ Refreshing...'); setTimeout(function(){ location.reload(); },1200); }catch(err){ toast('Invalid backup file'); } };
+  reader.onload=function(ev){
+    try{
+      let d=JSON.parse(ev.target.result);
+      /* ── Sanitize bowl on import ──
+         1. Always wipe the bowl library so it resets to current BOWL_DEFAULT_LIBRARY defaults.
+         2. Strip dailyDraws entries whose themeId no longer exists in the default library
+            (old backups have stale IDs that break renderBowl and silently block the crank).
+         3. Always remove today's draw so the crank works fresh after import. */
+      if(d.bowl){
+        /* Wipe library — getBowl() will repopulate from BOWL_DEFAULT_LIBRARY */
+        delete d.bowl.library;
+        delete d.bowl._themeLibMigrated;
+        /* Get valid IDs from current default library */
+        var validIds = (typeof BOWL_DEFAULT_LIBRARY !== 'undefined')
+          ? BOWL_DEFAULT_LIBRARY.map(function(x){ return x.id; })
+          : [];
+        var todayStr = localKey(today);
+        if(d.bowl.dailyDraws){
+          d.bowl.dailyDraws = d.bowl.dailyDraws.filter(function(dr){
+            /* Remove today's draw (so crank works immediately after import) */
+            if(dr.date === todayStr) return false;
+            /* Remove draws referencing IDs that don't exist in current library */
+            if(validIds.length && validIds.indexOf(dr.themeId) === -1) return false;
+            return true;
+          });
+        }
+      }
+      _stateCache=null;
+      localStorage.setItem('lifeOS',JSON.stringify(d));
+      toast('Imported ✓ Refreshing...');
+      setTimeout(function(){ location.reload(); },1200);
+    }catch(err){ toast('Invalid backup file'); }
+  };
   reader.readAsText(file);
 }
 

@@ -12,7 +12,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-11-audit'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-11-fixes'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -2519,7 +2519,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 /* ─── MOBILE ALIGNMENT FIXES — aggressive, applied at ALL phone/preview widths ─── */
 /* Base rules (always on) — prevent ANY child from causing horizontal overflow */
 #pg-finance{overflow-x:hidden;overflow-y:visible;max-width:100%}
-#pg-finance *{min-width:0;max-width:100%}
+#pg-finance *:not(canvas){min-width:0;max-width:100%}
 #pg-finance .fnx-hero,
 #pg-finance .fnx-coach,
 #pg-finance .fnx-orbit-card,
@@ -2529,6 +2529,11 @@ textarea.auto-grow{overflow:hidden;resize:none}
 #pg-finance .fnx-bills-strip,
 #pg-finance .fnx-section-hdr,
 #pg-finance .fnx-header{max-width:100%;box-sizing:border-box}
+/* NEW fx- layout elements also need containment */
+#pg-finance .fx-hero,
+#pg-finance .fx-vials-stage,
+#pg-finance .fx-tx-hdr,
+#pg-finance .fx-tx-log{max-width:100%;box-sizing:border-box}
 /* Watermark must be clipped by the page — give it explicit bounds */
 #pg-finance .fnx-watermark{max-width:60%;overflow:hidden}
 
@@ -2694,7 +2699,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 .fx-vial-col{display:flex;flex-direction:column;align-items:center;gap:10px}
 
 /* Canvas tube wrapper */
-.fx-vial-tube-wrap{position:relative;width:100%;max-width:130px;aspect-ratio:.38;display:flex;align-items:center;justify-content:center}
+.fx-vial-tube-wrap{position:relative;width:100%;max-width:130px;aspect-ratio:0.38;max-height:280px;display:flex;align-items:center;justify-content:center}
 .fx-vial-canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 12px 32px rgba(5,15,60,.4)) drop-shadow(0 2px 6px rgba(0,0,0,.3))}
 
 /* Percentage floating inside tube */
@@ -2712,9 +2717,12 @@ textarea.auto-grow{overflow:hidden;resize:none}
 
 @media(max-width:360px){
   .fx-vials-stage{gap:10px}
-  .fx-vial-tube-wrap{max-width:105px}
+  .fx-vial-tube-wrap{max-width:105px;max-height:220px}
   .fx-vial-pct{font-size:18px}
   .fx-vial-label-amt{font-size:16px}
+}
+@media(max-width:400px){
+  .fx-vial-tube-wrap{max-height:240px}
 }
 .fx-tx-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
 .fx-tx-hdr-label{font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
@@ -9281,6 +9289,7 @@ function openRewardModal(isEdit){
 
 function renderReward(){
   const el=document.getElementById('rw-content'); if(!el) return;
+  try {
   const rw=getReward();
   const lbl=document.getElementById('rw-week-label');
   const score=getRwLevelScore();
@@ -9421,6 +9430,10 @@ function renderReward(){
   }
 
   el.innerHTML=html;
+  } catch(e) {
+    console.error('renderReward error:', e);
+    el.innerHTML='<div class="rw-empty"><div class="rw-empty-icon">⚠️</div><div class="rw-empty-title">Something went wrong</div><div class="rw-empty-sub">Reward data may be corrupted. Try setting a new reward.</div><button class="rw-btn p" onclick="openRewardModal(false)" style="margin-top:16px;width:100%;padding:14px">+ Set Reward</button></div>';
+  }
 }
 
 /* ── Reward mini-widget on Today page ── */
@@ -12587,6 +12600,7 @@ function bowlDrawTheme(source){
 
 /* Manual crank — draw today's theme with animation */
 function bowlManualDraw(){
+  try {
   if(navigator.vibrate) navigator.vibrate(40);
   /* Resume gumball loop and unlock audio on this gesture */
   _bowlAnimResume();
@@ -12599,6 +12613,7 @@ function bowlManualDraw(){
   var machineWrap=document.getElementById('bowl-machine-wrap');
   if(machineWrap) machineWrap.scrollIntoView({behavior:'smooth',block:'start'});
   bowlPlaySingleAnimation(theme, function(){ renderBowl(); });
+  } catch(e) { console.error('bowlManualDraw error:', e); toast('Error drawing challenge — check console.'); }
 }
 
 /* Animation: single ball through tube 0 (center) */
@@ -12614,14 +12629,17 @@ function bowlPlaySingleAnimation(theme, done){
   /* Visual feedback: pulsing glow on machine + hint text */
   if(machineWrap2) machineWrap2.style.filter='drop-shadow(0 0 18px rgba(126,200,255,.45))';
   if(crankHint2){ crankHint2.textContent='Rolling…'; crankHint2.style.color='var(--a2)'; crankHint2.style.animation='phase-pulse 1s ease-in-out infinite'; }
-  if(typeof _playGumballCrank==='function') _playGumballCrank();
+  try { if(typeof _playGumballCrank==='function') _playGumballCrank(); } catch(e){ console.warn('Crank sound error:', e); }
   var SHAKE_DURATION=2200;
-  setTimeout(function(){ if(typeof _playBallsShaking==='function') _playBallsShaking(SHAKE_DURATION); },150);
+  setTimeout(function(){ try { if(typeof _playBallsShaking==='function') _playBallsShaking(SHAKE_DURATION); } catch(e){} },150);
   var TONE_COLORS=BOWL_BALL_COLORS;
   var color=TONE_COLORS[theme.tone]||'#6B9FFF';
 
+  var _finishCalled = false;
   function finishAnim(){
-    if(typeof _stopBallSound==='function') _stopBallSound();
+    if(_finishCalled) return;
+    _finishCalled = true;
+    try { if(typeof _stopBallSound==='function') _stopBallSound(); } catch(e){}
     if(crankBtn) crankBtn.disabled=false;
     /* Clear rolling feedback */
     if(machineWrap2) machineWrap2.style.filter='';
@@ -12634,6 +12652,8 @@ function bowlPlaySingleAnimation(theme, done){
       /* Launch through tube 0 (left tube acts as the single tube now) */
       finishAnim();
     });
+    /* Safety timeout: if _gbSetExcited callback never fires (canvas paused/broken), finish anyway */
+    setTimeout(function(){ finishAnim(); }, 6500);
   } else {
     setTimeout(function(){
       finishAnim();
@@ -13806,6 +13826,8 @@ function _fxVialBootCanvas(){
     var wrap = c.parentElement;
     var w = wrap.offsetWidth || 100;
     var h = wrap.offsetHeight || Math.round(w / 0.38);
+    /* Clamp height to prevent overflow on mobile */
+    h = Math.min(h, 280);
     var dpr = window.devicePixelRatio || 1;
     c.style.width = w + 'px';
     c.style.height = h + 'px';

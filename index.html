@@ -75,8 +75,8 @@ button:focus-visible,.tab:focus-visible,.bn-tab:focus-visible{border-radius:6px}
 .svg-icon-xl{width:1.5em;height:1.5em}
 
 :root{
-  --bg1:#0f2a7a;--bg2:#1a3fba;--bg3:#2d60e8;
-  --nav-bg:hsl(220,69%,20%,.92);
+  --bg1:hsl(210,80%,12%);--bg2:hsl(210,75%,20%);--bg3:hsl(210,70%,30%);
+  --nav-bg:hsl(210,80%,12%,.92);
   --card:rgba(255,255,255,0.10);--card2:rgba(107,182,255,0.20);
   --a1:#4D8DFF;--a2:#7EC8FF;
   --gold:#FFD97D;--goldbg:rgba(255,217,125,0.12);--goldbdr:rgba(255,217,125,0.4);
@@ -9144,6 +9144,241 @@ function setPaydayDay(n){
    - Hard × 3 in a row → +10 bonus per Hard until broken by Easy/Medium
    - Cleared levels are permanent
 ══════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════
+   BOWL CONSTANTS — must live above getRwLevelScore / getRwDailyStreak.
+   reward.active in imported data triggers those functions before getBowl()
+   is reached in script execution order — if these consts are declared below,
+   they hit the Temporal Dead Zone and silently kill the crank.
+   DO NOT move this block below line ~9300.
+══════════════════════════════════════════════ */
+const BOWL_SYSTEM_START = '2026-04-18'; /* Bowl tier scoring applies to cycles starting on/after this */
+const BOWL_XP_EASY = 15;
+const BOWL_XP_MEDIUM = 30;
+const BOWL_XP_HARD = 50;
+const BOWL_REROLL_COST = 30; /* XP cost for 4th+ reroll per day */
+const BOWL_PTS_EASY = 10;
+const BOWL_PTS_MEDIUM = 30;
+const BOWL_PTS_HARD = 60;
+const BOWL_TIER_BRONZE = 100;
+const BOWL_TIER_SILVER = 250;
+const BOWL_TIER_GOLD = 450;
+
+const BOWL_DEFAULT_LIBRARY = [
+
+  /* ═══ PHYSICAL ═══ */
+  {id:'t_pushups', name:'Pushups', icon:'💪', tone:'strawberry', weight:4,
+    easy:{desc:'10 pushups. Drop and do them now.',pts:10},
+    medium:{desc:'3 sets of 10, right now. Rest 60 sec between sets.',pts:30},
+    hard:{desc:'Max reps in one set, rest 2 min, repeat × 3. Log your numbers. Beat it next time.',pts:60}},
+
+  {id:'t_glute_bridges', name:'Glute Bridges', icon:'🦵', tone:'strawberry', weight:4,
+    easy:{desc:'20 glute bridges right now. Floor, no equipment.',pts:10},
+    medium:{desc:'3 × 20 with a 2-second hold at the top. Feel the squeeze.',pts:30},
+    hard:{desc:'4 × 25 + 10 single-leg each side. Your posterior chain will know about this.',pts:60}},
+
+  {id:'t_walk', name:'Zone 2 Walk', icon:'🚶', tone:'blueberry', weight:4,
+    easy:{desc:'Pace the apartment for 5 min. Hallway laps count.',pts:10},
+    medium:{desc:'30 min apartment pacing or stairs. Arms swinging, ~120 BPM. AirPods tracking.',pts:30},
+    hard:{desc:'40 min Zone 2 — outside if it\'s daylight, stairs/apartment if not. Log average HR.',pts:60}},
+
+  {id:'t_hiit', name:'HIIT', icon:'🔥', tone:'tangerine', weight:3,
+    easy:{desc:'1 min jumping jacks in the living room. Right now.',pts:10},
+    medium:{desc:'14 min HIIT. Your actual protocol. Full send.',pts:30},
+    hard:{desc:'Two 14-min rounds with 10 min rest between. Log both.',pts:60}},
+
+  {id:'t_mobility', name:'Mobility', icon:'🧘', tone:'cotton', weight:3,
+    easy:{desc:'Couch stretch 2 min each leg. Right now on the floor.',pts:10},
+    medium:{desc:'Hip flexors + thoracic rotation + couch stretch. 15 min.',pts:30},
+    hard:{desc:'30 min full mobility session. Find a YouTube follow-along and do the whole thing.',pts:60}},
+
+  {id:'t_cold_shower', name:'Cold Shower', icon:'🧊', tone:'cotton', weight:2,
+    easy:{desc:'30 seconds cold at the end of your shower. Breathe through it.',pts:10},
+    medium:{desc:'90 seconds full cold. No warm phase.',pts:30},
+    hard:{desc:'2 min cold from the very start. The first 30 seconds is the whole battle.',pts:60}},
+
+  {id:'t_gym', name:'Gym Session', icon:'🏋️', tone:'strawberry', weight:2,
+    easy:{desc:'Bodyweight only — 3×10 pushups + 3×20 glute bridges at home. Works on any day.',pts:10},
+    medium:{desc:'Full split — lat pulldown, chest press, leg press, leg curl. All 4.',pts:30},
+    hard:{desc:'Full split + 14 min HIIT after. No skipping.',pts:60}},
+
+  /* ═══ NUTRITION ═══ */
+  {id:'t_if', name:'Intermittent Fast', icon:'⏱️', tone:'grape', weight:2,
+    easy:{desc:'No food from this moment until you sleep. Water and black coffee only.',pts:10},
+    medium:{desc:'Kitchen closed right now. Nothing until tomorrow morning. 18+ hours from last meal.',pts:30},
+    hard:{desc:'20:4 window today. Eat only between 4pm–8pm. If you already ate outside that window, tomorrow is the day.',pts:60}},
+
+  {id:'t_cook_new', name:'Cook Something New', icon:'👨‍🍳', tone:'banana', weight:2,
+    easy:{desc:'Cook one thing tonight you\'ve never made before. Doesn\'t have to be complicated — one new dish.',pts:10},
+    medium:{desc:'Cook it tonight from scratch. Doesn\'t matter if it\'s ugly.',pts:30},
+    hard:{desc:'Full multi-component dish you\'ve never attempted. Photograph it.',pts:60}},
+
+  {id:'t_cook_safa', name:'Cook for Safa', icon:'🥘', tone:'bubblegum', weight:2, deleted:true,
+    easy:{desc:'Make her a snack she didn\'t ask for.',pts:10},
+    medium:{desc:'Cook her favorite meal from scratch.',pts:30},
+    hard:{desc:'New recipe + something sweet after. Full surprise.',pts:60}},
+
+  {id:'t_high_protein', name:'High Protein Day', icon:'🥩', tone:'tangerine', weight:2,
+    easy:{desc:'Drink a protein shake right now and plan tomorrow\'s meals to hit 100g. One concrete step.',pts:10},
+    medium:{desc:'Hit 130g today. Plan your next two meals before you close this screen.',pts:30},
+    hard:{desc:'Hit 150g, every meal logged, clean sources only. Operation88 mode.',pts:60}},
+
+  {id:'t_no_sugar', name:'No Sugar Day', icon:'🚫', tone:'tangerine', weight:2,
+    easy:{desc:'Zero sugary drinks from this moment forward today. Water, black coffee, tea only.',pts:10},
+    medium:{desc:'No added sugar for the rest of today and all of tomorrow. Starts now.',pts:30},
+    hard:{desc:'Zero added sugar + zero refined carbs from now until tomorrow night. Whole foods only.',pts:60}},
+
+  {id:'t_kitchen_curfew', name:'Kitchen Curfew', icon:'🌙', tone:'grape', weight:2, deleted:true,
+    easy:{desc:'Nothing after 10pm. Water only.',pts:10},
+    medium:{desc:'Kitchen closed by 9pm.',pts:30},
+    hard:{desc:'Kitchen closed by 8pm. Helps Mounjaro do its job.',pts:60}},
+
+  {id:'t_water', name:'Hydration', icon:'💧', tone:'blueberry', weight:3, deleted:true,
+    easy:{desc:'Drink a full glass of water right now.',pts:10},
+    medium:{desc:'Hit 2.5L today. Mark your bottle.',pts:30},
+    hard:{desc:'3L + zero sugary drinks all day. Log it.',pts:60}},
+
+  {id:'t_meal_prep', name:'Meal Prep', icon:'🥡', tone:'banana', weight:2, deleted:true,
+    easy:{desc:'Pack tomorrow\'s lunch right now. Future Ibrahim thanks you.',pts:10},
+    medium:{desc:'Prep 2 days of lunches tonight. Protein-forward.',pts:30},
+    hard:{desc:'4 days of meals portioned and labeled. Spreadsheet-brain this.',pts:60}},
+
+  /* ═══ MIND / LEARNING ═══ */
+  {id:'t_pl300', name:'PL-300 Study', icon:'📊', tone:'grape', weight:4,
+    easy:{desc:'5 flashcards. Keep the knowledge warm.',pts:10},
+    medium:{desc:'One micro-session: concept → analogy → trap → quiz. 25 min.',pts:30},
+    hard:{desc:'Full practice exam section or build a sample report. 60 min.',pts:60}},
+
+  {id:'t_dax', name:'DAX Drill', icon:'🧮', tone:'grape', weight:4,
+    easy:{desc:'Write one CALCULATE measure from memory. Then verify.',pts:10},
+    medium:{desc:'Write 3 measures from memory. Time yourself.',pts:30},
+    hard:{desc:'Build a full DAX pattern you haven\'t used: time intelligence, semi-additive, or dynamic segmentation.',pts:60}},
+
+  {id:'t_trading', name:'Trading Research', icon:'📈', tone:'tangerine', weight:3,
+    easy:{desc:'Read one article about a stock, ETF, or market concept. Write one sentence takeaway.',pts:10},
+    medium:{desc:'30 min deep dive into one trade idea. Take notes.',pts:30},
+    hard:{desc:'Build a watchlist of 5 tickers. One paragraph thesis on each — why you\'d enter and what your exit is.',pts:60}},
+
+  {id:'t_investing', name:'Investing / Savings', icon:'💰', tone:'apple', weight:2, deleted:true,
+    easy:{desc:'Spend 10 min researching one investment instrument you\'ve been meaning to look into.',pts:10},
+    medium:{desc:'Research one long-term vehicle: S&P 500, REITs, or sukuk.',pts:30},
+    hard:{desc:'Write a 3-month savings plan with actual SAR numbers.',pts:60}},
+
+  {id:'t_read', name:'Read', icon:'📖', tone:'blueberry', weight:3,
+    easy:{desc:'10 min. Actual book or long article. Not a thread.',pts:10},
+    medium:{desc:'25 min unbroken. One topic, no phone nearby.',pts:30},
+    hard:{desc:'45 min straight. One full chapter. Write one takeaway.',pts:60}},
+
+  {id:'t_philosophy', name:'Philosophy', icon:'🤔', tone:'grape', weight:2, deleted:true,
+    easy:{desc:'15 min on one concept. Stoicism, Nietzsche, whatever pulled you in this week.',pts:10},
+    medium:{desc:'30 min deep read or video. Take one note in your own words.',pts:30},
+    hard:{desc:'45 min + write what you actually think about it. Not what the philosopher says — what you think.',pts:60}},
+
+  {id:'t_sql', name:'SQL Practice', icon:'🗃️', tone:'grape', weight:3,
+    easy:{desc:'Write a query on paper or phone Notes. One JOIN, one WHERE filter. 5 min.',pts:10},
+    medium:{desc:'Write and run a real query. Window functions or CTEs.',pts:30},
+    hard:{desc:'Full analysis pipeline. CTE chain, window functions. Save the script.',pts:60}},
+
+  /* ═══ RELATIONSHIPS ═══ */
+  {id:'t_cats', name:'Cat Time', icon:'🐱', tone:'bubblegum', weight:2,
+    easy:{desc:'5 min actual playtime with both cats. Laser, string, whatever.',pts:10},
+    medium:{desc:'Clean litter + fresh water + 15 min play + brush them.',pts:30},
+    hard:{desc:'Full grooming session + rearrange their space or introduce something new.',pts:60}},
+
+  {id:'t_family_call', name:'Family Call', icon:'📞', tone:'bubblegum', weight:2,
+    easy:{desc:'Voice note to a family member. Something personal, not a forward.',pts:10},
+    medium:{desc:'Actual call. 15+ min. Proper conversation.',pts:30},
+    hard:{desc:'Video call 30+ min. Or write a long message to someone you\'ve been meaning to reach.',pts:60}},
+
+  {id:'t_friend', name:'Friend Check-in', icon:'💬', tone:'cotton', weight:2, deleted:true,
+    easy:{desc:'Message one friend you haven\'t spoken to in a while.',pts:10},
+    medium:{desc:'Real back and forth. Voice note chain or actual call.',pts:30},
+    hard:{desc:'Organize something online. Gaming session, group call, or watch party. Set the date, send the invite tonight.',pts:60}},
+
+  {id:'t_gaming_friend', name:'Game with a Friend', icon:'🎮', tone:'strawberry', weight:2,
+    easy:{desc:'Message someone you used to game with. Just check if they\'re still playing.',pts:10},
+    medium:{desc:'Message 3 people and find one who\'s free tonight. Pick the game, lock it in.',pts:30},
+    hard:{desc:'Full evening gaming online with someone. Voice chat on. This is social.',pts:60}},
+
+  {id:'t_safa_random', name:'Random Act for Safa', icon:'❤️', tone:'bubblegum', weight:2,
+    easy:{desc:'One thing she didn\'t ask for. Coffee, snack, anything.',pts:10},
+    medium:{desc:'Take over something she normally handles without being asked.',pts:30},
+    hard:{desc:'Plan something small but thoughtful. Homemade, within budget. Effort over money.',pts:60}},
+
+  /* ═══ MENTAL HEALTH / RECHARGE ═══ */
+  {id:'t_journal', name:'Journal', icon:'📓', tone:'blueberry', weight:2,
+    easy:{desc:'One sentence. What happened today, how it felt.',pts:10},
+    medium:{desc:'Free write 10 min. No structure. Just dump.',pts:30},
+    hard:{desc:'20 min deep. Where are you vs where you want to be. Operation88, everything. Be honest.',pts:60}},
+
+  {id:'t_breathwork', name:'Breathwork', icon:'🌬️', tone:'cotton', weight:2,
+    easy:{desc:'4-7-8: inhale 4, hold 7, exhale 8. Four cycles. Takes 3 min.',pts:10},
+    medium:{desc:'Box breathing 10 min. 4 in, 4 hold, 4 out, 4 hold.',pts:30},
+    hard:{desc:'20 min Wim Hof or extended session. This will change how you sleep.',pts:60}},
+
+  {id:'t_gratitude', name:'Gratitude', icon:'🙏', tone:'cotton', weight:2,
+    easy:{desc:'Name 3 things that went well today. Specific, not generic.',pts:10},
+    medium:{desc:'5 things, one sentence each on why. Go beyond surface.',pts:30},
+    hard:{desc:'Write a gratitude letter to someone — Safa, a parent, a friend. Then decide: send it or don\'t. But the writing has to be real.',pts:60}},
+
+  {id:'t_screen_break', name:'Screen Break', icon:'📵', tone:'grape', weight:2, deleted:true,
+    easy:{desc:'Phone in another room for 15 min. Notice the urge.',pts:10},
+    medium:{desc:'1 hour no social media. Anything else is fine.',pts:30},
+    hard:{desc:'After 9pm no phone no laptop. Just exist. Read, cook, talk to Safa.',pts:60}},
+
+  {id:'t_ps5', name:'PS5 Session', icon:'🎮', tone:'strawberry', weight:2,
+    easy:{desc:'Turn it on and play 30 min. No guilt.',pts:10},
+    medium:{desc:'1 hour. One game. No phone next to you.',pts:30},
+    hard:{desc:'2 hour session. Actually make progress in a game you\'ve been avoiding.',pts:60}},
+
+  {id:'t_one_piece', name:'One Piece', icon:'⛵', tone:'strawberry', weight:2, deleted:true,
+    easy:{desc:'One episode. Second screen off.',pts:10},
+    medium:{desc:'Two episodes back to back. Enjoy it properly.',pts:30},
+    hard:{desc:'3+ episode block. Don\'t stop at a cliffhanger.',pts:60}},
+
+  {id:'t_sleep', name:'Sleep Protocol', icon:'😴', tone:'grape', weight:2,
+    easy:{desc:'Set a bedtime alarm tonight. When it goes off, wind down. No debate.',pts:10},
+    medium:{desc:'Screens off 30 min before bed. Log what time you slept.',pts:30},
+    hard:{desc:'In bed within 30 min of drawing this. Phone down from this moment. Full 8 hours.',pts:60}},
+
+  /* ═══ HOME / ADMIN ═══ */
+  {id:'t_kitchen', name:'Kitchen Clean', icon:'🧹', tone:'apple', weight:2,
+    easy:{desc:'Just the dishes. Sink empty is a win.',pts:10},
+    medium:{desc:'Dishes + counters + stove. Full wipe.',pts:30},
+    hard:{desc:'Deep clean. Fridge check, shelves organized, floor mopped.',pts:60}},
+
+  {id:'t_desk', name:'Desk Reset', icon:'🖥️', tone:'blueberry', weight:2,
+    easy:{desc:'Clear the surface. 5 min.',pts:10},
+    medium:{desc:'Full reset — cables managed, surface clean, everything placed.',pts:30},
+    hard:{desc:'Desk + surrounding zone. Clean monitor, organize drawers, cable manage.',pts:60}},
+
+  {id:'t_laundry', name:'Laundry', icon:'👕', tone:'cotton', weight:2,
+    easy:{desc:'Fold and put away what\'s already done.',pts:10},
+    medium:{desc:'Full cycle. Wash, dry, fold, put away.',pts:30},
+    hard:{desc:'Start the machine tonight. Iron 5 items + organize one closet section while it runs. Fold and put away tomorrow morning.',pts:60}},
+
+  {id:'t_declutter', name:'Declutter', icon:'🗑️', tone:'tangerine', weight:1,
+    easy:{desc:'Clear one surface. 5 min.',pts:10},
+    medium:{desc:'One full drawer or shelf. Be ruthless.',pts:30},
+    hard:{desc:'Three zones. 6 months untouched = gone.',pts:60}},
+
+  {id:'t_car', name:'Car Clean', icon:'🚗', tone:'blueberry', weight:2, deleted:true,
+    easy:{desc:'Clear the trash.',pts:10},
+    medium:{desc:'Interior wipe, mats out, dashboard wiped.',pts:30},
+    hard:{desc:'Full interior — vacuum, seat wipe, dashboard, boot cleared. Exterior wash is a bonus if it\'s daylight.',pts:60}},
+
+];
+
+const BOWL_TONE_PALETTE = [
+  {id:'strawberry',name:'Strawberry'},
+  {id:'bubblegum', name:'Bubblegum'},
+  {id:'tangerine', name:'Tangerine'},
+  {id:'banana',    name:'Banana'},
+  {id:'apple',     name:'Apple'},
+  {id:'cotton',    name:'Cotton Candy'},
+  {id:'blueberry', name:'Blueberry'},
+  {id:'grape',     name:'Grape'}
+];
+
 const REWARD_LEVEL_TARGET = 2000;
 
 /* Get current level pts from all Bowl daily draws since levelStartDate */
@@ -9910,7 +10145,7 @@ function setTheme(hue, btn){
 }
 
 function initTheme(){
-  let saved = parseInt(localStorage.getItem('lifeOS_theme')) || 220;
+  let saved = parseInt(localStorage.getItem('lifeOS_theme')) || 210;
   applyTheme(saved);
   /* Mark active swatch */
   document.querySelectorAll('.theme-sw').forEach(function(b){
@@ -12309,237 +12544,16 @@ function renderTokenHistory(bp){
    BOWL SYSTEM — Gumball Machine for Hard Challenges
    ══════════════════════════════════════════════════ */
 
-const BOWL_SYSTEM_START = '2026-04-18'; /* Bowl tier scoring applies to cycles starting on/after this */
-const BOWL_XP_EASY = 15;
-const BOWL_XP_MEDIUM = 30;
-const BOWL_XP_HARD = 50;
-const BOWL_REROLL_COST = 30; /* XP cost for 4th+ reroll per day */
-const BOWL_PTS_EASY = 10;
-const BOWL_PTS_MEDIUM = 30;
-const BOWL_PTS_HARD = 60;
-const BOWL_TIER_BRONZE = 100;
-const BOWL_TIER_SILVER = 250;
-const BOWL_TIER_GOLD = 450;
-
-const BOWL_DEFAULT_LIBRARY = [
-
-  /* ═══ PHYSICAL ═══ */
-  {id:'t_pushups', name:'Pushups', icon:'💪', tone:'strawberry', weight:4,
-    easy:{desc:'10 pushups. Drop and do them now.',pts:10},
-    medium:{desc:'3 sets of 10, right now. Rest 60 sec between sets.',pts:30},
-    hard:{desc:'Max reps in one set, rest 2 min, repeat × 3. Log your numbers. Beat it next time.',pts:60}},
-
-  {id:'t_glute_bridges', name:'Glute Bridges', icon:'🦵', tone:'strawberry', weight:4,
-    easy:{desc:'20 glute bridges right now. Floor, no equipment.',pts:10},
-    medium:{desc:'3 × 20 with a 2-second hold at the top. Feel the squeeze.',pts:30},
-    hard:{desc:'4 × 25 + 10 single-leg each side. Your posterior chain will know about this.',pts:60}},
-
-  {id:'t_walk', name:'Zone 2 Walk', icon:'🚶', tone:'blueberry', weight:4,
-    easy:{desc:'Pace the apartment for 5 min. Hallway laps count.',pts:10},
-    medium:{desc:'30 min apartment pacing or stairs. Arms swinging, ~120 BPM. AirPods tracking.',pts:30},
-    hard:{desc:'40 min Zone 2 — outside if it\'s daylight, stairs/apartment if not. Log average HR.',pts:60}},
-
-  {id:'t_hiit', name:'HIIT', icon:'🔥', tone:'tangerine', weight:3,
-    easy:{desc:'1 min jumping jacks in the living room. Right now.',pts:10},
-    medium:{desc:'14 min HIIT. Your actual protocol. Full send.',pts:30},
-    hard:{desc:'Two 14-min rounds with 10 min rest between. Log both.',pts:60}},
-
-  {id:'t_mobility', name:'Mobility', icon:'🧘', tone:'cotton', weight:3,
-    easy:{desc:'Couch stretch 2 min each leg. Right now on the floor.',pts:10},
-    medium:{desc:'Hip flexors + thoracic rotation + couch stretch. 15 min.',pts:30},
-    hard:{desc:'30 min full mobility session. Find a YouTube follow-along and do the whole thing.',pts:60}},
-
-  {id:'t_cold_shower', name:'Cold Shower', icon:'🧊', tone:'cotton', weight:2,
-    easy:{desc:'30 seconds cold at the end of your shower. Breathe through it.',pts:10},
-    medium:{desc:'90 seconds full cold. No warm phase.',pts:30},
-    hard:{desc:'2 min cold from the very start. The first 30 seconds is the whole battle.',pts:60}},
-
-  {id:'t_gym', name:'Gym Session', icon:'🏋️', tone:'strawberry', weight:2,
-    easy:{desc:'Bodyweight only — 3×10 pushups + 3×20 glute bridges at home. Works on any day.',pts:10},
-    medium:{desc:'Full split — lat pulldown, chest press, leg press, leg curl. All 4.',pts:30},
-    hard:{desc:'Full split + 14 min HIIT after. No skipping.',pts:60}},
-
-  /* ═══ NUTRITION ═══ */
-  {id:'t_if', name:'Intermittent Fast', icon:'⏱️', tone:'grape', weight:2,
-    easy:{desc:'No food from this moment until you sleep. Water and black coffee only.',pts:10},
-    medium:{desc:'Kitchen closed right now. Nothing until tomorrow morning. 18+ hours from last meal.',pts:30},
-    hard:{desc:'20:4 window today. Eat only between 4pm–8pm. If you already ate outside that window, tomorrow is the day.',pts:60}},
-
-  {id:'t_cook_new', name:'Cook Something New', icon:'👨‍🍳', tone:'banana', weight:2,
-    easy:{desc:'Cook one thing tonight you\'ve never made before. Doesn\'t have to be complicated — one new dish.',pts:10},
-    medium:{desc:'Cook it tonight from scratch. Doesn\'t matter if it\'s ugly.',pts:30},
-    hard:{desc:'Full multi-component dish you\'ve never attempted. Photograph it.',pts:60}},
-
-  {id:'t_cook_safa', name:'Cook for Safa', icon:'🥘', tone:'bubblegum', weight:2, deleted:true,
-    easy:{desc:'Make her a snack she didn\'t ask for.',pts:10},
-    medium:{desc:'Cook her favorite meal from scratch.',pts:30},
-    hard:{desc:'New recipe + something sweet after. Full surprise.',pts:60}},
-
-  {id:'t_high_protein', name:'High Protein Day', icon:'🥩', tone:'tangerine', weight:2,
-    easy:{desc:'Drink a protein shake right now and plan tomorrow\'s meals to hit 100g. One concrete step.',pts:10},
-    medium:{desc:'Hit 130g today. Plan your next two meals before you close this screen.',pts:30},
-    hard:{desc:'Hit 150g, every meal logged, clean sources only. Operation88 mode.',pts:60}},
-
-  {id:'t_no_sugar', name:'No Sugar Day', icon:'🚫', tone:'tangerine', weight:2,
-    easy:{desc:'Zero sugary drinks from this moment forward today. Water, black coffee, tea only.',pts:10},
-    medium:{desc:'No added sugar for the rest of today and all of tomorrow. Starts now.',pts:30},
-    hard:{desc:'Zero added sugar + zero refined carbs from now until tomorrow night. Whole foods only.',pts:60}},
-
-  {id:'t_kitchen_curfew', name:'Kitchen Curfew', icon:'🌙', tone:'grape', weight:2, deleted:true,
-    easy:{desc:'Nothing after 10pm. Water only.',pts:10},
-    medium:{desc:'Kitchen closed by 9pm.',pts:30},
-    hard:{desc:'Kitchen closed by 8pm. Helps Mounjaro do its job.',pts:60}},
-
-  {id:'t_water', name:'Hydration', icon:'💧', tone:'blueberry', weight:3, deleted:true,
-    easy:{desc:'Drink a full glass of water right now.',pts:10},
-    medium:{desc:'Hit 2.5L today. Mark your bottle.',pts:30},
-    hard:{desc:'3L + zero sugary drinks all day. Log it.',pts:60}},
-
-  {id:'t_meal_prep', name:'Meal Prep', icon:'🥡', tone:'banana', weight:2, deleted:true,
-    easy:{desc:'Pack tomorrow\'s lunch right now. Future Ibrahim thanks you.',pts:10},
-    medium:{desc:'Prep 2 days of lunches tonight. Protein-forward.',pts:30},
-    hard:{desc:'4 days of meals portioned and labeled. Spreadsheet-brain this.',pts:60}},
-
-  /* ═══ MIND / LEARNING ═══ */
-  {id:'t_pl300', name:'PL-300 Study', icon:'📊', tone:'grape', weight:4,
-    easy:{desc:'5 flashcards. Keep the knowledge warm.',pts:10},
-    medium:{desc:'One micro-session: concept → analogy → trap → quiz. 25 min.',pts:30},
-    hard:{desc:'Full practice exam section or build a sample report. 60 min.',pts:60}},
-
-  {id:'t_dax', name:'DAX Drill', icon:'🧮', tone:'grape', weight:4,
-    easy:{desc:'Write one CALCULATE measure from memory. Then verify.',pts:10},
-    medium:{desc:'Write 3 measures from memory. Time yourself.',pts:30},
-    hard:{desc:'Build a full DAX pattern you haven\'t used: time intelligence, semi-additive, or dynamic segmentation.',pts:60}},
-
-  {id:'t_trading', name:'Trading Research', icon:'📈', tone:'tangerine', weight:3,
-    easy:{desc:'Read one article about a stock, ETF, or market concept. Write one sentence takeaway.',pts:10},
-    medium:{desc:'30 min deep dive into one trade idea. Take notes.',pts:30},
-    hard:{desc:'Build a watchlist of 5 tickers. One paragraph thesis on each — why you\'d enter and what your exit is.',pts:60}},
-
-  {id:'t_investing', name:'Investing / Savings', icon:'💰', tone:'apple', weight:2, deleted:true,
-    easy:{desc:'Spend 10 min researching one investment instrument you\'ve been meaning to look into.',pts:10},
-    medium:{desc:'Research one long-term vehicle: S&P 500, REITs, or sukuk.',pts:30},
-    hard:{desc:'Write a 3-month savings plan with actual SAR numbers.',pts:60}},
-
-  {id:'t_read', name:'Read', icon:'📖', tone:'blueberry', weight:3,
-    easy:{desc:'10 min. Actual book or long article. Not a thread.',pts:10},
-    medium:{desc:'25 min unbroken. One topic, no phone nearby.',pts:30},
-    hard:{desc:'45 min straight. One full chapter. Write one takeaway.',pts:60}},
-
-  {id:'t_philosophy', name:'Philosophy', icon:'🤔', tone:'grape', weight:2, deleted:true,
-    easy:{desc:'15 min on one concept. Stoicism, Nietzsche, whatever pulled you in this week.',pts:10},
-    medium:{desc:'30 min deep read or video. Take one note in your own words.',pts:30},
-    hard:{desc:'45 min + write what you actually think about it. Not what the philosopher says — what you think.',pts:60}},
-
-  {id:'t_sql', name:'SQL Practice', icon:'🗃️', tone:'grape', weight:3,
-    easy:{desc:'Write a query on paper or phone Notes. One JOIN, one WHERE filter. 5 min.',pts:10},
-    medium:{desc:'Write and run a real query. Window functions or CTEs.',pts:30},
-    hard:{desc:'Full analysis pipeline. CTE chain, window functions. Save the script.',pts:60}},
-
-  /* ═══ RELATIONSHIPS ═══ */
-  {id:'t_cats', name:'Cat Time', icon:'🐱', tone:'bubblegum', weight:2,
-    easy:{desc:'5 min actual playtime with both cats. Laser, string, whatever.',pts:10},
-    medium:{desc:'Clean litter + fresh water + 15 min play + brush them.',pts:30},
-    hard:{desc:'Full grooming session + rearrange their space or introduce something new.',pts:60}},
-
-  {id:'t_family_call', name:'Family Call', icon:'📞', tone:'bubblegum', weight:2,
-    easy:{desc:'Voice note to a family member. Something personal, not a forward.',pts:10},
-    medium:{desc:'Actual call. 15+ min. Proper conversation.',pts:30},
-    hard:{desc:'Video call 30+ min. Or write a long message to someone you\'ve been meaning to reach.',pts:60}},
-
-  {id:'t_friend', name:'Friend Check-in', icon:'💬', tone:'cotton', weight:2, deleted:true,
-    easy:{desc:'Message one friend you haven\'t spoken to in a while.',pts:10},
-    medium:{desc:'Real back and forth. Voice note chain or actual call.',pts:30},
-    hard:{desc:'Organize something online. Gaming session, group call, or watch party. Set the date, send the invite tonight.',pts:60}},
-
-  {id:'t_gaming_friend', name:'Game with a Friend', icon:'🎮', tone:'strawberry', weight:2,
-    easy:{desc:'Message someone you used to game with. Just check if they\'re still playing.',pts:10},
-    medium:{desc:'Message 3 people and find one who\'s free tonight. Pick the game, lock it in.',pts:30},
-    hard:{desc:'Full evening gaming online with someone. Voice chat on. This is social.',pts:60}},
-
-  {id:'t_safa_random', name:'Random Act for Safa', icon:'❤️', tone:'bubblegum', weight:2,
-    easy:{desc:'One thing she didn\'t ask for. Coffee, snack, anything.',pts:10},
-    medium:{desc:'Take over something she normally handles without being asked.',pts:30},
-    hard:{desc:'Plan something small but thoughtful. Homemade, within budget. Effort over money.',pts:60}},
-
-  /* ═══ MENTAL HEALTH / RECHARGE ═══ */
-  {id:'t_journal', name:'Journal', icon:'📓', tone:'blueberry', weight:2,
-    easy:{desc:'One sentence. What happened today, how it felt.',pts:10},
-    medium:{desc:'Free write 10 min. No structure. Just dump.',pts:30},
-    hard:{desc:'20 min deep. Where are you vs where you want to be. Operation88, everything. Be honest.',pts:60}},
-
-  {id:'t_breathwork', name:'Breathwork', icon:'🌬️', tone:'cotton', weight:2,
-    easy:{desc:'4-7-8: inhale 4, hold 7, exhale 8. Four cycles. Takes 3 min.',pts:10},
-    medium:{desc:'Box breathing 10 min. 4 in, 4 hold, 4 out, 4 hold.',pts:30},
-    hard:{desc:'20 min Wim Hof or extended session. This will change how you sleep.',pts:60}},
-
-  {id:'t_gratitude', name:'Gratitude', icon:'🙏', tone:'cotton', weight:2,
-    easy:{desc:'Name 3 things that went well today. Specific, not generic.',pts:10},
-    medium:{desc:'5 things, one sentence each on why. Go beyond surface.',pts:30},
-    hard:{desc:'Write a gratitude letter to someone — Safa, a parent, a friend. Then decide: send it or don\'t. But the writing has to be real.',pts:60}},
-
-  {id:'t_screen_break', name:'Screen Break', icon:'📵', tone:'grape', weight:2, deleted:true,
-    easy:{desc:'Phone in another room for 15 min. Notice the urge.',pts:10},
-    medium:{desc:'1 hour no social media. Anything else is fine.',pts:30},
-    hard:{desc:'After 9pm no phone no laptop. Just exist. Read, cook, talk to Safa.',pts:60}},
-
-  {id:'t_ps5', name:'PS5 Session', icon:'🎮', tone:'strawberry', weight:2,
-    easy:{desc:'Turn it on and play 30 min. No guilt.',pts:10},
-    medium:{desc:'1 hour. One game. No phone next to you.',pts:30},
-    hard:{desc:'2 hour session. Actually make progress in a game you\'ve been avoiding.',pts:60}},
-
-  {id:'t_one_piece', name:'One Piece', icon:'⛵', tone:'strawberry', weight:2, deleted:true,
-    easy:{desc:'One episode. Second screen off.',pts:10},
-    medium:{desc:'Two episodes back to back. Enjoy it properly.',pts:30},
-    hard:{desc:'3+ episode block. Don\'t stop at a cliffhanger.',pts:60}},
-
-  {id:'t_sleep', name:'Sleep Protocol', icon:'😴', tone:'grape', weight:2,
-    easy:{desc:'Set a bedtime alarm tonight. When it goes off, wind down. No debate.',pts:10},
-    medium:{desc:'Screens off 30 min before bed. Log what time you slept.',pts:30},
-    hard:{desc:'In bed within 30 min of drawing this. Phone down from this moment. Full 8 hours.',pts:60}},
-
-  /* ═══ HOME / ADMIN ═══ */
-  {id:'t_kitchen', name:'Kitchen Clean', icon:'🧹', tone:'apple', weight:2,
-    easy:{desc:'Just the dishes. Sink empty is a win.',pts:10},
-    medium:{desc:'Dishes + counters + stove. Full wipe.',pts:30},
-    hard:{desc:'Deep clean. Fridge check, shelves organized, floor mopped.',pts:60}},
-
-  {id:'t_desk', name:'Desk Reset', icon:'🖥️', tone:'blueberry', weight:2,
-    easy:{desc:'Clear the surface. 5 min.',pts:10},
-    medium:{desc:'Full reset — cables managed, surface clean, everything placed.',pts:30},
-    hard:{desc:'Desk + surrounding zone. Clean monitor, organize drawers, cable manage.',pts:60}},
-
-  {id:'t_laundry', name:'Laundry', icon:'👕', tone:'cotton', weight:2,
-    easy:{desc:'Fold and put away what\'s already done.',pts:10},
-    medium:{desc:'Full cycle. Wash, dry, fold, put away.',pts:30},
-    hard:{desc:'Start the machine tonight. Iron 5 items + organize one closet section while it runs. Fold and put away tomorrow morning.',pts:60}},
-
-  {id:'t_declutter', name:'Declutter', icon:'🗑️', tone:'tangerine', weight:1,
-    easy:{desc:'Clear one surface. 5 min.',pts:10},
-    medium:{desc:'One full drawer or shelf. Be ruthless.',pts:30},
-    hard:{desc:'Three zones. 6 months untouched = gone.',pts:60}},
-
-  {id:'t_car', name:'Car Clean', icon:'🚗', tone:'blueberry', weight:2, deleted:true,
-    easy:{desc:'Clear the trash.',pts:10},
-    medium:{desc:'Interior wipe, mats out, dashboard wiped.',pts:30},
-    hard:{desc:'Full interior — vacuum, seat wipe, dashboard, boot cleared. Exterior wash is a bonus if it\'s daylight.',pts:60}},
-
-];
-
-const BOWL_TONE_PALETTE = [
-  {id:'strawberry',name:'Strawberry'},
-  {id:'bubblegum', name:'Bubblegum'},
-  {id:'tangerine', name:'Tangerine'},
-  {id:'banana',    name:'Banana'},
-  {id:'apple',     name:'Apple'},
-  {id:'cotton',    name:'Cotton Candy'},
-  {id:'blueberry', name:'Blueberry'},
-  {id:'grape',     name:'Grape'}
-];
-
 function getBowl(){
+  /* Safety: if BOWL_DEFAULT_LIBRARY isn't ready yet, bail and return empty bowl.
+     This should never happen now that the constants block is declared above the
+     reward functions — but guards against future file reorganisation. */
+  if(typeof BOWL_DEFAULT_LIBRARY === 'undefined' || !BOWL_DEFAULT_LIBRARY){
+    console.error('getBowl() called before BOWL_DEFAULT_LIBRARY was initialized.');
+    return { library:[], draws:[], tripleDraws:[], dailyDraws:[], rerollsByCycle:{}, systemStart:'2026-04-18' };
+  }
   let s=gs();
-  var _BSS = (typeof BOWL_SYSTEM_START !== 'undefined') ? BOWL_SYSTEM_START : '2026-04-18';
+  var _BSS = BOWL_SYSTEM_START || '2026-04-18';
   if(!s.bowl){
     s.bowl={
       systemStart: _BSS,

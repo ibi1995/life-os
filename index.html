@@ -3254,7 +3254,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 
   <!-- Crank + reroll — below machine -->
   <div class="bowl-crank-row" id="bowl-crank-row">
-    <button class="bowl-crank-btn" id="bowl-crank-btn" ontouchstart="if(window._getAudioCtx){var _c=window._getAudioCtx();if(_c&&_c.state==='suspended')_c.resume().catch(function(){});}" onclick="bowlManualDraw()">
+    <button class="bowl-crank-btn" id="bowl-crank-btn" ontouchstart="if(window._getAudioCtx){var _c=window._getAudioCtx();if(_c&&_c.state==='suspended')_c.resume().catch(function(){});}" data-action="crank">
       <svg class="svg-icon" style="font-size:18px"><use href="#icon-bowl"/></svg><span>Pull the Crank</span>
     </button>
     <div class="bowl-crank-hint" id="bowl-crank-hint">Pull to draw today's challenge.</div>
@@ -15777,31 +15777,26 @@ window.finMonthNav = function(delta){
 /* === iOS PATCH — Bowl crank + reward image upload === */
 (function(){
 
-  /* 1. Crank button — use event DELEGATION on document so it survives renderBowl() DOM rebuilds.
-        iOS Safari suppresses click after touchend+preventDefault, so we intercept touchend
-        at the document level, check if the target is (or is inside) #bowl-crank-btn, and fire. */
+  /* 1. Crank — pointerup delegation. Fires on iOS Safari even when parent has touch-action:pan-y */
   var _crankBusy = false;
-  document.addEventListener('touchend', function(e){
-    /* Walk up from the touched element to find the crank button */
+  document.addEventListener('pointerup', function(e){
     var el = e.target;
     var btn = null;
     while(el && el !== document.body){
       if(el.id === 'bowl-crank-btn'){ btn = el; break; }
       el = el.parentElement;
     }
-    if(!btn) return;                    /* not a crank tap */
+    if(!btn) return;
     if(btn.disabled || _crankBusy) return;
-    e.preventDefault();                 /* stop the ghost click */
     _crankBusy = true;
     setTimeout(function(){ _crankBusy = false; }, 900);
-    /* Unlock AudioContext on gesture */
     try{
       var ac = window._getSharedAudioCtx ? window._getSharedAudioCtx()
              : (window._getAudioCtx ? window._getAudioCtx() : null);
       if(ac && ac.state === 'suspended') ac.resume().catch(function(){});
     }catch(_){}
     if(typeof bowlManualDraw === 'function') bowlManualDraw();
-  }, {passive: false});
+  });
 
   /* 2. Crank row z-index — sits above challenge area */
   var cr = document.getElementById('bowl-crank-row');

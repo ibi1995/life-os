@@ -9374,151 +9374,99 @@ function openRewardModal(isEdit){
 }
 
 function renderReward(){
+  var el=document.getElementById('rw-content');
+  if(!el) return;
+  var html='';
   try{
-  const el=document.getElementById('rw-content'); if(!el) return;
-  const rw=getReward();
-  const lbl=document.getElementById('rw-week-label');
-  const score=getRwLevelScore();
-  const pts=score.pts;
-  const pct=Math.min(100,Math.round(pts/REWARD_LEVEL_TARGET*100));
-  const dailyStreak=getRwDailyStreak();
-  const hardStreak=getRwHardStreak();
-  const levelsCleared=(rw.history||[]).filter(function(h){ return !h.abandoned; }).length;
-  let html='';
+    var rw=getReward();
+    var lbl=document.getElementById('rw-week-label');
 
-  if(!rw.active){
-    if(lbl) lbl.textContent='Set a reward to start grinding';
-    html+='<div class="rw-empty">';
-    html+='<div class="rw-empty-icon">🎁</div>';
-    html+='<div class="rw-empty-title">Set your reward</div>';
-    html+='<div class="rw-empty-sub">Pick something worth grinding for. Complete one Bowl challenge every day — don\'t break the streak.</div>';
-    html+='<button class="rw-btn p" onclick="openRewardModal(false)" style="margin-top:16px;width:100%;padding:14px">+ Set Reward</button>';
-    html+='</div>';
-  } else {
-    const a=rw.active;
-    const isUnlocked=pts>=REWARD_LEVEL_TARGET;
-    if(lbl) lbl.textContent=isUnlocked?'🎉 Level complete — claim it!':'Don\'t break the streak';
+    /* ── EMPTY STATE ── */
+    if(!rw||!rw.active){
+      if(lbl) lbl.textContent='Set a reward to start grinding';
+      html='<div class="rw-empty">'
+        +'<div class="rw-empty-icon">🎁</div>'
+        +'<div class="rw-empty-title">No reward set</div>'
+        +'<div class="rw-empty-sub">Pick something worth grinding for. Complete one Bowl challenge every day — don\'t break the streak.</div>'
+        +'<button class="rw-btn p" onclick="openRewardModal(false)" style="margin-top:16px;width:100%;padding:14px;min-height:48px;font-size:14px">+ Set My Reward</button>'
+        +'</div>';
+      el.innerHTML=html;
+      return;
+    }
 
-    /* ── Hero image card — full width, contain, ambient glow ── */
+    /* ── ACTIVE REWARD ── */
+    var a=rw.active;
+    var pts=0;
+    try{ pts=(getRwLevelScore()||{}).pts||0; }catch(e){ pts=0; }
+    var pct=Math.min(100,Math.round(pts/REWARD_LEVEL_TARGET*100));
+    var isUnlocked=pts>=REWARD_LEVEL_TARGET;
+    var streak=0;
+    try{ streak=getRwDailyStreak()||0; }catch(e){ streak=0; }
+
+    if(lbl) lbl.textContent=isUnlocked?'🎉 Level complete — claim it!':'Keep the streak alive';
+
+    /* Hero card */
     var imgSrc=a.imageData||a.imageUrl||'';
     html+='<div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:14px;background:rgba(10,15,35,.9);border:1px solid rgba(107,182,255,.18)">';
     if(imgSrc){
-      /* Ambient glow behind image */
-      html+='<div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 40%,rgba(77,141,255,.12),transparent 70%);pointer-events:none;z-index:0"></div>';
-      /* Image container — object-fit:contain so nothing gets cropped */
-      html+='<div style="width:100%;height:230px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;cursor:pointer;padding:12px" onclick="rwOpenLightbox()">';
-      html+='<img src="'+imgSrc+'" alt="'+a.name+'" onerror="this.style.display=\'none\'" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;filter:drop-shadow(0 4px 24px rgba(77,141,255,.25))">';
-      html+='</div>';
+      html+='<div style="width:100%;height:220px;display:flex;align-items:center;justify-content:center;padding:12px">'
+        +'<img src="'+imgSrc+'" onerror="this.style.display=\'none\'" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px">'
+        +'</div>';
     }
-    /* Gradient overlay at bottom for text */
-    html+='<div style="'+(imgSrc?'background:linear-gradient(to top,rgba(10,15,35,.95) 0%,rgba(10,15,35,.6) 60%,transparent 100%);margin-top:-60px;position:relative;z-index:2;':'')+'padding:16px 16px 14px">';
-    /* Level badge + price */
-    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">';
-    html+='<span style="font-family:var(--font-ui);font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--a2);background:rgba(77,141,255,.15);border:1px solid rgba(107,182,255,.25);border-radius:4px;padding:2px 8px">LEVEL '+(a.levelNum||1)+'</span>';
-    if(a.price) html+='<span style="font-family:var(--font-ui);font-size:12px;font-weight:700;color:var(--gold)">'+a.price+'</span>';
-    html+='</div>';
-    /* Name */
-    html+='<div style="font-family:var(--font-ui);font-size:19px;font-weight:800;color:#fff;line-height:1.2;text-shadow:0 2px 12px rgba(0,0,0,.5)">'+a.name+'</div>';
+    html+='<div style="padding:14px 16px">'
+      +'<div style="font-family:var(--font-ui);font-size:20px;font-weight:900;color:#fff;margin-bottom:6px">'+a.name+'</div>';
+    if(a.price) html+='<div style="font-size:13px;color:var(--gold);font-weight:700;margin-bottom:8px">'+a.price+'</div>';
+    if(a.why) html+='<div style="font-size:12px;color:var(--sec);line-height:1.5;margin-bottom:10px;opacity:.85">'+a.why+'</div>';
     html+='</div></div>';
 
-    /* ── "Why" callout card ── */
-    if(a.why){
-      html+='<div style="background:rgba(77,141,255,.06);border:1px solid rgba(107,182,255,.18);border-radius:10px;padding:14px 16px;margin-bottom:14px;position:relative">';
-      html+='<div style="position:absolute;top:10px;left:14px;font-size:20px;opacity:.25;line-height:1">❝</div>';
-      html+='<div style="font-family:var(--font-ui);font-size:13px;font-weight:600;color:var(--sec);line-height:1.6;padding-left:20px">'+a.why+'</div>';
-      html+='</div>';
-    }
-
-    /* ── Streak centerpiece — big number with flame ── */
-    var streakFlame=dailyStreak>=7;
-    var dColor=dailyStreak>=7?'var(--gold)':dailyStreak>=3?'var(--a2)':'rgba(255,255,255,.7)';
-    html+='<div style="text-align:center;padding:18px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(107,182,255,.12);border-radius:12px;margin-bottom:14px;position:relative;overflow:hidden">';
-    if(streakFlame) html+='<div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 60%,rgba(255,200,50,.08),transparent 70%);pointer-events:none"></div>';
-    html+='<div style="font-size:'+(streakFlame?'14px':'12px')+';margin-bottom:4px">'+(streakFlame?'🔥':'')+'</div>';
-    html+='<div style="font-family:var(--font-ui);font-size:44px;font-weight:900;color:'+dColor+';line-height:1;letter-spacing:-2px;'+(streakFlame?'text-shadow:0 0 20px rgba(255,200,50,.35)':'')+'">'+dailyStreak+'</div>';
-    html+='<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:6px">Day Streak</div>';
+    /* Progress bar */
+    html+='<div style="background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:10px;padding:14px 16px;margin-bottom:14px">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+    html+='<span style="font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--a2)">LEVEL '+(a.levelNum||1)+' PROGRESS</span>';
+    html+='<span style="font-family:var(--font-ui);font-size:14px;font-weight:900;color:'+(isUnlocked?'var(--gold)':'var(--a2)')+'">'+pts+' / '+REWARD_LEVEL_TARGET+'</span>';
+    html+='</div>';
+    html+='<div style="height:10px;background:rgba(0,0,0,.3);border-radius:99px;overflow:hidden;margin-bottom:10px">'
+      +'<div style="height:100%;border-radius:99px;background:linear-gradient(90deg,var(--a1),var(--a2));width:'+pct+'%;transition:width .5s ease"></div>'
+      +'</div>';
+    html+='<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">'
+      +'<span>🔥 '+streak+' day streak</span>'
+      +'<span>'+pct+'% complete</span>'
+      +'</div>';
     html+='</div>';
 
-    /* ── Secondary stats row ── */
-    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">';
-    /* Hard streak */
-    var hColor=hardStreak>=5?'var(--gold)':hardStreak>=3?'rgba(148,190,255,.9)':'rgba(255,255,255,.5)';
-    html+='<div style="background:rgba(255,255,255,.05);border:1px solid rgba(107,182,255,.12);border-radius:10px;padding:10px;text-align:center">';
-    html+='<div style="font-family:var(--font-ui);font-size:20px;font-weight:900;color:'+hColor+'">'+hardStreak+'</div>';
-    html+='<div style="font-family:var(--font-ui);font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-top:2px">Hard Streak</div>';
-    if(hardStreak>=3) html+='<div style="font-size:9px;color:rgba(200,225,255,.8);margin-top:2px">+10 bonus active</div>';
-    html+='</div>';
-    /* Levels cleared */
-    html+='<div style="background:rgba(255,255,255,.05);border:1px solid rgba(107,182,255,.12);border-radius:10px;padding:10px;text-align:center">';
-    html+='<div style="font-family:var(--font-ui);font-size:20px;font-weight:900;color:var(--a2)">'+levelsCleared+'</div>';
-    html+='<div style="font-family:var(--font-ui);font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-top:2px">Cleared</div>';
-    html+='</div>';
-    html+='</div>';
-
-    /* ── Progress bar ── */
-    html+='<div style="margin-bottom:14px">';
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-    html+='<span style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)">Progress</span>';
-    html+='<span style="font-family:\'Roboto Mono\',monospace;font-size:12px;font-weight:700;color:'+(isUnlocked?'var(--gold)':'var(--a2)')+'">'+pts+' / '+REWARD_LEVEL_TARGET+' pts</span>';
-    html+='</div>';
-    html+='<div style="height:10px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">';
-    var barColor=isUnlocked?'linear-gradient(90deg,var(--gold),#ffcc44)':'linear-gradient(90deg,var(--a1),var(--a2))';
-    html+='<div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)"></div>';
-    html+='</div>';
-    /* Breakdown hint */
-    html+='<div style="font-size:10px;color:var(--muted);margin-top:5px">Easy +10 · Medium +30 · Hard +60'+(hardStreak>=3?' · <span style="color:rgba(200,225,255,.9)">Hard bonus +10 active</span>':'')+'</div>';
-    html+='</div>';
-
-    /* ── Miss warning ── */
-    var todayDraw=getBowl().dailyDraws.find(function(dd){ return dd.date===localKey(today); });
-    if(!todayDraw||!todayDraw.chosenTier){
-      html+='<div style="background:rgba(255,90,90,.08);border:1px solid rgba(255,90,90,.2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:rgba(255,160,150,.9);line-height:1.5">';
-      html+='⚠️ No challenge done today. Miss this day and your level progress resets to 0.';
-      html+='</div>';
-    }
-
-    /* ── CTA buttons ── */
-    html+='<div class="rw-btn-row" style="gap:8px;margin-bottom:10px">';
+    /* Action buttons */
     if(isUnlocked){
-      html+='<button class="rw-btn p" onclick="rwClaimReward()" style="flex:2;background:linear-gradient(135deg,rgba(255,200,50,.25),rgba(255,170,0,.2));border-color:rgba(255,200,50,.5);color:var(--gold);font-size:13px;padding:14px">🎉 Claim Level '+(a.levelNum||1)+'</button>';
-    } else {
-      html+='<button class="rw-btn p" onclick="navTo(PAGE_IDS.indexOf(\'bowl\'))" style="flex:2;padding:14px;font-size:13px">🎱 Go to Bowl</button>';
+      html+='<button class="rw-btn p" onclick="rwClaimReward()" style="width:100%;padding:16px;font-size:15px;min-height:52px;margin-bottom:10px">🏆 Claim Reward</button>';
     }
-    html+='<button class="rw-btn ghost" onclick="openRewardModal(true)" style="flex:1">✏️ Edit</button>';
-    html+='<button onclick="rwArchiveAndReset()" style="flex:1;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.18);border-radius:6px;color:rgba(255,130,120,.75);font-family:var(--font-ui);font-size:11px;font-weight:700;padding:14px 8px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation">🗑️</button>';
-    html+='</div>';
-  }
+    html+='<div class="rw-btn-row">'
+      +'<button class="rw-btn ghost" onclick="openRewardModal(true)">✏️ Edit</button>'
+      +'<button class="rw-btn red" onclick="rwArchiveAndReset()">Archive</button>'
+      +'</div>';
 
-  /* ── History ── */
-  const hist=rw.history||[];
-  if(hist.length>0){
-    html+='<div style="font-family:var(--font-ui);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px"><span style="flex:1;height:1px;background:var(--div)"></span>HISTORY<span style="flex:1;height:1px;background:var(--div)"></span></div>';
-    const cleared=hist.filter(function(h){ return !h.abandoned; });
-    if(cleared.length>0){
-      html+='<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">';
-      html+='<div><div style="font-family:var(--font-ui);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px">Levels Cleared</div>';
-      html+='<div style="font-family:var(--font-ui);font-size:22px;font-weight:900;color:var(--a2)">'+cleared.length+'</div></div>';
-      const totalPts=cleared.reduce(function(a,h){ return a+(h.pts||0); },0);
-      html+='<div style="text-align:right"><div style="font-family:var(--font-ui);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px">Total Pts Earned</div>';
-      html+='<div style="font-family:\'Roboto Mono\',monospace;font-size:14px;font-weight:800;color:var(--gold)">'+totalPts+' pts</div></div>';
+    /* History */
+    var history=rw.history||[];
+    if(history.length>0){
+      html+='<div style="margin-top:16px">';
+      html+='<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Past Rewards</div>';
+      history.slice(0,5).forEach(function(h){
+        html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(127,178,255,.1);font-size:12px">'
+          +'<span style="color:var(--sec)">'+h.name+'</span>'
+          +'<span style="color:'+(h.abandoned?'var(--muted)':'var(--green)')+';">'+(h.abandoned?'Archived':'✓ Claimed')+'</span>'
+          +'</div>';
+      });
       html+='</div>';
     }
-    hist.forEach(function(h){
-      let thumb='<div class="rw-hist-thumb">🎁</div>';
-      if(h.imageData) thumb='<div class="rw-hist-thumb"><img src="'+h.imageData+'" alt=""></div>';
-      else if(h.imageUrl) thumb='<div class="rw-hist-thumb"><img src="'+h.imageUrl+'" alt="" onerror="this.parentNode.textContent=\'🎁\'"></div>';
-      const badge=h.abandoned
-        ?'<span class="rw-hist-badge" style="color:var(--muted);background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)">Abandoned</span>'
-        :'<span class="rw-hist-badge" style="color:rgba(107,182,255,.9);background:rgba(77,141,255,.12);border-color:rgba(107,182,255,.3)">✓ Level '+(h.levelNum||'?')+'</span>';
-      const meta='Level '+(h.levelNum||'?')+(h.pts?' · '+(h.pts)+' pts':'')+(h.claimedAt?' · '+new Date(h.claimedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'');
-      html+='<div class="rw-hist-card">'+thumb+'<div class="rw-hist-body"><div class="rw-hist-name">'+h.name+'</div><div class="rw-hist-meta">'+meta+'</div></div>'+badge+'</div>';
-    });
+
+  }catch(e){
+    console.error('[renderReward] error:', e);
+    html='<div style="text-align:center;padding:30px;color:var(--muted)">'
+      +'<div style="font-size:32px;margin-bottom:12px">⚠️</div>'
+      +'<div style="font-size:13px;margin-bottom:16px">Couldn\'t load reward data.</div>'
+      +'<button class="rw-btn p" onclick="renderReward()" style="padding:10px 20px">Retry</button>'
+      +'</div>';
   }
-
   el.innerHTML=html;
-  }catch(e){ console.error('renderReward error:',e); }
 }
-
 /* ── Reward mini-widget on Today page ── */
 function renderRewardStrip(){
   let el=document.getElementById('rw-strip'); if(!el) return;
@@ -12639,18 +12587,52 @@ function bowlDrawTheme(source){
 
 /* Manual crank — draw today's theme with animation */
 function bowlManualDraw(){
-  if(navigator.vibrate) navigator.vibrate(40);
-  /* Resume gumball loop and unlock audio on this gesture */
-  _bowlAnimResume();
-  var _ac2 = _getAudioCtx(); if(_ac2 && _ac2.state==='suspended') _ac2.resume().catch(function(){});
-  var todayKey2=localKey(today);
-  var existing=bowlFindDailyDraw(todayKey2);
-  if(existing){ toast('Today\'s challenge already drawn — pick your tier below.'); renderBowl(); return; }
-  var theme=bowlDrawTheme('manual');
-  if(!theme){ toast('Not enough themes available — add more to your library.'); return; }
-  var machineWrap=document.getElementById('bowl-machine-wrap');
-  if(machineWrap) machineWrap.scrollIntoView({behavior:'smooth',block:'start'});
-  bowlPlaySingleAnimation(theme, function(){ renderBowl(); });
+  /* Audio unlock — do this first on the gesture */
+  try{
+    var _ac2 = _getAudioCtx();
+    if(_ac2 && _ac2.state==='suspended') _ac2.resume().catch(function(){});
+  }catch(e){}
+
+  var todayKey2 = localKey(today);
+
+  /* Already drawn today? */
+  var existing = bowlFindDailyDraw(todayKey2);
+  if(existing){
+    toast('Already drawn today — pick your tier below');
+    renderBowl();
+    return;
+  }
+
+  /* Draw a theme */
+  var theme = bowlDrawTheme('manual');
+  if(!theme){
+    toast('No themes available — add some in Settings');
+    return;
+  }
+
+  /* Immediate UI feedback — disable crank, show spinning state */
+  var btn = document.getElementById('bowl-crank-btn');
+  var hint = document.getElementById('bowl-crank-hint');
+  var sp = btn && btn.querySelector('span');
+  if(btn) btn.disabled = true;
+  if(sp) sp.textContent = 'Drawing…';
+  if(hint) hint.textContent = 'Rolling…';
+
+  /* Play crank sound if available */
+  try{ if(typeof _playGumballCrank==='function') _playGumballCrank(); }catch(e){}
+
+  /* Resume canvas animation if available */
+  try{ if(typeof window._gbResume==='function') window._gbResume(); }catch(e){}
+  try{ if(typeof window._gbSetExcited==='function') window._gbSetExcited(theme.id, 3000, function(){}); }catch(e){}
+
+  /* Show challenge after animation delay — works even if canvas failed */
+  setTimeout(function(){
+    try{ if(typeof _playBallsShaking==='function') _playBallsShaking(1800); }catch(e){}
+  }, 100);
+
+  setTimeout(function(){
+    renderBowl();
+  }, 1200);
 }
 
 /* Animation: single ball through tube 0 (center) */
@@ -12698,64 +12680,71 @@ function _bowlAnimResume(){
   if(typeof window._gbResume==='function') window._gbResume();
 }
 
-/* Choose a tier and complete the challenge */
+/* Choose a tier and complete the challenge — direct action, no confirm dialog */
+var _bowlChoosingTier = false;
 function bowlChooseTier(tier){
-  var tierLabelsConf={easy:'Easy (+10 pts)',medium:'Medium (+30 pts)',hard:'Hard (+60 pts)'};
-  _confirm('Complete '+tierLabelsConf[tier]+'?', function(){
-    var todayKey2=localKey(today);
-    var b=getBowl();
-    var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
-    if(!dd){ toast('No challenge drawn today.'); return; }
-    if(dd.chosenTier){ toast('Already completed today!'); return; }
-    var theme=bowlGetLibBall(dd.themeId);
-    if(!theme){ toast('Theme not found.'); return; }
-    var tierData=theme[tier];
-    if(!tierData){ toast('Invalid tier.'); return; }
-    dd.chosenTier=tier;
-    dd.pts=tierData.pts;
-    /* Apply Hard streak bonus: 3+ consecutive Hards → +10 */
-    var _hardStreakBefore=getRwHardStreak();
-    if(tier==='hard' && _hardStreakBefore>=3){
-      dd.pts=(tierData.pts||0)+10;
-    }
-    var xpMap={easy:BOWL_XP_EASY,medium:BOWL_XP_MEDIUM,hard:BOWL_XP_HARD};
-    dd.xp=xpMap[tier]||0;
-    dd.doneAt=Date.now();
-    setBowl(b);
-    /* Award XP */
+  if(_bowlChoosingTier) return;
+  _bowlChoosingTier = true;
+  setTimeout(function(){ _bowlChoosingTier=false; }, 1500);
+
+  var todayKey2=localKey(today);
+  var b=getBowl();
+  var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
+  if(!dd){ toast("No challenge drawn today."); _bowlChoosingTier=false; return; }
+  if(dd.chosenTier){ toast("Already completed today!"); _bowlChoosingTier=false; return; }
+  var theme=bowlGetLibBall(dd.themeId);
+  if(!theme){ toast("Theme not found."); _bowlChoosingTier=false; return; }
+  var tierData=theme[tier];
+  if(!tierData){ toast("Invalid tier."); _bowlChoosingTier=false; return; }
+
+  dd.chosenTier=tier;
+  dd.pts=tierData.pts;
+  var hardStreakNow=0;
+  try{ hardStreakNow=getRwHardStreak()||0; }catch(e){}
+  if(tier==='hard'&&hardStreakNow>=3) dd.pts=(tierData.pts||0)+10;
+  var xpMap={easy:BOWL_XP_EASY,medium:BOWL_XP_MEDIUM,hard:BOWL_XP_HARD};
+  dd.xp=xpMap[tier]||0;
+  dd.doneAt=Date.now();
+  setBowl(b);
+
+  try{
     var s2=gs();
-    if(!s2.battlepass) s2.battlepass={totalXP:0,tokens:0,tokensLifetime:0,milestones:{},tokenHistory:[],tokenShop:[],manualWeight:CONFIG.DEFAULT_WEIGHT,dailyXP:{}};
+    if(!s2.battlepass) s2.battlepass={totalXP:0,tokens:0,tokensLifetime:0,milestones:{},tokenHistory:[],tokenShop:[],dailyXP:{}};
     if(!s2.battlepass.dailyXP) s2.battlepass.dailyXP={};
     s2.battlepass.dailyXP[todayKey2]=(s2.battlepass.dailyXP[todayKey2]||0)+dd.xp;
     s2.battlepass.totalXP=(s2.battlepass.totalXP||0)+dd.xp;
     ss(s2,true);
     if(typeof updateXPStrip==='function') updateXPStrip();
-    /* Animation */
-    _bowlAnimResume();
-    var _ac3 = _getAudioCtx(); if(_ac3 && _ac3.state==='suspended') _ac3.resume().catch(function(){});
-    if(typeof _playGumballCrank==='function') _playGumballCrank();
-    if(window._gbSetExcited){
-      window._gbSetExcited(null, 2500, function(){});
-    } else {
-      if(typeof _playBallsShaking==='function') _playBallsShaking(2500);
-    }
-    /* Celebration */
-    var tierEmoji={easy:'✓',medium:'🔥',hard:'⚡'};
-    var tierLabel={easy:'Easy',medium:'Medium',hard:'Hard'};
-    var celTitle=document.getElementById('bowl-celebrate-title');
-    var celSub=document.getElementById('bowl-celebrate-sub');
-    if(celTitle) celTitle.textContent=theme.name+' — '+tierLabel[tier]+' Done!';
-    if(celSub) celSub.textContent='+'+dd.pts+' pts · +'+dd.xp+' XP earned.';
-    var cel=document.getElementById('bowl-celebrate');
-    if(cel){ cel.classList.add('on'); window._celebrateTimer=setTimeout(function(){ bowlCloseCelebrate(); }, 3500); }
-    toast(tierEmoji[tier]+' '+tierLabel[tier]+' completed! +'+dd.pts+' pts');
-    if(typeof checkAllMilestones==='function') setTimeout(checkAllMilestones,300);
-    if(typeof rwCheckStreakIntegrity==='function') rwCheckStreakIntegrity();
-    if(typeof renderReward==='function' && curPage===PAGE_IDS.indexOf('reward')) renderReward();
-    if(typeof renderRewardStrip==='function') setTimeout(renderRewardStrip,100);
-    setTimeout(function(){ renderBowl(); },350);
-  }, {okLabel:'Complete ✓'});
+  }catch(e){}
+
+  try{
+    if(typeof window._gbSetExcited==='function') window._gbSetExcited(null,1800,function(){});
+    window._ensureAudioReady(function(ctx){
+      var now=ctx.currentTime+0.02;
+      var o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sine';o.frequency.setValueAtTime(880,now);o.frequency.exponentialRampToValueAtTime(1200,now+0.12);
+      g.gain.setValueAtTime(0.25,now);g.gain.exponentialRampToValueAtTime(0.0001,now+0.4);
+      o.connect(g);g.connect(ctx.destination);o.start(now);o.stop(now+0.42);
+    });
+  }catch(e){}
+
+  var tierEmoji={easy:"✅",medium:"🔥",hard:"⚡"};
+  var tierLabel={easy:"Easy",medium:"Medium",hard:"Hard"};
+  toast(tierEmoji[tier]+" "+tierLabel[tier]+" done! +"+dd.pts+" pts");
+
+  var celTitle=document.getElementById("bowl-celebrate-title");
+  var celSub=document.getElementById("bowl-celebrate-sub");
+  if(celTitle) celTitle.textContent=theme.name+" — "+tierLabel[tier]+" Done!";
+  if(celSub) celSub.textContent="+"+dd.pts+" pts · +"+dd.xp+" XP earned.";
+  var cel=document.getElementById("bowl-celebrate");
+  if(cel){ cel.classList.add("on"); window._celebrateTimer=setTimeout(function(){ bowlCloseCelebrate(); },3500); }
+
+  try{ if(typeof checkAllMilestones==='function') setTimeout(checkAllMilestones,300); }catch(e){}
+  try{ if(typeof rwCheckStreakIntegrity==='function') rwCheckStreakIntegrity(); }catch(e){}
+  try{ if(typeof renderRewardStrip==='function') setTimeout(renderRewardStrip,100); }catch(e){}
+  setTimeout(function(){ renderBowl(); _bowlChoosingTier=false; },350);
 }
+
 
 /* Undo a mistakenly chosen tier — reverses pts + XP */
 function bowlUndoTier(dateKey){

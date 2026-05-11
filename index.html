@@ -4,6 +4,12 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1.0,viewport-fit=cover" name="viewport"/>
+<!-- iOS PWA / Safari optimizations -->
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Life OS"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#0f2a7a"/>
 <title>My Life OS</title>
 <script>
 /* ═══════════════════════════════════════════════════
@@ -12,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-11-fixes'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-11-audit'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -84,7 +90,9 @@ button:focus-visible,.tab:focus-visible,.bn-tab:focus-visible{border-radius:6px}
   --font-ui:'Outfit',sans-serif;--font-body:'DM Sans',sans-serif
 }
 html{scroll-behavior:smooth;overflow-x:hidden;width:100%;max-width:100%}
-body{font-family:var(--font-body);background:linear-gradient(150deg,var(--bg1) 0%,var(--bg2) 45%,var(--bg3) 100%);background-attachment:fixed;min-height:100vh;color:#fff;-webkit-font-smoothing:antialiased;padding-bottom:80px;overscroll-behavior-y:none;overflow-x:hidden;width:100%;max-width:100%;position:relative}
+body{font-family:var(--font-body);background:transparent;min-height:100vh;color:#fff;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;padding-bottom:80px;overscroll-behavior-y:none;overflow-x:hidden;width:100%;max-width:100%;position:relative}
+/* iOS-safe fixed gradient — body::after is the solid base (z:-2), body::before adds radial glows (z:0) */
+body::after{content:'';position:fixed;inset:0;background:linear-gradient(150deg,var(--bg1) 0%,var(--bg2) 45%,var(--bg3) 100%);z-index:-2;pointer-events:none;will-change:auto}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(100,160,255,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(80,140,255,.08) 0%,transparent 50%);pointer-events:none;z-index:0;will-change:auto;transform:translateZ(0)}
 
 /* ─── NAV ─── */
@@ -734,11 +742,11 @@ textarea.big:focus{border-bottom-color:var(--a2)}
 .stype-sub{font-size:11px;color:var(--muted);margin-top:2px}
 
 /* ─── Steps card ─── */
-.steps-card{background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--bdr);border-radius:var(--r);padding:16px 18px;margin-bottom:14px;box-shadow:var(--ssh)}
+.steps-card{background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 10px;margin-bottom:14px;box-shadow:var(--ssh)}
 .steps-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .steps-title{font-family:var(--font-ui);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--a2)}
 .steps-goal-lbl{font-family:var(--font-ui);font-size:9px;color:var(--muted)}
-.steps-main{display:flex;align-items:center;gap:16px}
+.steps-main{display:flex;align-items:center;gap:8px}
 .steps-ring-wrap{position:relative;flex-shrink:0}
 .steps-ring-svg{transform:rotate(-90deg)}
 .steps-ring-bg{fill:none;stroke:rgba(255,255,255,.08)}
@@ -754,7 +762,7 @@ textarea.big:focus{border-bottom-color:var(--a2)}
 .steps-inp{flex:1;background:rgba(255,255,255,.08);border:1px solid var(--bdr);border-radius:var(--rs);color:#fff;font-family:var(--font-ui);font-size:15px;font-weight:700;padding:8px 12px;outline:none;transition:border-color .2s;-moz-appearance:textfield}
 .steps-inp::-webkit-outer-spin-button,.steps-inp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .steps-inp:focus{border-color:rgba(126,200,255,.55)}
-.steps-save-btn{background:linear-gradient(135deg,var(--a1),#3a7aff);border:none;border-radius:var(--rs);color:#fff;font-family:var(--font-ui);font-size:12px;font-weight:700;padding:9px 14px;cursor:pointer;white-space:nowrap;transition:all .2s}
+.steps-save-btn{background:linear-gradient(135deg,var(--a1),#3a7aff);border:none;border-radius:var(--rs);color:#fff;font-family:var(--font-ui);font-size:11px;font-weight:700;padding:7px 8px;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
 .steps-save-btn:hover{background:linear-gradient(135deg,var(--a2),var(--a1))}
 .steps-week{display:flex;gap:5px;margin-top:12px}
 .sw-day{flex:1;text-align:center}
@@ -909,7 +917,7 @@ textarea.big:focus{border-bottom-color:var(--a2)}
 .pr-empty{font-family:var(--font-ui);font-size:11px;color:var(--muted);font-style:italic;margin-top:6px}
 
 /* ─── Bodyweight ─── */
-.bw-card{background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;box-shadow:var(--ssh)}
+.bw-card{background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 10px;margin-bottom:14px;box-shadow:var(--ssh)}
 .bw-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .bw-title{font-family:var(--font-ui);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--a2)}
 .bw-row{display:flex;gap:8px;align-items:center}
@@ -1027,7 +1035,8 @@ textarea.big:focus{border-bottom-color:var(--a2)}
 .bottom-nav-inner::-webkit-scrollbar{display:none}
 .bn-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:7px 9px;border-radius:6px;cursor:pointer;border:none;background:none;transition:background .18s,transform .14s cubic-bezier(.34,1.4,.64,1);min-width:52px;flex:1;max-width:70px;flex-shrink:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;position:relative;overflow:hidden;scroll-snap-align:start}
 .bn-tab:active{transform:scale(.88)}
-.bn-tab.active{background:color-mix(in srgb,var(--a1) 30%,transparent)}
+.bn-tab.active{background:rgba(77,141,255,0.28)}
+@supports (background:color-mix(in srgb,red 1%,blue)){.bn-tab.active{background:color-mix(in srgb,var(--a1) 30%,transparent)}}
 .bn-tab.active .bn-icon{filter:drop-shadow(0 0 6px var(--a2))}
 .bn-tab.active .bn-lbl{color:var(--a2)}
 .bn-icon{font-size:20px;line-height:1;transition:transform .22s cubic-bezier(.34,1.56,.64,1);width:24px;height:22px;display:flex;align-items:center;justify-content:center;text-align:center}
@@ -1080,7 +1089,7 @@ button,a,[role="button"],.hc-main,.hc-chk,.tab,.bn-tab,.epd-habit,.wk-day{-webki
 .fab-bg.on{background:rgba(5,15,60,.62);pointer-events:auto;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 
 /* Sheet panel */
-.fab-sheet{position:fixed;bottom:0;left:0;right:0;z-index:200;background:linear-gradient(175deg,hsl(222,68%,14%) 0%,hsl(222,70%,11%) 100%);border-radius:6px 3px 0 0;border:1px solid rgba(127,178,255,.22);border-bottom:none;padding-bottom:max(18px,env(safe-area-inset-bottom));transform:translateY(110%);transition:transform .4s cubic-bezier(.32,1,.54,1);will-change:transform;box-shadow:0 -10px 60px rgba(5,15,60,.7),0 -1px 0 rgba(107,182,255,.12);max-height:94dvh;display:flex;flex-direction:column;overflow:hidden}
+.fab-sheet{position:fixed;bottom:0;left:0;right:0;z-index:200;background:linear-gradient(175deg,hsl(222,68%,14%) 0%,hsl(222,70%,11%) 100%);border-radius:6px 3px 0 0;border:1px solid rgba(127,178,255,.22);border-bottom:none;padding-bottom:max(18px,env(safe-area-inset-bottom));transform:translateY(110%);transition:transform .4s cubic-bezier(.32,1,.54,1);will-change:transform;box-shadow:0 -10px 60px rgba(5,15,60,.7),0 -1px 0 rgba(107,182,255,.12);max-height:94vh;max-height:94dvh;display:flex;flex-direction:column;overflow:hidden}
 .fab-sheet.on{transform:translateY(0)}
 .fab-sheet-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:4px}
 
@@ -1157,7 +1166,7 @@ button,a,[role="button"],.hc-main,.hc-chk,.tab,.bn-tab,.epd-habit,.wk-day{-webki
 /* ─── Triage screen ─── */
 .fnx-triage-bg{display:none;position:fixed;inset:0;background:rgba(5,15,60,.8);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:200;align-items:flex-end;justify-content:center;-webkit-tap-highlight-color:transparent}
 .fnx-triage-bg.on{display:flex}
-.fnx-triage-card{background:linear-gradient(180deg,rgba(30,60,150,.96),rgba(15,40,120,.98));border-top:1px solid rgba(126,200,255,.4);border-radius:18px 18px 0 0;padding:20px 18px 32px;max-width:520px;width:100%;box-shadow:0 -10px 40px rgba(0,0,0,.5);animation:fnx-vdp-up .35s cubic-bezier(.34,1.56,.64,1);max-height:85dvh;display:flex;flex-direction:column}
+.fnx-triage-card{background:linear-gradient(180deg,rgba(30,60,150,.96),rgba(15,40,120,.98));border-top:1px solid rgba(126,200,255,.4);border-radius:18px 18px 0 0;padding:20px 18px 32px;max-width:520px;width:100%;box-shadow:0 -10px 40px rgba(0,0,0,.5);animation:fnx-vdp-up .35s cubic-bezier(.34,1.56,.64,1);max-height:85vh;max-height:85dvh;display:flex;flex-direction:column}
 .fnx-triage-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .fnx-triage-title{font-family:var(--font-ui);font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px}
 .fnx-triage-progress{font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--muted)}
@@ -1193,7 +1202,9 @@ button,a,[role="button"],.hc-main,.hc-chk,.tab,.bn-tab,.epd-habit,.wk-day{-webki
 
 /* ─── Page entrance animation — opacity ONLY, no scale (scale = zoom bug) ─── */
 @keyframes pg-enter{from{opacity:.4;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pg-enter-back{from{opacity:.4;transform:translateX(-14px)}to{opacity:1;transform:translateX(0)}}
 .pg-enter-animate{animation:pg-enter .2s ease-out both;pointer-events:auto}
+.pg-enter-animate-back{animation:pg-enter-back .2s ease-out both;pointer-events:auto}
 
 /* ─── Toggle switch upgrade ─── */
 .tog-sl{transition:background .28s cubic-bezier(.4,0,.2,1),border-color .28s!important}
@@ -2509,8 +2520,16 @@ textarea.auto-grow{overflow:hidden;resize:none}
 .fnx-vdp-item-amt{color:#fff;font-weight:700;font-family:var(--font-ui)}
 .fnx-vdp-close{width:100%;background:rgba(255,255,255,.07);border:1px solid var(--bdr);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13px;font-weight:700;padding:13px;cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:44px;margin-top:8px}
 
-/* ─── Counting number animation (idea 11) ─── */
-.fnx-counting{transition:none}
+/* ── iOS-safe confirm sheet (replaces all window.confirm() calls) ── */
+.ios-confirm-bg{position:fixed;inset:0;background:rgba(5,10,40,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:1200;opacity:0;pointer-events:none;transition:opacity .2s}
+.ios-confirm-bg.on{opacity:1;pointer-events:all}
+.ios-confirm-sheet{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(160deg,#0f2060,#0a1840);border:1px solid rgba(107,182,255,.28);border-radius:16px 16px 0 0;padding:24px 20px max(28px,env(safe-area-inset-bottom));z-index:1201;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,1,.7,1)}
+.ios-confirm-sheet.on{transform:translateY(0)}
+.ios-confirm-msg{font-family:var(--font-ui);font-size:16px;font-weight:700;color:#fff;text-align:center;margin-bottom:20px;line-height:1.45}
+.ios-confirm-btns{display:flex;flex-direction:column;gap:10px}
+.ios-confirm-ok{background:linear-gradient(135deg,var(--a1),#2d6fff);border:none;border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:15px;font-weight:800;padding:15px;cursor:pointer;min-height:50px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.ios-confirm-ok.danger{background:linear-gradient(135deg,#d9534f,#c0392b)}
+.ios-confirm-cancel{background:rgba(255,255,255,.09);border:1px solid rgba(127,178,255,.22);border-radius:10px;color:var(--muted);font-family:var(--font-ui);font-size:15px;font-weight:700;padding:14px;cursor:pointer;min-height:50px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 
 /* Saved indicator (autosave) */
 .fnx-saved{position:fixed;top:70px;right:14px;background:rgba(74,222,128,.18);border:1px solid rgba(74,222,128,.4);color:var(--green);font-family:var(--font-ui);font-size:11px;font-weight:700;padding:6px 12px;border-radius:99px;z-index:150;opacity:0;pointer-events:none;transition:opacity .3s}
@@ -2519,7 +2538,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 /* ─── MOBILE ALIGNMENT FIXES — aggressive, applied at ALL phone/preview widths ─── */
 /* Base rules (always on) — prevent ANY child from causing horizontal overflow */
 #pg-finance{overflow-x:hidden;overflow-y:visible;max-width:100%}
-#pg-finance *:not(canvas){min-width:0;max-width:100%}
+#pg-finance *{min-width:0;max-width:100%}
 #pg-finance .fnx-hero,
 #pg-finance .fnx-coach,
 #pg-finance .fnx-orbit-card,
@@ -2529,11 +2548,6 @@ textarea.auto-grow{overflow:hidden;resize:none}
 #pg-finance .fnx-bills-strip,
 #pg-finance .fnx-section-hdr,
 #pg-finance .fnx-header{max-width:100%;box-sizing:border-box}
-/* NEW fx- layout elements also need containment */
-#pg-finance .fx-hero,
-#pg-finance .fx-vials-stage,
-#pg-finance .fx-tx-hdr,
-#pg-finance .fx-tx-log{max-width:100%;box-sizing:border-box}
 /* Watermark must be clipped by the page — give it explicit bounds */
 #pg-finance .fnx-watermark{max-width:60%;overflow:hidden}
 
@@ -2699,7 +2713,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 .fx-vial-col{display:flex;flex-direction:column;align-items:center;gap:10px}
 
 /* Canvas tube wrapper */
-.fx-vial-tube-wrap{position:relative;width:100%;max-width:130px;aspect-ratio:0.38;max-height:280px;display:flex;align-items:center;justify-content:center}
+.fx-vial-tube-wrap{position:relative;width:100%;max-width:130px;aspect-ratio:.38;display:flex;align-items:center;justify-content:center}
 .fx-vial-canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 12px 32px rgba(5,15,60,.4)) drop-shadow(0 2px 6px rgba(0,0,0,.3))}
 
 /* Percentage floating inside tube */
@@ -2717,12 +2731,9 @@ textarea.auto-grow{overflow:hidden;resize:none}
 
 @media(max-width:360px){
   .fx-vials-stage{gap:10px}
-  .fx-vial-tube-wrap{max-width:105px;max-height:220px}
+  .fx-vial-tube-wrap{max-width:105px}
   .fx-vial-pct{font-size:18px}
   .fx-vial-label-amt{font-size:16px}
-}
-@media(max-width:400px){
-  .fx-vial-tube-wrap{max-height:240px}
 }
 .fx-tx-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
 .fx-tx-hdr-label{font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
@@ -3070,7 +3081,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <!-- ──────────────── ACTIVITY BOARD ──────────────── -->
 
 <!-- Body Weight + Steps compact 2-col row -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;margin-bottom:14px">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:4px;margin-bottom:14px">
 
 <!-- Body Weight (kept) -->
 <div class="bw-card" style="margin-bottom:0">
@@ -3097,7 +3108,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 </div>
 <div class="steps-main">
 <div class="steps-ring-wrap">
-<svg class="steps-ring-svg" height="72" viewbox="0 0 88 88" width="72">
+<svg class="steps-ring-svg" height="58" viewBox="0 0 88 88" width="58">
 <defs>
 <lineargradient id="stepsGrad" x1="0%" x2="100%" y1="0%" y2="0%">
 <stop offset="0%" stop-color="#4D8DFF"></stop>
@@ -4247,8 +4258,7 @@ $id.clear = function(prefix){
 let today  = new Date();
 function localKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 let todayKey = localKey(today);
-$id('nav-date').textContent =
-  today.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+/* nav-date text set in gesture nav init block below */
 
 /* ── Midnight-crossing guard: refresh todayKey if page stays open overnight ── */
 (function(){
@@ -4389,6 +4399,7 @@ const PAGE_IDS  = ['today','gym','bowl','finance','reward','settings'];
 const PAGE_NAMES= ['Today','Gym','Bowl','Finance','Reward','Settings'];
 let curPage   = 0;
 let isAnimating = false;
+let _navDir = 1; /* +1 = forward, -1 = backward */
 
 /* ── Core navigation ── */
 const _pageScrollPos = {}; /* saves scrollY per page index */
@@ -4398,6 +4409,7 @@ function navTo(idx, animate){
   /* Save current scroll position before leaving */
   _pageScrollPos[curPage] = window.scrollY;
   let prev = curPage;
+  _navDir = idx > prev ? 1 : -1;
   curPage = idx;
   /* Intentionally NOT persisting curPage — app always boots on Today */
   _applyTrackPos(true);
@@ -4426,8 +4438,13 @@ function _applyTrackPos(withTransition){
   pages.forEach(function(pg){
     if(pg.id === activeId){
       pg.classList.add('active');
+      /* Reset any drag feedback */
+      pg.style.opacity = '';
+      pg.style.transform = '';
     } else {
       pg.classList.remove('active');
+      pg.style.opacity = '';
+      pg.style.transform = '';
     }
   });
   const track = $id('pages-track');
@@ -4445,8 +4462,14 @@ window.addEventListener('orientationchange', function(){ setTimeout(function(){ 
 (function(){ try{ curPage = 0; _applyTrackPos(false); } catch(e){} })();
 
 function _applyTrackOffset(px){
-  /* No-op in show/hide mode. Live drag offset is disabled — swipe still works,
-     it just commits on release instead of dragging the page visually. */
+  /* Apply subtle opacity feedback to active page so swipe feels responsive on iOS.
+     Full page translate is avoided (causes layout/paint costs). Opacity is GPU-composited. */
+  const activePg = document.getElementById('pg-'+PAGE_IDS[curPage]);
+  if(!activePg) return;
+  const maxDrag = window.innerWidth * 0.45;
+  const ratio = Math.min(Math.abs(px) / maxDrag, 1);
+  activePg.style.opacity = 1 - ratio * 0.18;
+  activePg.style.transform = 'translateX('+( px * 0.06).toFixed(1)+'px)';
 }
 
 function _syncNavUI(idx){
@@ -4464,7 +4487,11 @@ function _syncNavUI(idx){
 
 function _onPageEnter(id){
   const pg = document.getElementById('pg-'+id);
-  if(pg){ pg.classList.remove('pg-enter-animate'); void pg.offsetWidth; pg.classList.add('pg-enter-animate'); }
+  if(pg){
+    pg.classList.remove('pg-enter-animate','pg-enter-animate-back');
+    void pg.offsetWidth;
+    pg.classList.add(_navDir >= 0 ? 'pg-enter-animate' : 'pg-enter-animate-back');
+  }
   // Restore saved scroll position, or scroll to top if no saved position
   const savedScroll = _pageScrollPos[curPage];
   window.scrollTo(0, savedScroll || 0);
@@ -4515,23 +4542,33 @@ function _onPageEnter(id){
   const track    = $id('pages-track');
   if(!viewport || !track) return;
 
+  /* Cache of elements known to be horizontally scrollable — avoids getComputedStyle on every touch */
+  const _scrollableCache = new WeakSet();
+  const _nonScrollableCache = new WeakSet();
+  function _isHorizScrollable(el){
+    if(_scrollableCache.has(el)) return true;
+    if(_nonScrollableCache.has(el)) return false;
+    const ov = window.getComputedStyle(el).overflowX;
+    if((ov === 'auto' || ov === 'scroll') && el.scrollWidth > el.clientWidth + 4){
+      _scrollableCache.add(el); return true;
+    }
+    _nonScrollableCache.add(el); return false;
+  }
+
   viewport.addEventListener('touchstart', function(e){
     // Ignore multi-touch
     if(e.touches.length > 1){ touch.active=false; return; }
-    // Fix 20: Guard against iOS back-swipe from screen edges (20px edge zone)
+    // Guard against iOS back-swipe from screen edges (20px edge zone)
     const t0 = e.touches[0];
     if(t0.clientX < CONFIG.EDGE_ZONE || t0.clientX > window.innerWidth - CONFIG.EDGE_ZONE){ touch.active=false; return; }
     // Ignore if a modal is open
     if(document.querySelector('.epd-modal-bg.on,.sh-modal-bg.on,.modal-bg.on,.gse-modal-bg.on')){
       touch.active=false; return;
     }
-    // Check if touch starts inside a horizontally scrollable element
+    // Check if touch starts inside a horizontally scrollable element (cached)
     let tgt = e.target;
     while(tgt && tgt !== viewport){
-      const ov = window.getComputedStyle(tgt).overflowX;
-      if((ov === 'auto' || ov === 'scroll') && tgt.scrollWidth > tgt.clientWidth + 4){
-        touch.active=false; touch.isScrolling=true; return;
-      }
+      if(_isHorizScrollable(tgt)){ touch.active=false; touch.isScrolling=true; return; }
       tgt = tgt.parentElement;
     }
     const t = e.touches[0];
@@ -4728,10 +4765,17 @@ function _onPageEnter(id){
 
 /* ─ Haptics ─ */
 function _triggerHaptic(type){
-  if(!navigator.vibrate) return;
-  if(type==='light')  navigator.vibrate(8);
-  if(type==='medium') navigator.vibrate(18);
-  if(type==='error')  navigator.vibrate([15,10,15]);
+  /* navigator.vibrate is not supported on iOS Safari — no-op on iPhone.
+     Visual micro-flash provides tactile-feel substitute. */
+  if(type==='error'){
+    /* shake is already handled by shakeEl() CSS — nothing extra needed */
+  }
+  /* Android only: */
+  if(navigator.vibrate){
+    if(type==='light')  navigator.vibrate(8);
+    if(type==='medium') navigator.vibrate(18);
+    if(type==='error')  navigator.vibrate([15,10,15]);
+  }
 }
 
 /* ─ Utility: shake an element on error ─ */
@@ -4784,7 +4828,8 @@ function closeModal(id){
     document._lastModalTrigger=null;
   }
 }
-/* Global Escape key: close the topmost open modal or dismiss the celebration overlay */
+/* Global Escape key: close the topmost open modal or dismiss the celebration overlay
+   (single consolidated handler — duplicate at boot-time patches removed) */
 document.addEventListener('keydown',function(e){
   if(e.key!=='Escape') return;
   const celebrate=document.getElementById('rw-celebrate');
@@ -4799,6 +4844,43 @@ document.addEventListener('keydown',function(e){
     if(!anyStillOpen) document.body.style.overflow='';
   }
 });
+
+/* ══════════════════════════════════════════════
+   iOS-SAFE CONFIRM — replaces window.confirm()
+   Usage: _confirm('Message?', onYes, {danger:true, okLabel:'Delete'})
+══════════════════════════════════════════════ */
+(function(){
+  var _cb = null;
+  var _bg = null, _sheet = null, _msgEl = null, _okBtn = null, _cancelBtn = null;
+  function _init(){
+    if(_bg) return;
+    _bg      = document.getElementById('ios-confirm-bg');
+    _sheet   = document.getElementById('ios-confirm-sheet');
+    _msgEl   = document.getElementById('ios-confirm-msg');
+    _okBtn   = document.getElementById('ios-confirm-ok');
+    _cancelBtn = document.getElementById('ios-confirm-cancel');
+    function _close(){ _bg.classList.remove('on'); _sheet.classList.remove('on'); document.body.style.overflow=''; _cb=null; }
+    _cancelBtn.addEventListener('click', _close);
+    _bg.addEventListener('click', _close);
+    _okBtn.addEventListener('click', function(){
+      var fn=_cb; _close();
+      if(fn) fn();
+    });
+    _okBtn.addEventListener('touchend', function(e){ e.preventDefault(); var fn=_cb; _close(); if(fn) fn(); },{passive:false});
+    _cancelBtn.addEventListener('touchend', function(e){ e.preventDefault(); _close(); },{passive:false});
+  }
+  window._confirm = function(msg, onYes, opts){
+    _init();
+    opts = opts || {};
+    _msgEl.textContent = msg;
+    _okBtn.textContent = opts.okLabel || 'Confirm';
+    _okBtn.className   = 'ios-confirm-ok' + (opts.danger ? ' danger' : '');
+    _cb = onYes || null;
+    document.body.style.overflow = 'hidden';
+    _bg.classList.add('on');
+    _sheet.classList.add('on');
+  };
+})();
 
 /* ── Render coordinator: groups all Today page sub-renders into one call ── */
 function renderTodayPage(){
@@ -5450,14 +5532,15 @@ btAutoSaveDebounce.flush = function(){
 };
 
 function btReset(){
-  if(!confirm('Clear all actual amounts for this month?')) return;
-  const f = getF();
-  const monthKey = _getFinMonth();
-  _btSetActuals(f, monthKey, {});
-  setF(f);
-  document.querySelectorAll('.bt-actual-in').forEach(function(inp){ inp.value = ''; });
-  btRecalculate();
-  toast('Actuals cleared ✓');
+  _confirm('Clear all actual amounts for this month?', function(){
+    const f = getF();
+    const monthKey = _getFinMonth();
+    _btSetActuals(f, monthKey, {});
+    setF(f);
+    document.querySelectorAll('.bt-actual-in').forEach(function(inp){ inp.value = ''; });
+    btRecalculate();
+    toast('Actuals cleared ✓');
+  }, {danger:true, okLabel:'Clear'})
 }
 
 function _btMakeSVGDonut(data, labels, colors, centerVal, centerLabel, size){
@@ -6388,9 +6471,10 @@ function editTxSetCat(cat,el){
 function deleteFromEditModal(){
   const id=parseInt(document.getElementById('edit-tx-id').value);
   if(!id) return;
-  if(!confirm('Delete this transaction?')) return;
-  closeModal('edit-tx-modal');
-  if(typeof deleteTx==='function') deleteTx(id);
+  _confirm('Delete this transaction?', function(){
+    closeModal('edit-tx-modal');
+    if(typeof deleteTx==='function') deleteTx(id);
+  }, {danger:true, okLabel:'Delete'});
 }
 function saveEditTx(){
   let id=parseInt(document.getElementById('edit-tx-id').value);
@@ -6574,11 +6658,12 @@ function saveCM(){
   toast(id?'Milestone updated ✓':'Milestone created ✓');
 }
 function deleteCM(id){
-  if(!confirm('Delete this milestone?')) return;
-  _setCMs(_getCMs().filter(function(m){ return m.id!==id; }));
-  renderCustomMilestones();
-  if(typeof renderFinStrip==='function') renderFinStrip();
-  toast('Milestone deleted ✓');
+  _confirm('Delete this milestone?', function(){
+    _setCMs(_getCMs().filter(function(m){ return m.id!==id; }));
+    renderCustomMilestones();
+    if(typeof renderFinStrip==='function') renderFinStrip();
+    toast('Milestone deleted ✓');
+  }, {danger:true, okLabel:'Delete'});
 }
 let _cmUpdateId=null;
 function openCMUpdate(id){
@@ -9220,27 +9305,28 @@ function rwShowCelebration(active){
 }
 
 function rwArchiveAndReset(){
-  if(!confirm('Archive this reward without claiming? Your level progress will be lost.')) return;
-  var rw=getReward();
-  if(!rw.active) return;
-  if(!rw.history) rw.history=[];
-  var score=getRwLevelScore();
-  rw.history.unshift({
-    name:rw.active.name,
-    price:rw.active.price||null,
-    imageData:rw.active.imageData||null,
-    imageUrl:rw.active.imageUrl||null,
-    levelNum:rw.active.levelNum||1,
-    setDate:rw.active.setDate||localKey(today),
-    archivedAt:Date.now(),
-    pts:score.pts,
-    abandoned:true
-  });
-  rw.active=null;
-  setReward(rw);
-  renderReward();
-  if(typeof renderRewardStrip==='function') renderRewardStrip();
-  toast('Reward archived.');
+  _confirm('Archive this reward without claiming? Your level progress will be lost.', function(){
+    var rw=getReward();
+    if(!rw.active) return;
+    if(!rw.history) rw.history=[];
+    var score=getRwLevelScore();
+    rw.history.unshift({
+      name:rw.active.name,
+      price:rw.active.price||null,
+      imageData:rw.active.imageData||null,
+      imageUrl:rw.active.imageUrl||null,
+      levelNum:rw.active.levelNum||1,
+      setDate:rw.active.setDate||localKey(today),
+      archivedAt:Date.now(),
+      pts:score.pts,
+      abandoned:true
+    });
+    rw.active=null;
+    setReward(rw);
+    renderReward();
+    if(typeof renderRewardStrip==='function') renderRewardStrip();
+    toast('Reward archived.');
+  }, {okLabel:'Archive'});
 }
 
 function isReadyToBuyFull(active){
@@ -9289,7 +9375,6 @@ function openRewardModal(isEdit){
 
 function renderReward(){
   const el=document.getElementById('rw-content'); if(!el) return;
-  try {
   const rw=getReward();
   const lbl=document.getElementById('rw-week-label');
   const score=getRwLevelScore();
@@ -9430,10 +9515,6 @@ function renderReward(){
   }
 
   el.innerHTML=html;
-  } catch(e) {
-    console.error('renderReward error:', e);
-    el.innerHTML='<div class="rw-empty"><div class="rw-empty-icon">⚠️</div><div class="rw-empty-title">Something went wrong</div><div class="rw-empty-sub">Reward data may be corrupted. Try setting a new reward.</div><button class="rw-btn p" onclick="openRewardModal(false)" style="margin-top:16px;width:100%;padding:14px">+ Set Reward</button></div>';
-  }
 }
 
 /* ── Reward mini-widget on Today page ── */
@@ -9654,7 +9735,8 @@ function _playGumballCrank(){
   if(!_soundEnabled) return;
   var actx = _getAudioCtx(); if(!actx) return;
   if(actx.state === 'suspended') actx.resume();
-  var now = actx.currentTime;
+  /* Buffer: ensure we never schedule in the past — iOS AudioContext resume is async */
+  var now = Math.max(actx.currentTime + 0.02, 0.05);
 
   /* 3 clicks at 0 / 90ms / 175ms */
   [0, 0.09, 0.175].forEach(function(offset, ci){
@@ -9701,7 +9783,7 @@ function _stopBallSound(){
 
 function _playOneBallClank(actx, intensity){
   /* Real steel ball impact: sharp noise transient + two short inharmonic rings */
-  var now = actx.currentTime;
+  var now = Math.max(actx.currentTime + 0.01, 0.03);
 
   /* Impact transient — very short filtered noise */
   var len = Math.floor(actx.sampleRate * 0.008);
@@ -10405,9 +10487,7 @@ initTheme();
 })();
 /* ── Init gesture navigation ── */
 (function(){
-  // Track was already correctly positioned by _applyTrackPos(false) above.
-  // Restore pointer-events via rAF so the .26s transition doesn't fire
-  // on the same frame as the initial paint (which caused the startup glitch).
+  // Always start on Today page. One clean init on load — no duplicates.
   const track = $id('pages-track');
   if(track && track.classList.contains('is-dragging')){
     requestAnimationFrame(function(){
@@ -10416,33 +10496,15 @@ initTheme();
       });
     });
   }
-  // Always start on the Today page (index 0) — never restore last-visited page.
-  // Also clear any previously-saved page so nothing sneaks it back later.
   curPage = 0;
-  try{ localStorage.removeItem('lifeOS_activePage'); } catch(e){}
-  _applyTrackPos(false); // reposition track instantly to page 0, no slide animation
-  _syncNavUI(curPage);
+  _applyTrackPos(false);
+  _syncNavUI(0);
   window.scrollTo(0, 0);
-  /* Extra safety: re-apply after layout settles and after the page is fully loaded.
-     iOS Safari sometimes reports wrong viewport metrics during initial paint. */
-  requestAnimationFrame(function(){
-    curPage = 0;
-    _applyTrackPos(false);
-    _syncNavUI(0);
-    window.scrollTo(0, 0);
-  });
-  setTimeout(function(){
-    curPage = 0;
-    _applyTrackPos(false);
-    _syncNavUI(0);
-    window.scrollTo(0, 0);
-  }, 50);
   window.addEventListener('load', function(){
     curPage = 0;
     _applyTrackPos(false);
     _syncNavUI(0);
     window.scrollTo(0, 0);
-    /* Trigger the Today page render so content is populated on first open */
     try{ _onPageEnter('today'); } catch(e){}
   }, {once:true});
   // Nav date
@@ -10547,30 +10609,7 @@ initTheme();
   });
 })();
 
-/* ── 5. Close modals on Escape key ── */
-document.addEventListener('keydown',function(e){
-  if(e.key!=='Escape') return;
-  /* Close overflow menu */
-  const ofm=document.getElementById('today-overflow-menu');
-  if(ofm) ofm.classList.remove('on');
-  const openModal=document.querySelector('.modal-bg.on');
-  if(openModal) openModal.classList.remove('on');
-  const epdModal=document.querySelector('.epd-modal-bg.on');
-  if(epdModal) epdModal.classList.remove('on');
-  const shModal=document.querySelector('.sh-modal-bg.on');
-  if(shModal) shModal.classList.remove('on');
-  const gseModal=document.getElementById('gse-modal-bg');
-  if(gseModal&&gseModal.classList.contains('on')) gseClose();
-  /* Close FNX edit modal */
-  const fnxEdit=document.getElementById('fnx-edit-modal');
-  if(fnxEdit&&fnxEdit.classList.contains('on')){ if(typeof fnxCloseEdit==='function') fnxCloseEdit(); }
-  /* Close FNX vial detail popover */
-  const fnxVdp=document.getElementById('fnx-vdp');
-  if(fnxVdp&&fnxVdp.classList.contains('on')){ if(typeof fnxCloseVdp==='function') fnxCloseVdp(); }
-  if(typeof closeFabSheet==='function') closeFabSheet();
-  /* Restore body scroll */
-  document.body.style.overflow='';
-});
+/* ── 5. Escape key: handled by consolidated handler above ── */
 
 /* ════════════════════════════════════════════
    FAB QUICK-LOG SHEET
@@ -12200,13 +12239,14 @@ window.bpClaimReward=function(id){
 };
 
 window.bpDeleteReward=function(id){
-  if(!confirm('Remove this reward from the shop?')) return;
-  let s=gs();
-  const bp=_getBP(s);
-  bp.tokenShop=bp.tokenShop.filter(function(x){return x.id!==id;});
-  _setBP(bp);
-  renderTokenShop(bp);
-  if(typeof toast==='function') toast('Reward removed ✓');
+  _confirm('Remove this reward from the shop?', function(){
+    let s=gs();
+    const bp=_getBP(s);
+    bp.tokenShop=bp.tokenShop.filter(function(x){return x.id!==id;});
+    _setBP(bp);
+    renderTokenShop(bp);
+    if(typeof toast==='function') toast('Reward removed ✓');
+  }, {danger:true, okLabel:'Remove'});
 };
 
 /* ── Add Reward Modal ── */
@@ -12600,7 +12640,6 @@ function bowlDrawTheme(source){
 
 /* Manual crank — draw today's theme with animation */
 function bowlManualDraw(){
-  try {
   if(navigator.vibrate) navigator.vibrate(40);
   /* Resume gumball loop and unlock audio on this gesture */
   _bowlAnimResume();
@@ -12613,7 +12652,6 @@ function bowlManualDraw(){
   var machineWrap=document.getElementById('bowl-machine-wrap');
   if(machineWrap) machineWrap.scrollIntoView({behavior:'smooth',block:'start'});
   bowlPlaySingleAnimation(theme, function(){ renderBowl(); });
-  } catch(e) { console.error('bowlManualDraw error:', e); toast('Error drawing challenge — check console.'); }
 }
 
 /* Animation: single ball through tube 0 (center) */
@@ -12629,17 +12667,14 @@ function bowlPlaySingleAnimation(theme, done){
   /* Visual feedback: pulsing glow on machine + hint text */
   if(machineWrap2) machineWrap2.style.filter='drop-shadow(0 0 18px rgba(126,200,255,.45))';
   if(crankHint2){ crankHint2.textContent='Rolling…'; crankHint2.style.color='var(--a2)'; crankHint2.style.animation='phase-pulse 1s ease-in-out infinite'; }
-  try { if(typeof _playGumballCrank==='function') _playGumballCrank(); } catch(e){ console.warn('Crank sound error:', e); }
+  if(typeof _playGumballCrank==='function') _playGumballCrank();
   var SHAKE_DURATION=2200;
-  setTimeout(function(){ try { if(typeof _playBallsShaking==='function') _playBallsShaking(SHAKE_DURATION); } catch(e){} },150);
+  setTimeout(function(){ if(typeof _playBallsShaking==='function') _playBallsShaking(SHAKE_DURATION); },150);
   var TONE_COLORS=BOWL_BALL_COLORS;
   var color=TONE_COLORS[theme.tone]||'#6B9FFF';
 
-  var _finishCalled = false;
   function finishAnim(){
-    if(_finishCalled) return;
-    _finishCalled = true;
-    try { if(typeof _stopBallSound==='function') _stopBallSound(); } catch(e){}
+    if(typeof _stopBallSound==='function') _stopBallSound();
     if(crankBtn) crankBtn.disabled=false;
     /* Clear rolling feedback */
     if(machineWrap2) machineWrap2.style.filter='';
@@ -12652,8 +12687,6 @@ function bowlPlaySingleAnimation(theme, done){
       /* Launch through tube 0 (left tube acts as the single tube now) */
       finishAnim();
     });
-    /* Safety timeout: if _gbSetExcited callback never fires (canvas paused/broken), finish anyway */
-    setTimeout(function(){ finishAnim(); }, 6500);
   } else {
     setTimeout(function(){
       finishAnim();
@@ -12669,65 +12702,60 @@ function _bowlAnimResume(){
 /* Choose a tier and complete the challenge */
 function bowlChooseTier(tier){
   var tierLabelsConf={easy:'Easy (+10 pts)',medium:'Medium (+30 pts)',hard:'Hard (+60 pts)'};
-  if(!confirm('Complete '+tierLabelsConf[tier]+'?')) return;
-  var todayKey2=localKey(today);
-  var b=getBowl();
-  var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
-  if(!dd){ toast('No challenge drawn today.'); return; }
-  if(dd.chosenTier){ toast('Already completed today!'); return; }
-  var theme=bowlGetLibBall(dd.themeId);
-  if(!theme){ toast('Theme not found.'); return; }
-  var tierData=theme[tier];
-  if(!tierData){ toast('Invalid tier.'); return; }
-  dd.chosenTier=tier;
-  dd.pts=tierData.pts;
-  /* Apply Hard streak bonus: 3+ consecutive Hards → +10 */
-  var _hardStreakBefore=getRwHardStreak();
-  if(tier==='hard' && _hardStreakBefore>=3){
-    dd.pts=(tierData.pts||0)+10;
-  }
-  /* If Easy or Medium, hard streak resets next calc automatically (no stored state needed) */
-  var xpMap={easy:BOWL_XP_EASY,medium:BOWL_XP_MEDIUM,hard:BOWL_XP_HARD};
-  dd.xp=xpMap[tier]||0;
-  dd.doneAt=Date.now();
-  setBowl(b);
-  /* Award XP */
-  var s2=gs();
-  if(!s2.battlepass) s2.battlepass={totalXP:0,tokens:0,tokensLifetime:0,milestones:{},tokenHistory:[],tokenShop:[],manualWeight:CONFIG.DEFAULT_WEIGHT,dailyXP:{}};
-  if(!s2.battlepass.dailyXP) s2.battlepass.dailyXP={};
-  s2.battlepass.dailyXP[todayKey2]=(s2.battlepass.dailyXP[todayKey2]||0)+dd.xp;
-  s2.battlepass.totalXP=(s2.battlepass.totalXP||0)+dd.xp;
-  ss(s2,true);
-  if(typeof updateXPStrip==='function') updateXPStrip();
-  /* Animation: crank + shake + tube ball */
-  _bowlAnimResume();
-  var _ac3 = _getAudioCtx(); if(_ac3 && _ac3.state==='suspended') _ac3.resume().catch(function(){});
-  if(typeof _playGumballCrank==='function') _playGumballCrank();
-  var TONE_COLORS=BOWL_BALL_COLORS;
-  var ballColor=TONE_COLORS[theme.tone]||'#4d8fff';
-  if(window._gbSetExcited){
-    window._gbSetExcited(null, 2500, function(){
-    });
-  } else {
-    if(typeof _playBallsShaking==='function') _playBallsShaking(2500);
-  }
-  /* Celebration */
-  var tierEmoji={easy:'✓',medium:'🔥',hard:'⚡'};
-  var tierLabel={easy:'Easy',medium:'Medium',hard:'Hard'};
-  var celTitle=document.getElementById('bowl-celebrate-title');
-  var celSub=document.getElementById('bowl-celebrate-sub');
-  if(celTitle) celTitle.textContent=theme.name+' — '+tierLabel[tier]+' Done!';
-  if(celSub) celSub.textContent='+'+dd.pts+' pts · +'+dd.xp+' XP earned.';
-  var cel=document.getElementById('bowl-celebrate');
-  if(cel){ cel.classList.add('on'); window._celebrateTimer=setTimeout(function(){ bowlCloseCelebrate(); }, 3500); }
-  if(navigator.vibrate) navigator.vibrate([10,20,10,20,10]);
-  toast(tierEmoji[tier]+' '+tierLabel[tier]+' completed! +'+dd.pts+' pts');
-  if(typeof checkAllMilestones==='function') setTimeout(checkAllMilestones,300);
-  /* Reward sync */
-  if(typeof rwCheckStreakIntegrity==='function') rwCheckStreakIntegrity();
-  if(typeof renderReward==='function' && curPage===PAGE_IDS.indexOf('reward')) renderReward();
-  if(typeof renderRewardStrip==='function') setTimeout(renderRewardStrip,100);
-  setTimeout(function(){ renderBowl(); },350);
+  _confirm('Complete '+tierLabelsConf[tier]+'?', function(){
+    var todayKey2=localKey(today);
+    var b=getBowl();
+    var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
+    if(!dd){ toast('No challenge drawn today.'); return; }
+    if(dd.chosenTier){ toast('Already completed today!'); return; }
+    var theme=bowlGetLibBall(dd.themeId);
+    if(!theme){ toast('Theme not found.'); return; }
+    var tierData=theme[tier];
+    if(!tierData){ toast('Invalid tier.'); return; }
+    dd.chosenTier=tier;
+    dd.pts=tierData.pts;
+    /* Apply Hard streak bonus: 3+ consecutive Hards → +10 */
+    var _hardStreakBefore=getRwHardStreak();
+    if(tier==='hard' && _hardStreakBefore>=3){
+      dd.pts=(tierData.pts||0)+10;
+    }
+    var xpMap={easy:BOWL_XP_EASY,medium:BOWL_XP_MEDIUM,hard:BOWL_XP_HARD};
+    dd.xp=xpMap[tier]||0;
+    dd.doneAt=Date.now();
+    setBowl(b);
+    /* Award XP */
+    var s2=gs();
+    if(!s2.battlepass) s2.battlepass={totalXP:0,tokens:0,tokensLifetime:0,milestones:{},tokenHistory:[],tokenShop:[],manualWeight:CONFIG.DEFAULT_WEIGHT,dailyXP:{}};
+    if(!s2.battlepass.dailyXP) s2.battlepass.dailyXP={};
+    s2.battlepass.dailyXP[todayKey2]=(s2.battlepass.dailyXP[todayKey2]||0)+dd.xp;
+    s2.battlepass.totalXP=(s2.battlepass.totalXP||0)+dd.xp;
+    ss(s2,true);
+    if(typeof updateXPStrip==='function') updateXPStrip();
+    /* Animation */
+    _bowlAnimResume();
+    var _ac3 = _getAudioCtx(); if(_ac3 && _ac3.state==='suspended') _ac3.resume().catch(function(){});
+    if(typeof _playGumballCrank==='function') _playGumballCrank();
+    if(window._gbSetExcited){
+      window._gbSetExcited(null, 2500, function(){});
+    } else {
+      if(typeof _playBallsShaking==='function') _playBallsShaking(2500);
+    }
+    /* Celebration */
+    var tierEmoji={easy:'✓',medium:'🔥',hard:'⚡'};
+    var tierLabel={easy:'Easy',medium:'Medium',hard:'Hard'};
+    var celTitle=document.getElementById('bowl-celebrate-title');
+    var celSub=document.getElementById('bowl-celebrate-sub');
+    if(celTitle) celTitle.textContent=theme.name+' — '+tierLabel[tier]+' Done!';
+    if(celSub) celSub.textContent='+'+dd.pts+' pts · +'+dd.xp+' XP earned.';
+    var cel=document.getElementById('bowl-celebrate');
+    if(cel){ cel.classList.add('on'); window._celebrateTimer=setTimeout(function(){ bowlCloseCelebrate(); }, 3500); }
+    toast(tierEmoji[tier]+' '+tierLabel[tier]+' completed! +'+dd.pts+' pts');
+    if(typeof checkAllMilestones==='function') setTimeout(checkAllMilestones,300);
+    if(typeof rwCheckStreakIntegrity==='function') rwCheckStreakIntegrity();
+    if(typeof renderReward==='function' && curPage===PAGE_IDS.indexOf('reward')) renderReward();
+    if(typeof renderRewardStrip==='function') setTimeout(renderRewardStrip,100);
+    setTimeout(function(){ renderBowl(); },350);
+  }, {okLabel:'Complete ✓'});
 }
 
 /* Undo a mistakenly chosen tier — reverses pts + XP */
@@ -12824,14 +12852,15 @@ function bowlSkipToday(){
   var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
   if(!dd){ toast('No challenge drawn.'); return; }
   if(dd.chosenTier){ toast('Already completed.'); return; }
-  if(!confirm('Skip today\'s challenge? It will be marked as skipped (0 pts, no streak break).')) return;
-  dd.chosenTier='skipped';
-  dd.pts=0;
-  dd.xp=0;
-  dd.doneAt=Date.now();
-  setBowl(b);
-  toast('Skipped — no penalty. Come back tomorrow.');
-  renderBowl();
+  _confirm('Skip today\'s challenge? It will be marked as skipped (0 pts, no streak break).', function(){
+    dd.chosenTier='skipped';
+    dd.pts=0;
+    dd.xp=0;
+    dd.doneAt=Date.now();
+    setBowl(b);
+    toast('Skipped — no penalty. Come back tomorrow.');
+    renderBowl();
+  }, {okLabel:'Skip'});
 }
 
 /* Cycle key — tied to reward cycleStartDate, falls back to weekStart-style key */
@@ -13441,14 +13470,15 @@ function bowlDeleteBall(){
     toast('This theme is today\'s draw. Complete or reroll first.');
     return;
   }
-  if(!confirm('Delete this ball? Past draws will still show in your history.')) return;
-  ball.deleted=true;
-  ball.deletedAt=localKey(today);
-  setBowl(b);
-  toast('Ball deleted');
-  bowlCloseModal();
-  bowlRenderLibrary();
-  renderBowl();
+  _confirm('Delete this ball? Past draws will still show in your history.', function(){
+    ball.deleted=true;
+    ball.deletedAt=localKey(today);
+    setBowl(b);
+    toast('Ball deleted');
+    bowlCloseModal();
+    bowlRenderLibrary();
+    renderBowl();
+  }, {danger:true, okLabel:'Delete'});
 }
 
 (function(){
@@ -13826,8 +13856,6 @@ function _fxVialBootCanvas(){
     var wrap = c.parentElement;
     var w = wrap.offsetWidth || 100;
     var h = wrap.offsetHeight || Math.round(w / 0.38);
-    /* Clamp height to prevent overflow on mobile */
-    h = Math.min(h, 280);
     var dpr = window.devicePixelRatio || 1;
     c.style.width = w + 'px';
     c.style.height = h + 'px';
@@ -14239,11 +14267,11 @@ function fnxTxIcon(t){
 function fnxFilterTx(q){ _fnxTxFilter = q||''; fxRenderTxLog(getF(), fnxCurMonth()); }
 function fnxEditTx(id){
   if(typeof openEditTx==='function'){ openEditTx(id); return; }
-  if(confirm('Delete this transaction?')){
+  _confirm('Delete this transaction?', function(){
     const f = getF();
     f.transactions = (f.transactions||[]).filter(function(t){return t.id!==id});
     setF(f); fnxRender();
-  }
+  }, {danger:true, okLabel:'Delete'});
 }
 
 /* ══════════════════════════════════════════════════
@@ -14311,11 +14339,12 @@ function fnxAddIncome(){
   setF(f); fnxRenderEditModal();
 }
 function fnxDeleteIncome(idx){
-  if(!confirm('Remove this income source?')) return;
-  const f = getF();
-  if(!f.incomeSources) return;
-  f.incomeSources.splice(idx,1);
-  setF(f); fnxRenderEditModal(); fnxToastSaved();
+  _confirm('Remove this income source?', function(){
+    const f = getF();
+    if(!f.incomeSources) return;
+    f.incomeSources.splice(idx,1);
+    setF(f); fnxRenderEditModal(); fnxToastSaved();
+  }, {danger:true, okLabel:'Remove'});
 }
 function fnxUpdateEmergency(field, val){
   const f = getF();
@@ -14709,7 +14738,7 @@ window.finMonthNav = function(delta){
   function _playClank(intensity){
     var ac = _getAC();
     if(!ac || !window._isSoundEnabled()) return;
-    var now = ac.currentTime;
+    var now = Math.max(ac.currentTime + 0.01, 0.03);
     intensity = Math.min(1, Math.max(0.05, intensity || 0.3));
 
     /* ── 1. Short metallic impact noise (high-passed) ── */
@@ -15550,7 +15579,7 @@ window.finMonthNav = function(delta){
   function _playGlassPing(){
     var ac = _getAC();
     if(!ac || !window._isSoundEnabled()) return;
-    var now = ac.currentTime;
+    var now = Math.max(ac.currentTime + 0.01, 0.03);
     /* Crystal glass ping: 3 layered sine tones with fast attack + 0.6s ring-out */
     var freqs = [1520, 1840, 2180];
     var master = ac.createGain();
@@ -15705,6 +15734,15 @@ window.finMonthNav = function(delta){
 
 })();
 </script>
+<!-- ═══ iOS-SAFE CONFIRM MODAL (replaces window.confirm everywhere) ═══ -->
+<div class="ios-confirm-bg" id="ios-confirm-bg"></div>
+<div class="ios-confirm-sheet" id="ios-confirm-sheet">
+  <div class="ios-confirm-msg" id="ios-confirm-msg">Are you sure?</div>
+  <div class="ios-confirm-btns">
+    <button class="ios-confirm-ok" id="ios-confirm-ok">Confirm</button>
+    <button class="ios-confirm-cancel" id="ios-confirm-cancel">Cancel</button>
+  </div>
+</div>
 
 </body>
 </html>

@@ -12704,6 +12704,7 @@ function bowlRerollTheme(){
   if(!newTheme){ toast('No other themes available.'); setBowl(b); return; }
   dd.options.push(newTheme.id);
   dd.rerolls=rerollCount;
+  dd.showingOptions=true;
   /* Current displayed theme stays as last option for now — selection happens via UI */
   dd.themeId=newTheme.id;
   setBowl(b);
@@ -12746,11 +12747,20 @@ function bowlSelectOption(themeId){
   var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
   if(!dd||dd.chosenTier){ return; }
   dd.themeId=themeId;
-  /* Clear options so card collapses back to single view */
-  delete dd.options;
+  /* Keep dd.options alive so user can go back to selection view */
+  dd.showingOptions=false;
   setBowl(b);
   renderBowl();
-  toast('Challenge selected!');
+}
+
+function bowlBackToOptions(){
+  var todayKey2=localKey(today);
+  var b=getBowl();
+  var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
+  if(!dd||dd.chosenTier) return;
+  dd.showingOptions=true;
+  setBowl(b);
+  renderBowl();
 }
 
 /* Undo last reroll — restore previous challenge */
@@ -12950,7 +12960,7 @@ function renderBowl(){
   if(challengeArea){
     if(!dd){
       challengeArea.innerHTML='<div style="text-align:center;padding:24px 16px;color:var(--muted);font-size:12px;font-style:italic">Pull the crank to draw today\'s challenge.</div>';
-    } else if(dd.options && dd.options.length>1 && !dd.chosenTier){
+    } else if(dd.options && dd.options.length>1 && !dd.chosenTier && dd.showingOptions!==false){
       /* ── Multi-option selection view (after rerolls) ── */
       var _optH='<div style="margin-bottom:8px;text-align:center;font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase">Choose your challenge</div>';
       _optH+='<div style="display:flex;flex-direction:column;gap:8px">';
@@ -12992,6 +13002,10 @@ function renderBowl(){
         h+='<div style="width:56px;height:56px;border-radius:50%;background:'+color+';display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-bottom:8px;filter:drop-shadow(0 4px 16px rgba(0,0,0,.5));position:relative">'+bowlBallSvg(theme.icon,26)+'<div style="content:\'\';position:absolute;top:8%;left:18%;width:42%;height:28%;border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.8) 0%,rgba(255,255,255,.2) 55%,transparent 80%);pointer-events:none"></div></div>';
         h+='<div style="font-family:var(--font-ui);font-size:18px;font-weight:900;color:#fff;letter-spacing:-.3px">'+theme.name+'</div>';
         h+='</div>';
+        /* Back to options button — only if options exist and tier not chosen */
+        if(dd.options && dd.options.length>1 && !dd.chosenTier){
+          h+='<button onclick="bowlBackToOptions()" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.06);border:1px solid rgba(127,178,255,.2);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:700;padding:7px 14px;cursor:pointer;margin-bottom:12px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:36px">← Back to all options</button>';
+        }
 
         if(dd.chosenTier&&dd.chosenTier!=='skipped'){
           /* Already completed — show result */

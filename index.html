@@ -12752,6 +12752,9 @@ function bowlSelectOption(themeId){
   renderBowl();
   toast('Challenge selected!');
 }
+
+/* Undo last reroll — restore previous challenge */
+function bowlUndoReroll(){
   var todayKey2=localKey(today);
   var b=getBowl();
   var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
@@ -12956,7 +12959,7 @@ function renderBowl(){
         if(!ot) return;
         var oc=TONE_COLORS[ot.tone]||'#6B9FFF';
         var isActive=tid===dd.themeId;
-        _optH+='<button onclick="bowlSelectOption(''+tid+'')" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;background:'+(isActive?'rgba(77,141,255,.18)':'rgba(255,255,255,.05)')+';border:1.5px solid '+(isActive?'rgba(107,182,255,.6)':'rgba(127,178,255,.15)')+';border-radius:10px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all .18s">';
+        _optH+='<button onclick="bowlSelectOption(\'' +tid+ '\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;background:'+(isActive?'rgba(77,141,255,.18)':'rgba(255,255,255,.05)')+';border:1.5px solid '+(isActive?'rgba(107,182,255,.6)':'rgba(127,178,255,.15)')+';border-radius:10px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all .18s">';
         _optH+='<div style="width:36px;height:36px;border-radius:50%;background:'+oc+';display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative">'+bowlBallSvg(ot.icon,18)+'<div style="position:absolute;top:8%;left:18%;width:42%;height:28%;border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.8) 0%,rgba(255,255,255,.2) 55%,transparent 80%);pointer-events:none"></div></div>';
         _optH+='<div style="flex:1;min-width:0">';
         _optH+='<div style="font-family:var(--font-ui);font-size:13px;font-weight:800;color:#fff;margin-bottom:2px">'+ot.name+'</div>';

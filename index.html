@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-12-gumball-perf'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-12-habits-finance-v2'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -96,7 +96,7 @@ body::after{content:'';position:fixed;inset:0;background:linear-gradient(150deg,
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(100,160,255,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(80,140,255,.08) 0%,transparent 50%);pointer-events:none;z-index:0;will-change:auto;transform:translateZ(0)}
 
 
-.nav{position:sticky;top:0;z-index:100;background:var(--nav-bg);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-bottom:1px solid var(--bdr);padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;height:60px;transition:background .4s,box-shadow .2s}
+.nav{position:sticky;top:0;z-index:100;background:var(--nav-bg);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-bottom:1px solid var(--bdr);padding:env(safe-area-inset-top,0px) 14px 0;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:60px;height:calc(60px + env(safe-area-inset-top,0px));transition:background .4s,box-shadow .2s}
 .nav.scrolled{box-shadow:0 4px 24px rgba(5,15,60,.4)}
 .nav-brand{font-family:var(--font-ui);font-size:15px;font-weight:800;white-space:nowrap;color:#fff;letter-spacing:-.3px;flex-shrink:0}
 .nav-brand span{color:var(--a2)}
@@ -1036,7 +1036,7 @@ textarea.big:focus{border-bottom-color:var(--a2)}
 
 
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:95;padding:0 10px 10px;pointer-events:none}
-.bottom-nav-inner{display:flex;align-items:center;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:var(--nav-bg);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid var(--bdr);border-radius:6px;padding:6px 4px;box-shadow:0 -4px 32px rgba(5,15,60,.35),0 0 0 0.5px rgba(107,182,255,.12);pointer-events:auto;gap:0;transition:background .4s,border-color .4s}
+.bottom-nav-inner{display:flex;align-items:center;justify-content:space-evenly;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:var(--nav-bg);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid var(--bdr);border-radius:6px;padding:6px 4px;box-shadow:0 -4px 32px rgba(5,15,60,.35),0 0 0 0.5px rgba(107,182,255,.12);pointer-events:auto;gap:0;transition:background .4s,border-color .4s}
 .bottom-nav-inner::-webkit-scrollbar{display:none}
 .bn-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:7px 9px;border-radius:6px;cursor:pointer;border:none;background:none;transition:background .18s,transform .14s cubic-bezier(.34,1.4,.64,1);min-width:52px;flex:1;max-width:70px;flex-shrink:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;position:relative;overflow:hidden;scroll-snap-align:start}
 .bn-tab:active{transform:scale(.88)}
@@ -1780,7 +1780,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 .is-fri .hide-fri{display:none!important}
 .is-sat .hide-sat{display:none!important}
 
-.is-eid #hA,.is-eid #hD,.is-eid #hE,.is-eid #hF,.is-eid #hG,.is-eid #hS,.is-eid #hT,.is-eid #hU,.is-eid #hV,.is-eid #hW,.is-eid #hI,.is-eid #hJ,.is-eid #hL,.is-eid #hO,.is-eid #hQ,.is-eid #hR,
+.is-eid #hA,.is-eid #hD,.is-eid #hE,.is-eid #hF,.is-eid #hG,.is-eid #hS,.is-eid #hT,.is-eid #hU,.is-eid #hV,.is-eid #hW,.is-eid #hI,.is-eid #hH,.is-eid #hL,.is-eid #hO,.is-eid #hQ,.is-eid #hR,
 .is-eid #rA,.is-eid #rD,.is-eid #rE,.is-eid #rF,.is-eid #rG,.is-eid #rH,.is-eid #rW,.is-eid #rI,.is-eid #rJ,.is-eid #rL,.is-eid #rO,.is-eid #rQ,.is-eid #rR{display:none!important}
 
 .is-eid .ph{display:none!important}
@@ -3000,7 +3000,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div class="hc week-only" id="hF"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'F')}"><div class="hc-chk" onclick="tickDone(event,'F')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Deep Work — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'F')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">F</span><span class="hc-name">Deep Work</span><span class="hc-time">9:00 AM</span></div><div class="hc-action">Before email — Priority 1. Protect the first 90 min. Phone in bag.</div></div></div></div>
 <div class="hc hide-fri" id="hG"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'G')}"><div class="hc-chk" onclick="tickDone(event,'G')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Mid-Morning Walk — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'G')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">G</span><span class="hc-name">Mid-Morning Walk</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">11:00 AM</span></div><div class="hc-action">20 min outside. No screens. Brain recharge block.</div></div></div></div>
 
-<div class="hc week-only" id="hJ"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'J')}"><div class="hc-chk" onclick="tickDone(event,'J')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Arrive Home — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'J')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">J</span><span class="hc-name">Arrive Home</span><span class="hc-time">5:30 PM</span></div><div class="hc-action">Change clothes immediately. Sit 5 min. Do nothing. Breathe.</div></div></div></div>
+
 <div class="hc not-eid" id="hS"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'S')}"><div class="hc-chk" onclick="tickDone(event,'S')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Chest Stretch — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'S')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">S</span><span class="hc-name">Chest Stretch</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:15 PM</span></div><div class="hc-action">Doorframe stretch. Forearms on frame, elbows 90°. Lean forward. 30s × 3.</div></div></div></div>
 <div class="hc not-eid" id="hT"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'T')}"><div class="hc-chk" onclick="tickDone(event,'T')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Couch Stretch — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'T')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">T</span><span class="hc-name">Couch Stretch</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:18 PM</span></div><div class="hc-action">Back foot on couch/wall behind you, front knee down. Push hips forward, squeeze rear glute. 60s each side.</div></div></div></div>
 <div class="hc not-eid" id="hU"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'U')}"><div class="hc-chk" onclick="tickDone(event,'U')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Glute Bridges — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'U')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">U</span><span class="hc-name">Glute Bridges</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:21 PM</span></div><div class="hc-action">Lie back, knees bent, drive hips up. Squeeze hard at top. 15 reps × 2.</div></div></div></div>
@@ -3009,10 +3009,12 @@ textarea.auto-grow{overflow:hidden;resize:none}
 
 
 <div class="hc" id="hK"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'K')}"><div class="hc-chk" onclick="tickDone(event,'K')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Slow Dinner — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'K')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">K</span><span class="hc-name">Slow Dinner</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">7:00 PM</span></div><div class="hc-action">One portion. 20 min minimum. Fork down each bite. No screen.</div></div></div></div>
-
+<div class="hc" id="hH"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'H')}"><div class="hc-chk" onclick="tickDone(event,'H')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Psyllium Husk — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'H')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">H</span><span class="hc-name">Psyllium Husk</span><span class="hc-time">6:45 PM</span></div><div class="hc-action">1 tsp in a full glass of water, before dinner. Drink immediately — don't let it sit.</div></div></div></div>
 
 
 <div class="hc" id="hN"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'N')}"><div class="hc-chk" onclick="tickDone(event,'N')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Brush Teeth — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'N')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">N</span><span class="hc-name">Brush Teeth</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">10:30 PM</span></div><div class="hc-action">Brush, floss, wash face. Same time every night. Sleep cue.</div></div></div></div>
+<div class="hc" id="hM"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'M')}"><div class="hc-chk" onclick="tickDone(event,'M')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Magnesium Glycinate — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'M')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">M</span><span class="hc-name">Magnesium Glycinate</span><span class="hc-time">10:32 PM</span></div><div class="hc-action">400mg with water. Take after brushing — improves sleep quality and muscle recovery.</div></div></div></div>
+<div class="hc week-only" id="hX"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'X')}"><div class="hc-chk" onclick="tickDone(event,'X')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Export Data — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'X')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">X</span><span class="hc-name">Export Data</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">10:28 PM</span></div><div class="hc-action">Settings → Export backup. Takes 2 seconds. Your data, your insurance.</div></div></div></div>
 <div class="hc week-only" id="hO"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'O')}"><div class="hc-chk" onclick="tickDone(event,'O')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Journal and Breathe — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'O')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">O</span><span class="hc-name">Journal + Breathe</span><span class="hc-time">10:35 PM</span></div><div class="hc-action">Win / Challenge / Tomorrow. Then 5 min slow breathing.</div></div></div></div>
 <div class="hc sat-only" id="hR"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'R')}"><div class="hc-chk" onclick="tickDone(event,'R')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Weekly Reset — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'R')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">R</span><span class="hc-name">Weekly Reset</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">10:00 PM</span></div><div class="hc-action">Tidy workspace. Prep bag and clothes. 5-min review of last week done.</div></div></div></div>
 
@@ -3180,12 +3182,22 @@ textarea.auto-grow{overflow:hidden;resize:none}
     </div>
   </div>
 
-  <!-- ═══ Transactions ═══ -->
-  <div class="fx-tx-hdr">
-    <span class="fx-tx-hdr-label">Recent</span>
-    <span class="fx-tx-count" id="fx-tx-count"></span>
+  <!-- ═══ Leftover Adjust ═══ -->
+  <div id="fx-adjust-wrap" style="margin-bottom:18px">
+    <div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Adjust Leftover</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="fxAdjustLeftover(-1)" style="width:44px;height:44px;border-radius:10px;background:rgba(255,100,100,.12);border:1px solid rgba(255,100,100,.28);color:var(--red);font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s" aria-label="Subtract">−</button>
+      <input id="fx-adjust-input" type="number" inputmode="decimal" min="0" placeholder="Amount" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(127,178,255,.25);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:16px;font-weight:700;padding:10px 14px;outline:none;text-align:center;min-height:44px" onfocus="this.select()">
+      <button onclick="fxAdjustLeftover(1)" style="width:44px;height:44px;border-radius:10px;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.28);color:var(--green);font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s" aria-label="Add">+</button>
+    </div>
   </div>
-  <div class="fx-tx-log" id="fnx-tx-log"></div>
+
+  <!-- ═══ Bottle Transaction Log ═══ -->
+  <div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Leftover History</div>
+  <div id="fx-bottle-log" style="display:flex;flex-direction:column;gap:6px;margin-bottom:90px"></div>
+
+  <!-- ═══ Transactions (hidden — kept for legacy compat) ═══ -->
+  <div class="fx-tx-log" id="fnx-tx-log" style="display:none"></div>
 
   <!-- ═══ Hidden inputs preserved for old code ═══ -->
   <div style="display:none">
@@ -3930,7 +3942,7 @@ const CONFIG = {
 /* Gym/HIIT (I) moved to Bowl challenge system — no longer in fixed habits.
    Legacy days with I ticked keep their rating; removing from STEPS just means
    new days don't require it for "perfect day" completion. */
-const STEPS_WEEK = ['A','B','D','E','F','G','S','T','U','V','W','J','K','N','O']; // C and I removed (ghost habits)
+const STEPS_WEEK = ['A','B','D','E','F','G','S','T','U','V','W','I','H','K','M','X','N','O']; // C and I removed (ghost habits), J removed (Arrive Home), added H/M/X
 const STEPS_FRI  = ['B','D','K','N'];
 const STEPS_SAT  = ['A','B','D','G','Q','K','N','R'];
 /* Eid Al-Fitr 2026 — 17 Mar to 23 Mar: wellness-only essentials */
@@ -4003,8 +4015,10 @@ const NH = [
   {s:'V',n:'Chin Tucks',         t:'17:23',xp:5,m:'Pull chin straight back — double chin. Hold 5s. 10 reps × 3.',     min:'5 reps × 1 set. Fix that forward head.'},
   {s:'W',n:'Wall Angels',        t:'17:25',xp:5,m:'Back flat on wall, arms goalpost. Slide up/down. 10 reps × 2.',    min:'5 reps × 1 set against the wall. Keep contact.'},
   {s:'I',n:'Gym / HIIT',          t:'17:45',xp:15,m:'Gym: 45–60 min PPL session. OR HIIT: 6 rounds sprint + burpees ~14 min. Either counts.',  min:'10 min at the gym OR 3 rounds of HIIT. Movement is the habit.'},
-  {s:'J',n:'Arrive Home',       t:'17:30',xp:5,m:'Change clothes. Sit 5 min. Do nothing. Breathe.',                min:'Change out of work clothes. 2 min transition counts.'},
   {s:'K',n:'Slow Dinner',       t:'18:30',xp:8,m:'One plate. Timer on table. Fork down between bites.',            min:'Eat without a screen. That\'s the whole habit.'},
+  {s:'H',n:'Psyllium Husk',     t:'18:45',xp:5,m:'1 tsp in a full glass of water, before dinner. Drink immediately.',min:'Just take it. 30 seconds.'},
+  {s:'M',n:'Magnesium Glycinate',t:'22:32',xp:5,m:'400mg with water after brushing. Improves sleep and muscle recovery.',min:'Take the pill. That\'s it.'},
+  {s:'X',n:'Export Data',       t:'22:28',xp:5,m:'Settings → Export backup. 2 seconds. Your data insurance.',        min:'Export it. Done.'},
   {s:'L',n:'Quality Time',      t:'19:00',xp:0,m:'',min:''},
   {s:'N',n:'Brush Teeth',       t:'22:32',xp:5,m:'Night routine. Same ritual. Same spot every night.',             min:'Brush teeth. Full stop. Takes 2 minutes.'},
   {s:'O',n:'Journal and Breathe',t:'22:35',xp:8,m:'Win. Challenge. Tomorrow. Then 5 min breathing.',              min:'Write 1 sentence about today. One breath cycle counts.'},
@@ -4048,7 +4062,7 @@ let todayKey = localKey(today);
         // New day — update schedule FIRST so STEPS reflects the new day
         applyDaySchedule();
         // Reset all possible habit cards (union of all day types)
-        ['A','B','C','D','E','F','G','S','T','U','V','W','I','J','K','N','O','Q','R'].forEach(function(st){ let el=document.getElementById('h'+st); if(el) el.classList.remove('done'); });
+        ['A','B','C','D','E','F','G','S','T','U','V','W','I','H','K','M','X','N','O','Q','R'].forEach(function(st){ let el=document.getElementById('h'+st); if(el) el.classList.remove('done'); });
         let s=gs(); if(!s.days) s.days={}; if(!s.days[todayKey]) s.days[todayKey]={}; ss(s,true);
         initToday(); buildYesterday(); buildHeatmap(); renderFinStrip();
         $id('nav-date').textContent=today.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
@@ -5023,8 +5037,8 @@ const RWDS_REQ = {
   H: ['F','G'],
   W: ['S','T','U','V','W'],
   I: ['I'],
-  L: ['J','I','K'],
-  P: ['A','B','D','E','F','G','S','T','U','V','W','I','J','K','N','O']
+  L: ['I','H','K'],
+  P: ['A','B','D','E','F','G','S','T','U','V','W','I','H','K','M','X','N','O']
 };
 
 function updRwds(s){
@@ -6779,14 +6793,14 @@ function _doExcelExport(){
   /* ── Sheet 1: Habits Daily Log ── */
   const habitRows=[['Date','Day',
     'A Wake Up','B Morning Walk','C Breakfast','D Brush+Face','E 3 Priorities',
-    'F Deep Work','G Mid Walk','H Learn',
+    'F Deep Work','G Mid Walk','H Psyllium Husk',
     'S Chest Stretch','T Couch Stretch','U Glute Bridges','V Chin Tucks','W Wall Angels',
-    'I Gym Session','J Arrive Home',
-    'K Slow Dinner','L Quality Time','N Brush Teeth','O Journal','P Read+Sleep',
+    'I Gym Session',
+    'K Slow Dinner','M Magnesium','X Export Data','L Quality Time','N Brush Teeth','O Journal','P Read+Sleep',
     'Total Score','% Complete'
   ]];
   let days=s.days||{};
-  const ALL_HABIT_IDS=['A','B','C','D','E','F','G','S','T','U','V','W','I','J','K','N','O'];
+  const ALL_HABIT_IDS=['A','B','C','D','E','F','G','S','T','U','V','W','I','H','K','M','X','N','O'];
   Object.keys(days).sort().forEach(function(key){
     const dd=days[key]||{};
     if(typeof dd!=='object') return;
@@ -7049,14 +7063,14 @@ function epdLoad(){
   } else if(dow === 5){
     phases = [
       { label:'☀️ Morning', steps: daySteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
-      { label:'🌆 Evening', steps: daySteps.filter(function(st){ return ['J','K'].indexOf(st)>-1; }) },
+      { label:'🌆 Evening', steps: daySteps.filter(function(st){ return ['H','K'].indexOf(st)>-1; }) },
       { label:'🌙 Night',   steps: daySteps.filter(function(st){ return ['N','O'].indexOf(st)>-1; }) }
     ].filter(function(ph){ return ph.steps.length > 0; });
   } else if(dow === 6){
     phases = [
       { label:'☀️ Morning', steps: daySteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
       { label:'🌤️ Mid-Day',  steps: daySteps.filter(function(st){ return ['F','G','Q'].indexOf(st)>-1; }) },
-      { label:'🌆 Evening', steps: daySteps.filter(function(st){ return ['I','J','K'].indexOf(st)>-1; }) },
+      { label:'🌆 Evening', steps: daySteps.filter(function(st){ return ['I','H','K'].indexOf(st)>-1; }) },
       { label:'🌙 Night',   steps: daySteps.filter(function(st){ return ['N','O','R'].indexOf(st)>-1; }) }
     ].filter(function(ph){ return ph.steps.length > 0; });
   } else {
@@ -7064,7 +7078,7 @@ function epdLoad(){
     phases = [
       { label:'☀️ Morning', steps: daySteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
       { label:'💼 Office',  steps: daySteps.filter(function(st){ return ['F','G'].indexOf(st)>-1; }) },
-      { label:'🌆 Evening', steps: daySteps.filter(function(st){ return ['S','T','U','V','W','I','J','K'].indexOf(st)>-1; }) },
+      { label:'🌆 Evening', steps: daySteps.filter(function(st){ return ['S','T','U','V','W','I','H','K'].indexOf(st)>-1; }) },
       { label:'🌙 Night',   steps: daySteps.filter(function(st){ return ['N','O'].indexOf(st)>-1; }) }
     ].filter(function(ph){ return ph.steps.length > 0; });
   }
@@ -9143,8 +9157,8 @@ function renderReward(){
     if(!imgSrc){ try{ imgSrc=localStorage.getItem('lifeOS_rwImg')||''; }catch(e){} }
     html+='<div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:14px;background:rgba(10,15,35,.9);border:1px solid rgba(107,182,255,.18)">';
     if(imgSrc){
-      html+='<div id="rw-hero-img-wrap" style="width:100%;height:220px;display:flex;align-items:center;justify-content:center;padding:12px">'
-        +'<img src="'+imgSrc+'" onerror="var w=document.getElementById(\'rw-hero-img-wrap\');if(w)w.style.display=\'none\'" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px">'
+      html+='<div id="rw-hero-img-wrap" style="width:100%;height:220px;overflow:hidden;border-radius:8px 8px 0 0">'
+        +'<img src="'+imgSrc+'" onerror="var w=document.getElementById(\'rw-hero-img-wrap\');if(w)w.style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;display:block">'
         +'</div>';
     }
     html+='<div style="padding:14px 16px">'
@@ -10090,7 +10104,7 @@ function highlightActivePhase(){
   const phaseMap=[
     {label:'Morning',end:9,steps:ts.filter(function(x){return ['A','B','D','E'].indexOf(x)>-1;})},
     {label:'Office',end:17,steps:ts.filter(function(x){return ['F','G','Q'].indexOf(x)>-1;})},
-    {label:'Evening',end:22,steps:ts.filter(function(x){return ['S','T','U','V','W','I','J','K'].indexOf(x)>-1;})},
+    {label:'Evening',end:22,steps:ts.filter(function(x){return ['S','T','U','V','W','I','H','K'].indexOf(x)>-1;})},
     {label:'Night',end:24,steps:ts.filter(function(x){return ['N','O','R'].indexOf(x)>-1;})}
   ];
   let activeIdx=0;
@@ -13026,9 +13040,6 @@ function bowlDeleteBall(){
 })();
 </script>
 
-<!-- ═══════════════ FAB BUTTON ═══════════════ -->
-<button class="tx-fab" id="tx-fab" ontouchstart="" onclick="toggleFabSheet()" aria-label="Log transaction" title="Quick log transaction">＋</button>
-
 <!-- ═══════════════ BOWL CELEBRATION ═══════════════ -->
 <div class="bowl-celebrate" id="bowl-celebrate" onclick="if(event.target===this)bowlCloseCelebrate()">
   <div class="bowl-celebrate-inner">
@@ -13087,90 +13098,6 @@ function bowlDeleteBall(){
   <button class="bowl-modal-delete" id="bowl-modal-delete" style="display:none" onclick="bowlDeleteBall()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block;vertical-align:middle;margin-right:5px"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Delete this ball</button>
 </div>
 
-<!-- ═══════════════ FAB SHEET ═══════════════ -->
-<div class="fab-bg" id="fab-bg" onclick="closeFabSheet()"></div>
-<div class="fab-sheet" id="fab-sheet" role="dialog" aria-modal="true" aria-label="Log transaction">
-  <div class="fab-handle"></div>
-  <div class="fab-hdr">
-    <div class="fab-hdr-title">Log Expense</div>
-    <button class="fab-date-pill" id="fab-date-pill" onclick="fabPickDate()">📅 Today</button>
-    <button class="fab-income-pill" id="fab-income-pill" onclick="fabToggleIncome()">💰 Income</button>
-    <button onclick="closeFabSheet()" aria-label="Close" style="background:rgba(255,255,255,.1);border:1px solid rgba(127,178,255,.2);border-radius:8px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .15s;margin-left:4px">✕</button>
-  </div>
-
-  <!-- Scrollable area -->
-  <div class="fab-sheet-scroll">
-  <!-- Recent (populated by JS) -->
-  <div class="fab-recent-row" id="fab-recent-row" style="display:none"></div>
-  <!-- Presets hidden -->
-  <div class="fab-presets" id="fab-presets" style="display:none"></div>
-
-  <!-- Amount display -->
-  <div class="fab-amt-wrap">
-    <span class="fab-currency-lbl">﷼</span>
-    <span class="fab-amt-num" id="fab-amt-num">0</span>
-  </div>
-
-  <!-- Description — one word note -->
-  <div class="fab-desc-wrap">
-    <input class="fab-desc-inp" id="fab-desc-inp" type="text" placeholder="Note (e.g. Coffee, Petrol, Lunch)" autocomplete="off"
-      oninput="fabDescInput(this.value)" autocapitalize="sentences" style="padding-right:36px">
-    <button id="fab-desc-clear" onclick="document.getElementById('fab-desc-inp').value='';fabDescInput('');this.style.display='none';document.getElementById('fab-desc-inp').focus()" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.12);border:none;border-radius:50%;width:22px;height:22px;color:rgba(255,255,255,.5);font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent;line-height:1;padding:0">✕</button>
-    <div class="fab-sug-list" id="fab-sug-list"></div>
-  </div>
-
-  <!-- Hidden type toggle (kept for code compat) -->
-  <div style="display:none">
-    <button class="fab-type-btn expense active" id="fab-type-exp"></button>
-    <button class="fab-type-btn income" id="fab-type-inc"></button>
-  </div>
-  <div class="fab-cats" id="fab-cats" style="display:none"></div>
-  </div><!-- end .fab-sheet-scroll -->
-
-  <!-- Numpad -->
-  <div class="fab-numpad">
-    <button class="fab-key" onclick="fabKey('1')">1</button>
-    <button class="fab-key" onclick="fabKey('2')">2</button>
-    <button class="fab-key" onclick="fabKey('3')">3</button>
-    <button class="fab-key" onclick="fabKey('4')">4</button>
-    <button class="fab-key" onclick="fabKey('5')">5</button>
-    <button class="fab-key" onclick="fabKey('6')">6</button>
-    <button class="fab-key" onclick="fabKey('7')">7</button>
-    <button class="fab-key" onclick="fabKey('8')">8</button>
-    <button class="fab-key" onclick="fabKey('9')">9</button>
-    <button class="fab-key fab-key-dot" onclick="fabKey('.')">·</button>
-    <button class="fab-key" onclick="fabKey('0')">0</button>
-    <button class="fab-key fab-key-del" onclick="fabKey('del')">⌫</button>
-  </div>
-
-  <!-- Submit -->
-  <button class="fab-log-btn" id="fab-log-btn" onclick="fabAdd()">＋ Log Expense</button>
-
-  <!-- Hidden date picker -->
-  <input type="date" id="fab-date-h" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px" tabindex="-1">
-</div>
-
-<!-- ═══ FAB iOS TOUCH FIX — must be after FAB HTML so getElementById works ═══ -->
-<script>
-(function(){
-  const fab=$id('tx-fab');
-  const bg=document.getElementById('fab-bg');
-  if(!fab) return;
-  let _busy=false;
-  function _open(e){
-    if(e&&e.cancelable) e.preventDefault();
-    if(_busy) return; _busy=true; setTimeout(function(){ _busy=false; },400);
-    if(typeof toggleFabSheet==='function') toggleFabSheet();
-  }
-  function _close(e){
-    if(e&&e.cancelable) e.preventDefault();
-    if(typeof closeFabSheet==='function') closeFabSheet();
-  }
-  /* touchend is the most reliable iOS event — fires before click, no 300ms delay */
-  fab.addEventListener('touchend',_open,{passive:false});
-  if(bg) bg.addEventListener('touchend',_close,{passive:false});
-})();
-</script>
 
 <script>
 
@@ -13346,23 +13273,22 @@ var _fxVialTime = 0;
 
 function fxRenderVials(f, mk, stats){
   const leftover = f.leftover || 0;
-  const monthTx = fnxTxForMonth(f.transactions||[], mk);
-  const totalSpent = monthTx.reduce(function(a,t){return t.type==='expense'?a+t.amount:a},0);
-  const remaining = Math.max(0, leftover - totalSpent);
+  /* leftoverCurrent = manual running balance set via +/− adjust; falls back to leftover */
+  const current = (f.leftoverCurrent !== undefined) ? f.leftoverCurrent : leftover;
   const eg = (f.goals||[]).find(function(g){return (g.name||'').toLowerCase().indexOf('emergency')>-1});
   const savingsTarget = eg ? (eg.target||0) : 0;
   const savedAmt = eg ? (eg.saved||0) : 0;
 
-  /* Spending vial: drains as you spend. Savings vial: fills toward target. INDEPENDENT. */
-  _fxVialState.free.target = leftover > 0 ? Math.min(1, remaining / leftover) : 0;
+  /* Spending vial: fills based on current / leftover (total set amount) */
+  _fxVialState.free.target = leftover > 0 ? Math.min(1, current / leftover) : 0;
   _fxVialState.savings.target = savingsTarget > 0 ? Math.min(1, savedAmt / savingsTarget) : 0;
 
   var freeAmt = document.getElementById('fx-vial-amt-free');
   var freeSub = document.getElementById('fx-vial-sub-free');
   var freePct = document.getElementById('fx-vial-pct-free');
-  if(freeAmt) freeAmt.textContent = fnxFmt(remaining);
-  if(freeSub) freeSub.textContent = leftover > 0 ? fnxFmt(totalSpent)+' spent of '+fnxFmt(leftover) : 'tap to set leftover';
-  if(freePct) freePct.textContent = leftover > 0 ? Math.round((remaining/leftover)*100)+'%' : '—';
+  if(freeAmt) freeAmt.textContent = fnxFmt(current);
+  if(freeSub) freeSub.textContent = leftover > 0 ? fnxFmt(current)+' of '+fnxFmt(leftover) : 'tap to set leftover';
+  if(freePct) freePct.textContent = leftover > 0 ? Math.round((current/leftover)*100)+'%' : '—';
 
   var savAmt = document.getElementById('fx-vial-amt-savings');
   var savSub = document.getElementById('fx-vial-sub-savings');
@@ -13684,6 +13610,66 @@ function fxOpenSavings(){
   window._fxLeftoverMode = false;
   openModal('cm-update-modal');
 }
+
+/* ── Bottle Adjust: inline +/− below vials ── */
+function fxAdjustLeftover(dir){
+  var inp = document.getElementById('fx-adjust-input');
+  var amt = parseFloat(inp ? inp.value : 0);
+  if(!amt || isNaN(amt) || amt <= 0){
+    if(inp){ inp.focus(); inp.style.borderColor='rgba(255,100,100,.6)'; setTimeout(function(){ inp.style.borderColor='rgba(127,178,255,.25)'; },800); }
+    return;
+  }
+  var f = getF();
+  /* leftoverCurrent is the running balance; seed from f.leftover if not yet set */
+  var prev = (f.leftoverCurrent !== undefined) ? f.leftoverCurrent : (f.leftover || 0);
+  var next = dir === 1 ? prev + amt : Math.max(0, prev - amt);
+  f.leftoverCurrent = Math.round(next * 100) / 100;
+  if(!f.bottleLog) f.bottleLog = [];
+  var now = new Date();
+  var dateStr = now.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) + ' ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  f.bottleLog.unshift({ dir: dir, amt: amt, prev: prev, next: f.leftoverCurrent, date: dateStr });
+  if(f.bottleLog.length > 50) f.bottleLog = f.bottleLog.slice(0, 50);
+  setF(f);
+  if(inp){ inp.value = ''; inp.blur(); }
+  if(typeof renderFinance === 'function') renderFinance();
+  fxRenderBottleLog();
+  toast((dir===1?'+ ':'− ') + fnxFmt(amt) + ' leftover');
+}
+
+function fxRenderBottleLog(){
+  var el = document.getElementById('fx-bottle-log');
+  if(!el) return;
+  var f = getF();
+  var log = f.bottleLog || [];
+  if(!log.length){
+    el.innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--muted);font-family:var(--font-ui);font-size:12px;font-weight:600">No adjustments yet</div>';
+    return;
+  }
+  el.innerHTML = log.map(function(e){
+    var isAdd = e.dir === 1;
+    var color = isAdd ? 'var(--green)' : 'var(--red)';
+    var bg    = isAdd ? 'rgba(74,222,128,.07)' : 'rgba(255,100,100,.07)';
+    var bdr   = isAdd ? 'rgba(74,222,128,.2)'  : 'rgba(255,100,100,.18)';
+    var sign  = isAdd ? '+' : '\u2212';
+    var sar   = '\uFDFC';
+    return '<div style="display:flex;align-items:center;background:'+bg+';border:1px solid '+bdr+';border-radius:10px;padding:10px 14px;gap:10px">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-family:var(--font-ui);font-size:12px;font-weight:800;color:'+color+'">'+sign+' '+sar+(+e.amt).toLocaleString()+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-top:2px">'+e.date+' &nbsp;&middot;&nbsp; was '+sar+Math.round(e.prev).toLocaleString()+' &rarr; '+sar+Math.round(e.next).toLocaleString()+'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+(function(){
+  var _origNavTo = window.navTo;
+  window.navTo = function(idx){
+    if(typeof _origNavTo==="function") _origNavTo(idx);
+    if(idx===2) setTimeout(fxRenderBottleLog, 150);
+  };
+  setTimeout(fxRenderBottleLog, 1200);
+})();
+
 /* Monkey-patch confirmCMUpdate to handle leftover + savings modes */
 var _origConfirmCMUpdate = window.confirmCMUpdate;
 window.confirmCMUpdate = function(){
@@ -13696,8 +13682,8 @@ window.confirmCMUpdate = function(){
 
   if(window._fxLeftoverMode){
     window._fxLeftoverMode = false;
-    if(setVal!==null) f.leftover = Math.max(0, setVal);
-    else f.leftover = Math.max(0, (f.leftover||0) + amt);
+    if(setVal!==null){ f.leftover = Math.max(0, setVal); f.leftoverCurrent = f.leftover; }
+    else { f.leftover = Math.max(0, (f.leftover||0) + amt); f.leftoverCurrent = f.leftover; }
     setF(f);
     if(typeof closeModal==='function') closeModal('cm-update-modal');
     fnxRender();

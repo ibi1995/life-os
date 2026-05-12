@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-12-trophy-v5-112px'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-12-trophy-v7-compact'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -232,7 +232,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   padding:0;
   position:relative;
   overflow:hidden;
-  min-height:160px;
+  min-height:92px;
   box-shadow:
     0 0 0 1px rgba(90,150,255,.28),
     0 0 0 2px rgba(20,50,140,.60),
@@ -292,9 +292,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 /* Inner display area */
 .tc-cabinet-display{
-  padding:10px 10px 12px;
+  padding:8px 10px 10px;
   position:relative;
-  min-height:132px;
+  min-height:72px;
 }
 
 /* Glass panel overlay — top-left sheen + diagonal catchlight */
@@ -385,13 +385,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   align-items:flex-end;
   position:relative;
   z-index:3;
-  min-height:112px;
+  min-height:56px;
 }
 
 /* Each trophy ball slot */
 .tc-ball{
-  width:112px;
-  height:112px;
+  width:56px;
+  height:56px;
   border-radius:50%;
   position:relative;
   flex-shrink:0;
@@ -13797,7 +13797,7 @@ function tcRender(animateNew){
     el.setAttribute('title', (b.ballName || '') + ' · ' + (b.tier || 'easy') + ' · ' + b.dateKey);
     /* Deterministic shade: hash from dateKey so same ball always same shade */
     var seed = b.dateKey ? b.dateKey.split('').reduce(function(a,c){ return a+c.charCodeAt(0); }, 0) + idx : idx;
-    el.innerHTML = tcBallSVG(b.tone, b.icon, 112, seed);
+    el.innerHTML = tcBallSVG(b.tone, b.icon, 56, seed);
     inner.appendChild(el);
   });
 }

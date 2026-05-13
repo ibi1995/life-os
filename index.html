@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-12-trophy-v7-compact'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-13-finance-first-v8'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -114,7 +114,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .prog{background:rgba(255,255,255,.09);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;backdrop-filter:var(--blur);box-shadow:var(--ssh)}
 .prog-lbl{font-family:var(--font-ui);font-size:12px;font-weight:700;white-space:nowrap;letter-spacing:.3px;text-transform:uppercase;color:var(--sec)}
 .prog-track{flex:1;height:10px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden}
-.prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#4D8DFF,#7EC8FF);transition:width .55s cubic-bezier(.4,0,.2,1);box-shadow:0 0 12px rgba(126,200,255,.35)}
+.prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--a1),var(--a2));transition:width .55s cubic-bezier(.4,0,.2,1);box-shadow:0 0 12px rgba(126,200,255,.35)}
 .prog-ct{font-family:var(--font-ui);font-size:15px;font-weight:800;color:var(--a2);white-space:nowrap;letter-spacing:-.3px}
 
 
@@ -3110,9 +3110,9 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div class="nav-brand">My Life <span>OS</span></div>
 <div class="nav-tabs-wrap">
 <div class="nav-tabs">
-<button class="tab on" onclick="showPg('today',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-home"/></svg> Today</button>
+<button class="tab on" onclick="showPg('finance',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-finance"/></svg> Finance</button>
+<button class="tab" onclick="showPg('today',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-home"/></svg> Today</button>
 <button class="tab" onclick="showPg('bowl',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-bowl"/></svg> Bowl</button>
-<button class="tab" onclick="showPg('finance',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-finance"/></svg> Finance</button>
 <button class="tab" onclick="showPg('reward',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-gift"/></svg> Reward</button>
 <button class="tab" onclick="showPg('settings',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-settings"/></svg> Settings</button>
 </div>
@@ -3122,9 +3122,9 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <!-- ══════════════════════════ BOTTOM NAV (mobile) -->
 <nav class="bottom-nav" id="bottom-nav" aria-label="Main navigation">
 <div class="bottom-nav-inner">
-<button class="bn-tab active" id="bn-today" onclick="navTo(0)" aria-current="page"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-home"/></svg></div><div class="bn-lbl">Today</div></button>
-<button class="bn-tab" id="bn-bowl" onclick="navTo(1)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-bowl"/></svg></div><div class="bn-lbl">Bowl</div></button>
-<button class="bn-tab" id="bn-finance" onclick="navTo(2)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-finance"/></svg></div><div class="bn-lbl">Finance</div></button>
+<button class="bn-tab active" id="bn-finance" onclick="navTo(0)" aria-current="page"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-finance"/></svg></div><div class="bn-lbl">Finance</div></button>
+<button class="bn-tab" id="bn-today" onclick="navTo(1)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-home"/></svg></div><div class="bn-lbl">Today</div></button>
+<button class="bn-tab" id="bn-bowl" onclick="navTo(2)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-bowl"/></svg></div><div class="bn-lbl">Bowl</div></button>
 <button class="bn-tab" id="bn-reward" onclick="navTo(3)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-gift"/></svg></div><div class="bn-lbl">Reward</div></button>
 <button class="bn-tab" id="bn-settings" onclick="navTo(4)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-settings"/></svg></div><div class="bn-lbl">Settings</div></button>
 </div>
@@ -3133,7 +3133,110 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div class="ptr-spinner"></div>
 <span>Release to refresh</span>
 </div>
-<div class="pages-viewport" id="pages-viewport"><div class="pages-track" id="pages-track"><div class="pg" id="pg-today">
+<div class="pages-viewport" id="pages-viewport"><div class="pages-track" id="pages-track"><div class="pg" id="pg-finance">
+
+  <!-- ═══ HERO BALANCE CARD ═══ -->
+  <div class="fx-hero">
+    <div class="fx-hero-mesh"></div>
+    <div class="fx-hero-inner">
+      <div class="fx-hero-top">
+        <div class="fx-hero-month" id="fx-month-label">May 2026</div>
+        <button class="fx-settings-btn" onclick="fnxOpenEdit()" aria-label="Settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+      <div class="fx-hero-label">Remaining</div>
+      <div class="fx-hero-amount">
+        <span class="fx-hero-cur">﷼</span>
+        <span class="fx-hero-num" id="fx-free-num">0</span>
+      </div>
+      <div class="fx-hero-row">
+        <div class="fx-hero-stat">
+          <div class="fx-hero-stat-label">Leftover</div>
+          <div class="fx-hero-stat-val fx-green" id="fx-income-val">﷼ 0</div>
+        </div>
+        <div class="fx-hero-divider"></div>
+        <div class="fx-hero-stat">
+          <div class="fx-hero-stat-label">Spent</div>
+          <div class="fx-hero-stat-val fx-red" id="fx-spent-val">﷼ 0</div>
+        </div>
+        <div class="fx-hero-divider"></div>
+        <div class="fx-hero-stat">
+          <div class="fx-hero-stat-label">Saved</div>
+          <div class="fx-hero-stat-val fx-gold" id="fx-saved-val">﷼ 0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TWO VIALS: Savings + Free Cash — big glass display ═══ -->
+  <div class="fx-vials-stage">
+    <div class="fx-vial-col" id="fx-vial-savings">
+      <div class="fx-vial-tube-wrap">
+        <canvas class="fx-vial-canvas" id="fx-canvas-savings" width="200" height="320"></canvas>
+        <div class="fx-vial-pct" id="fx-vial-pct-savings">0%</div>
+      </div>
+      <div class="fx-vial-label-block">
+        <div class="fx-vial-label-name">Savings</div>
+        <div class="fx-vial-label-amt" id="fx-vial-amt-savings">﷼ 0</div>
+        <div class="fx-vial-label-sub" id="fx-vial-sub-savings">of ﷼ 0 target</div>
+      </div>
+      <button class="fx-vial-edit-btn" onclick="fxOpenSavings()" aria-label="Add savings">+ Add</button>
+    </div>
+    <div class="fx-vial-col" id="fx-vial-free">
+      <div class="fx-vial-tube-wrap">
+        <canvas class="fx-vial-canvas" id="fx-canvas-free" width="200" height="320"></canvas>
+        <div class="fx-vial-pct" id="fx-vial-pct-free">0%</div>
+      </div>
+      <div class="fx-vial-label-block">
+        <div class="fx-vial-label-name">Leftover</div>
+        <div class="fx-vial-label-amt" id="fx-vial-amt-free">﷼ 0</div>
+        <div class="fx-vial-label-sub" id="fx-vial-sub-free">tap to set</div>
+      </div>
+      <button class="fx-vial-edit-btn" onclick="fxSetLeftover()" aria-label="Set leftover" style="background:color-mix(in srgb,var(--a1) 12%,transparent);border-color:color-mix(in srgb,var(--a1) 35%,transparent);color:var(--a2)">Set Amount</button>
+    </div>
+  </div>
+
+  <!-- ═══ Leftover Adjust ═══ -->
+  <div id="fx-adjust-wrap" style="margin-bottom:18px">
+    <div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Adjust Leftover</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="fxAdjustLeftover(-1)" style="width:44px;height:44px;border-radius:10px;background:rgba(255,100,100,.12);border:1px solid rgba(255,100,100,.28);color:var(--red);font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s" aria-label="Subtract">−</button>
+      <input id="fx-adjust-input" type="number" inputmode="decimal" min="0" placeholder="Amount" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(127,178,255,.25);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:16px;font-weight:700;padding:10px 14px;outline:none;text-align:center;min-height:44px" onfocus="this.select()">
+      <button onclick="fxAdjustLeftover(1)" style="width:44px;height:44px;border-radius:10px;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.28);color:var(--green);font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s" aria-label="Add">+</button>
+    </div>
+  </div>
+
+  <!-- ═══ Bottle Transaction Log ═══ -->
+  <div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Leftover History</div>
+  <div id="fx-bottle-log" style="display:flex;flex-direction:column;gap:6px;margin-bottom:90px"></div>
+
+  <!-- ═══ Transactions (hidden — kept for legacy compat) ═══ -->
+  <div class="fx-tx-log" id="fnx-tx-log" style="display:none"></div>
+
+  <!-- ═══ Hidden inputs preserved for old code ═══ -->
+  <div style="display:none">
+    <div id="bt-header-sub"></div><div id="fin-month-label"></div><div id="fin-month-sub"></div>
+    <div id="bt-metrics"></div><div id="bt-charts"></div><div id="bt-legend"></div>
+    <div id="bt-table-body"></div><div id="bt-split-box"></div><div id="bt-split-hdr"></div>
+    <div id="bt-split-body"></div><div id="tx-list"></div>
+    <input id="tx-search" type="text">
+    <select id="tx-filter-type"><option value=""></option></select>
+    <input id="tx-desc-in"><input id="tx-amt-in"><input id="tx-notes-in"><input id="tx-date-in" type="date">
+    <div id="tx-cat-row"></div>
+    <button id="txtype-exp"></button><button id="txtype-inc"></button>
+    <!-- Stubs for removed elements so old code doesn't crash -->
+    <div id="fnx-hero-num"></div><div id="fnx-hero-sub"></div>
+    <div id="fnx-pace-time"></div><div id="fnx-pace-budget"></div><div id="fnx-pace-status"></div><div id="fnx-pace"></div>
+    <div id="fnx-month-label"></div><div id="fnx-month-strip"></div>
+    <div id="fnx-coach"></div><div id="fnx-coach-icon"></div><div id="fnx-coach-text"></div><div id="fnx-coach-dots"></div>
+    <div id="fnx-bills-strip"></div><div id="fnx-orbit-wrap"></div><div id="fnx-orbit-amt"></div><div id="fnx-orbit-sub"></div>
+    <div id="fnx-vials-row"></div><div id="fnx-unsorted-badge"></div><div id="fnx-unsorted-count"></div>
+    <div id="fnx-tx-search"></div>
+  </div>
+
+</div>
+<div class="pg" id="pg-today">
 <div class="pg-inner">
 <!-- Fix 5: Data backup notice (shown once per week) -->
 <div id="backup-notice" style="display:none;background:linear-gradient(135deg,rgba(77,141,255,.1),rgba(30,70,200,.07));border:1px solid rgba(107,182,255,.2);border-radius:6px;padding:11px 14px;margin-bottom:10px;align-items:center;gap:10px">
@@ -3209,33 +3312,6 @@ textarea.auto-grow{overflow:hidden;resize:none}
   <div class="xp-strip-amt" id="xp-strip-amt">0 XP</div>
   <div class="xp-strip-tokens" id="xp-strip-tokens">🏅 0</div>
 </div>
-<div class="streak-bar">
-  <div class="streak-tile">
-    <span style="font-size:20px">&#128293;</span>
-    <div>
-      <div class="streak-tile-lbl">Streak</div>
-      <div class="streak-tile-val" id="streak-cur-badge" style="color:#fff">0 days</div>
-    </div>
-  </div>
-  <div class="streak-tile">
-    <span style="font-size:20px">&#127942;</span>
-    <div>
-      <div class="streak-tile-lbl">Best</div>
-      <div class="streak-tile-val" id="streak-best-badge" style="color:var(--gold)">0 days</div>
-    </div>
-  </div>
-  <div class="streak-tile">
-    <span style="font-size:20px">⚡</span>
-    <div>
-      <div class="streak-tile-lbl">XP</div>
-      <div class="streak-tile-val" id="xp-inline-amt" style="color:var(--gold)">0 XP</div>
-      <div style="font-family:var(--font-ui);font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.3px;text-transform:uppercase;margin-top:1px" id="xp-inline-lvl">LVL 1 · RECRUIT</div>
-    </div>
-  </div>
-
-</div>
-<!-- Finance strip -->
-<div class="fin-strip" id="fin-strip"></div>
 <!-- Reward progress strip -->
 <div id="rw-strip" style="display:none;margin-bottom:10px"></div>
 <!-- Streak at risk banner -->
@@ -3273,14 +3349,12 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div class="hc not-eid" id="hW"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'W')}"><div class="hc-chk" onclick="tickDone(event,'W')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Wall Angels — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'W')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">W</span><span class="hc-name">Wall Angels</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:25 PM</span></div><div class="hc-action">Back flat on wall, arms in goalpost. Slide up/down keeping contact. 10 reps × 2.</div></div></div></div>
 
 
-<div class="hc" id="hK"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'K')}"><div class="hc-chk" onclick="tickDone(event,'K')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Slow Dinner — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'K')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">K</span><span class="hc-name">Slow Dinner</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">7:00 PM</span></div><div class="hc-action">One portion. 20 min minimum. Fork down each bite. No screen.</div></div></div></div>
 <div class="hc" id="hH"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'H')}"><div class="hc-chk" onclick="tickDone(event,'H')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Psyllium Husk — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'H')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">H</span><span class="hc-name">Psyllium Husk</span><span class="hc-time">6:45 PM</span></div><div class="hc-action">1 tsp in a full glass of water, before dinner. Drink immediately — don't let it sit.</div></div></div></div>
 
 
 <div class="hc" id="hN"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'N')}"><div class="hc-chk" onclick="tickDone(event,'N')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Brush Teeth — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'N')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">N</span><span class="hc-name">Brush Teeth</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">10:30 PM</span></div><div class="hc-action">Brush, floss, wash face. Same time every night. Sleep cue.</div></div></div></div>
 <div class="hc" id="hM"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'M')}"><div class="hc-chk" onclick="tickDone(event,'M')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Magnesium Glycinate — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'M')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">M</span><span class="hc-name">Magnesium Glycinate</span><span class="hc-time">10:32 PM</span></div><div class="hc-action">400mg with water. Take after brushing — improves sleep quality and muscle recovery.</div></div></div></div>
 <div class="hc week-only" id="hX"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'X')}"><div class="hc-chk" onclick="tickDone(event,'X')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Export Data — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'X')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">X</span><span class="hc-name">Export Data</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">10:28 PM</span></div><div class="hc-action">Settings → Export backup. Takes 2 seconds. Your data, your insurance.</div></div></div></div>
-<div class="hc week-only" id="hO"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'O')}"><div class="hc-chk" onclick="tickDone(event,'O')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Journal and Breathe — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'O')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">O</span><span class="hc-name">Journal + Breathe</span><span class="hc-time">10:35 PM</span></div><div class="hc-action">Win / Challenge / Tomorrow. Then 5 min slow breathing.</div></div></div></div>
 <div class="hc sat-only" id="hR"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'R')}"><div class="hc-chk" onclick="tickDone(event,'R')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Weekly Reset — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'R')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">R</span><span class="hc-name">Weekly Reset</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">10:00 PM</span></div><div class="hc-action">Tidy workspace. Prep bag and clothes. 5-min review of last week done.</div></div></div></div>
 
 </div><!-- /.hc-list -->
@@ -3322,6 +3396,31 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div class="heatmap-outer">
 <div class="heatmap-grid" id="hm-grid"></div>
 </div>
+</div>
+<!-- Streak + Best + XP — below heatmap -->
+<div class="streak-bar" style="margin-top:12px">
+  <div class="streak-tile">
+    <span style="font-size:20px">&#128293;</span>
+    <div>
+      <div class="streak-tile-lbl">Streak</div>
+      <div class="streak-tile-val" id="streak-cur-badge" style="color:#fff">0 days</div>
+    </div>
+  </div>
+  <div class="streak-tile">
+    <span style="font-size:20px">&#127942;</span>
+    <div>
+      <div class="streak-tile-lbl">Best</div>
+      <div class="streak-tile-val" id="streak-best-badge" style="color:var(--gold)">0 days</div>
+    </div>
+  </div>
+  <div class="streak-tile">
+    <span style="font-size:20px">⚡</span>
+    <div>
+      <div class="streak-tile-lbl">XP</div>
+      <div class="streak-tile-val" id="xp-inline-amt" style="color:var(--gold)">0 XP</div>
+      <div style="font-family:var(--font-ui);font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.3px;text-transform:uppercase;margin-top:1px" id="xp-inline-lvl">LVL 1 · RECRUIT</div>
+    </div>
+  </div>
 </div>
 </div><!-- end pg-inner -->
 </div>
@@ -3415,110 +3514,6 @@ textarea.auto-grow{overflow:hidden;resize:none}
   </div><!-- end pg-inner -->
 
 </div>
-<div class="pg" id="pg-finance">
-
-  <!-- ═══ HERO BALANCE CARD ═══ -->
-  <div class="fx-hero">
-    <div class="fx-hero-mesh"></div>
-    <div class="fx-hero-inner">
-      <div class="fx-hero-top">
-        <div class="fx-hero-month" id="fx-month-label">May 2026</div>
-        <button class="fx-settings-btn" onclick="fnxOpenEdit()" aria-label="Settings">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        </button>
-      </div>
-      <div class="fx-hero-label">Remaining</div>
-      <div class="fx-hero-amount">
-        <span class="fx-hero-cur">﷼</span>
-        <span class="fx-hero-num" id="fx-free-num">0</span>
-      </div>
-      <div class="fx-hero-row">
-        <div class="fx-hero-stat">
-          <div class="fx-hero-stat-label">Leftover</div>
-          <div class="fx-hero-stat-val fx-green" id="fx-income-val">﷼ 0</div>
-        </div>
-        <div class="fx-hero-divider"></div>
-        <div class="fx-hero-stat">
-          <div class="fx-hero-stat-label">Spent</div>
-          <div class="fx-hero-stat-val fx-red" id="fx-spent-val">﷼ 0</div>
-        </div>
-        <div class="fx-hero-divider"></div>
-        <div class="fx-hero-stat">
-          <div class="fx-hero-stat-label">Saved</div>
-          <div class="fx-hero-stat-val fx-gold" id="fx-saved-val">﷼ 0</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ TWO VIALS: Savings + Free Cash — big glass display ═══ -->
-  <div class="fx-vials-stage">
-    <div class="fx-vial-col" id="fx-vial-savings">
-      <div class="fx-vial-tube-wrap">
-        <canvas class="fx-vial-canvas" id="fx-canvas-savings" width="200" height="320"></canvas>
-        <div class="fx-vial-pct" id="fx-vial-pct-savings">0%</div>
-      </div>
-      <div class="fx-vial-label-block">
-        <div class="fx-vial-label-name">Savings</div>
-        <div class="fx-vial-label-amt" id="fx-vial-amt-savings">﷼ 0</div>
-        <div class="fx-vial-label-sub" id="fx-vial-sub-savings">of ﷼ 0 target</div>
-      </div>
-      <button class="fx-vial-edit-btn" onclick="fxOpenSavings()" aria-label="Add savings">+ Add</button>
-    </div>
-    <div class="fx-vial-col" id="fx-vial-free">
-      <div class="fx-vial-tube-wrap">
-        <canvas class="fx-vial-canvas" id="fx-canvas-free" width="200" height="320"></canvas>
-        <div class="fx-vial-pct" id="fx-vial-pct-free">0%</div>
-      </div>
-      <div class="fx-vial-label-block">
-        <div class="fx-vial-label-name">Leftover</div>
-        <div class="fx-vial-label-amt" id="fx-vial-amt-free">﷼ 0</div>
-        <div class="fx-vial-label-sub" id="fx-vial-sub-free">tap to set</div>
-      </div>
-      <button class="fx-vial-edit-btn" onclick="fxSetLeftover()" aria-label="Set leftover" style="background:rgba(77,141,255,.1);border-color:rgba(77,141,255,.3);color:var(--a2)">Set Amount</button>
-    </div>
-  </div>
-
-  <!-- ═══ Leftover Adjust ═══ -->
-  <div id="fx-adjust-wrap" style="margin-bottom:18px">
-    <div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Adjust Leftover</div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button onclick="fxAdjustLeftover(-1)" style="width:44px;height:44px;border-radius:10px;background:rgba(255,100,100,.12);border:1px solid rgba(255,100,100,.28);color:var(--red);font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s" aria-label="Subtract">−</button>
-      <input id="fx-adjust-input" type="number" inputmode="decimal" min="0" placeholder="Amount" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(127,178,255,.25);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:16px;font-weight:700;padding:10px 14px;outline:none;text-align:center;min-height:44px" onfocus="this.select()">
-      <button onclick="fxAdjustLeftover(1)" style="width:44px;height:44px;border-radius:10px;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.28);color:var(--green);font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s" aria-label="Add">+</button>
-    </div>
-  </div>
-
-  <!-- ═══ Bottle Transaction Log ═══ -->
-  <div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Leftover History</div>
-  <div id="fx-bottle-log" style="display:flex;flex-direction:column;gap:6px;margin-bottom:90px"></div>
-
-  <!-- ═══ Transactions (hidden — kept for legacy compat) ═══ -->
-  <div class="fx-tx-log" id="fnx-tx-log" style="display:none"></div>
-
-  <!-- ═══ Hidden inputs preserved for old code ═══ -->
-  <div style="display:none">
-    <div id="bt-header-sub"></div><div id="fin-month-label"></div><div id="fin-month-sub"></div>
-    <div id="bt-metrics"></div><div id="bt-charts"></div><div id="bt-legend"></div>
-    <div id="bt-table-body"></div><div id="bt-split-box"></div><div id="bt-split-hdr"></div>
-    <div id="bt-split-body"></div><div id="tx-list"></div>
-    <input id="tx-search" type="text">
-    <select id="tx-filter-type"><option value=""></option></select>
-    <input id="tx-desc-in"><input id="tx-amt-in"><input id="tx-notes-in"><input id="tx-date-in" type="date">
-    <div id="tx-cat-row"></div>
-    <button id="txtype-exp"></button><button id="txtype-inc"></button>
-    <!-- Stubs for removed elements so old code doesn't crash -->
-    <div id="fnx-hero-num"></div><div id="fnx-hero-sub"></div>
-    <div id="fnx-pace-time"></div><div id="fnx-pace-budget"></div><div id="fnx-pace-status"></div><div id="fnx-pace"></div>
-    <div id="fnx-month-label"></div><div id="fnx-month-strip"></div>
-    <div id="fnx-coach"></div><div id="fnx-coach-icon"></div><div id="fnx-coach-text"></div><div id="fnx-coach-dots"></div>
-    <div id="fnx-bills-strip"></div><div id="fnx-orbit-wrap"></div><div id="fnx-orbit-amt"></div><div id="fnx-orbit-sub"></div>
-    <div id="fnx-vials-row"></div><div id="fnx-unsorted-badge"></div><div id="fnx-unsorted-count"></div>
-    <div id="fnx-tx-search"></div>
-  </div>
-
-</div>
-
 <div class="pg" id="pg-reward">
 <div class="pg-inner">
 <div class="pg-hdr">
@@ -3528,7 +3523,6 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div id="rw-content"><!-- rendered by JS --></div>
 </div>
 </div>
-<!-- ══════════════════════════════════════════════════ BATTLE PASS PAGE -->
 <div class="pg" id="pg-battlepass" style="display:none!important">
 <div class="pg-inner">
 
@@ -3662,8 +3656,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div id="score-content"></div>
 
   </div><!-- /pg-inner -->
-</div><!-- /pg-battlepass -->
-
+</div>
 <div class="pg" id="pg-settings">
 <div class="pg-inner">
 <div class="ss">
@@ -4495,7 +4488,7 @@ function parseAmt(str){ return parseFloat(String(str).replace(/[^0-9.]/g,''))||0
 /* ════════════════════════════════════════════
    GESTURE NAVIGATION ENGINE
 ════════════════════════════════════════════ */
-const PAGE_IDS  = ['today','bowl','finance','reward','settings'];
+const PAGE_IDS  = ['finance','today','bowl','reward','settings'];
 const PAGE_NAMES= ['Today','Gym','Bowl','Finance','Reward','Settings'];
 let curPage   = 0;
 let isAnimating = false;
@@ -4794,14 +4787,14 @@ function _onPageEnter(id){
   }
 
   document.addEventListener('touchstart', function(e){
-    if(curPage !== 0) return;
+    if(curPage !== PAGE_IDS.indexOf('today')) return;
     if(getTodayScroll() > 0) return;
     startY   = e.touches[0].clientY;
     pulling  = true;
   }, {passive:true});
 
   document.addEventListener('touchmove', function(e){
-    if(!pulling || curPage !== 0) return;
+    if(!pulling || curPage !== PAGE_IDS.indexOf('today')) return;
     let dy = e.touches[0].clientY - startY;
     if(dy <= 0){ ptr.classList.remove('visible','releasing'); return; }
     if(getTodayScroll() > 4){ pulling = false; return; }
@@ -4811,7 +4804,7 @@ function _onPageEnter(id){
   }, {passive:true});
 
   document.addEventListener('touchend', function(){
-    if(!pulling || curPage !== 0){ pulling=false; return; }
+    if(!pulling || curPage !== PAGE_IDS.indexOf('today')){ pulling=false; return; }
     pulling = false;
     let h = parseInt(ptr.style.height) || 0;
     if(h >= PTR_TRIGGER && !spinning){
@@ -5460,22 +5453,23 @@ function renderFinStrip(){
   const savedAmt=eg?(eg.saved||0):0;
   const savingsTarget=eg?(eg.target||0):0;
   let el=document.getElementById('fin-strip');
+  if(!el) return;
   el.innerHTML=
-    '<div class="fin-strip-item" style="cursor:pointer" onclick="navTo(3)">'+
+    '<div class="fin-strip-item" style="cursor:pointer" onclick="navTo(PAGE_IDS.indexOf(\'finance\'))">'+
       '<div class="fin-strip-lbl">Leftover</div>'+
       '<div class="fin-strip-val">'+sar(leftover)+'</div>'+
     '</div>'+
-    '<div class="fin-strip-item" style="cursor:pointer" onclick="navTo(3)">'+
+    '<div class="fin-strip-item" style="cursor:pointer" onclick="navTo(PAGE_IDS.indexOf(\'finance\'))">'+
       '<div class="fin-strip-lbl">Spent</div>'+
       '<div class="fin-strip-val" style="color:'+(txSpend>leftover?'#FF8B8B':'#FFE8A0')+'">'+sar(txSpend)+'</div>'+
     '</div>'+
-    '<div class="fin-strip-item" style="cursor:pointer" onclick="navTo(3)">'+
+    '<div class="fin-strip-item" style="cursor:pointer" onclick="navTo(PAGE_IDS.indexOf(\'finance\'))">'+
       '<div class="fin-strip-lbl">Remaining</div>'+
       '<div class="fin-strip-val" style="color:'+(remaining>0?'#4ade80':'#FF8B8B')+'">'+sar(remaining)+'</div>'+
       (leftover>0?'<div style="font-size:9px;color:var(--muted);margin-top:1px">'+sar(dailyBudget)+'/day · '+daysLeft+'d left</div>':'')+
     '</div>'+
     (savedAmt>0?
-      '<div class="fin-strip-item" style="cursor:pointer;border-left:1px solid rgba(255,217,125,.2);padding-left:16px;margin-left:4px" onclick="navTo(3)">'+
+      '<div class="fin-strip-item" style="cursor:pointer;border-left:1px solid rgba(255,217,125,.2);padding-left:16px;margin-left:4px" onclick="navTo(PAGE_IDS.indexOf(\'finance\'))">'+
         '<div class="fin-strip-lbl" style="color:var(--gold)">Saved</div>'+
         '<div class="fin-strip-val" style="color:#4ade80">'+sar(savedAmt)+'</div>'+
         (savingsTarget>0?'<div style="font-size:9px;color:var(--muted);margin-top:1px">'+Math.round(savedAmt/savingsTarget*100)+'%</div>':'')+
@@ -7000,11 +6994,13 @@ function buildHeatmap(){
         cell.style.background='rgba(255,255,255,.05)'; cell.style.cursor='default';
       } else if(isToday){
         cell.style.background='rgba(255,255,255,.15)';
-        cell.style.outline='1.5px solid rgba(107,182,255,.7)';
+        var _a1=getComputedStyle(document.documentElement).getPropertyValue('--a2').trim();
+        cell.style.outline='1.5px solid '+(_a1||'rgba(107,182,255,.7)');
         cell.style.outlineOffset='-1px';
         cell.title='Today: '+day.n+'/'+getStepsForDay(day.date).length+' habits';
       } else if(cellPass2){
-        cell.style.background='rgba(107,182,255,.28)';
+        var _hmA1=getComputedStyle(document.documentElement).getPropertyValue('--a1').trim();
+        cell.style.background=(_hmA1||'hsl(210,95%,62%)')+'28'; // approx .28 alpha — use hex shortcut
         cell.style.outline='1px dashed rgba(107,182,255,.55)';
         cell.style.outlineOffset='-1px';
         cell.title=day.key+(cellPass2==='freepass'?' (Free Pass)':(cellPass2==='freeze'?' (Shield)':''));
@@ -7012,12 +7008,16 @@ function buildHeatmap(){
         cell.style.background='rgba(255,255,255,.08)';
         cell.title=day.key+': 0 habits';
       } else {
+        var _cs=getComputedStyle(document.documentElement);
+        var _rawHue=(_cs.getPropertyValue('--a1')||'hsl(210,95%,62%)').trim();
+        var _hueMatch=_rawHue.match(/\d+/);
+        var _h=_hueMatch?parseInt(_hueMatch[0]):210;
         const intensity=day.n/getStepsForDay(day.date).length;
-        if(intensity<0.25)       cell.style.background='rgba(77,141,255,.25)';
-        else if(intensity<0.5)   cell.style.background='rgba(77,141,255,.50)';
-        else if(intensity<0.75)  cell.style.background='rgba(77,141,255,.75)';
-        else if(intensity<1)     cell.style.background='rgba(107,182,255,.90)';
-        else                     cell.style.background='#6BB6FF';
+        if(intensity<0.25)       cell.style.background='hsla('+_h+',70%,58%,.28)';
+        else if(intensity<0.5)   cell.style.background='hsla('+_h+',75%,60%,.52)';
+        else if(intensity<0.75)  cell.style.background='hsla('+_h+',80%,62%,.76)';
+        else if(intensity<1)     cell.style.background='hsla('+_h+',85%,65%,.92)';
+        else                     cell.style.background='hsl('+_h+',88%,68%)';
         cell.title=day.key+': '+day.n+'/'+getStepsForDay(day.date).length+' habits ('+Math.round(intensity*100)+'%)';
       }
       cell.setAttribute('aria-label',cell.title||day.key);
@@ -9928,6 +9928,143 @@ function _playBallsShaking(durationMs){
 /* ════════════════════════════════════════════
    THEME ENGINE
 ════════════════════════════════════════════ */
+
+/* ── Single function: injects all theme-override CSS into one <style> tag ──
+   Logic: set --hue-shift once in applyTheme(), then CSS hue-rotate() does
+   the work on blue-heavy containers. Explicit HSL overrides cover the rest. ── */
+function _applyToneCSS(hue){
+  var h = hue;
+
+  /* 1. Bowl ball tone swatches in library/editor */
+  var tones  = ['strawberry','bubblegum','tangerine','banana','apple','cotton','blueberry','grape'];
+  var lights = [72, 64, 78, 56, 40, 88, 60, 52];
+  var darks  = [48, 42, 56, 34, 22, 70, 38, 32];
+  var css = tones.map(function(t,i){
+    return '.bowl-ball.tone-'+t+'{background:linear-gradient(135deg,hsl('+h+',82%,'+lights[i]+'%),hsl('+h+',90%,'+darks[i]+'%))}';
+  }).join('');
+  if(typeof BOWL_BALL_COLORS !== 'undefined'){
+    tones.forEach(function(t,i){
+      BOWL_BALL_COLORS[t] = 'hsl('+h+',84%,'+Math.round((lights[i]+darks[i])/2)+'%)';
+    });
+  }
+
+  /* 2. hue-rotate on self-contained blue containers (no semantic color children) */
+  css += '#bowl-machine-canvas{filter:hue-rotate(var(--hue-shift,0deg)) drop-shadow(0 8px 24px rgba(8,24,80,.45))!important}'
+       + '.tc-cabinet{filter:hue-rotate(var(--hue-shift,0deg))!important}'
+       + '.fx-vial-canvas{filter:hue-rotate(var(--hue-shift,0deg))!important}'
+       + '.fx-hero-mesh{filter:hue-rotate(var(--hue-shift,0deg))!important}'
+       + '.rest-timer-bar{filter:hue-rotate(var(--hue-shift,0deg))!important}'
+       + '#bowl-challenge-area{filter:hue-rotate(var(--hue-shift,0deg))!important}';
+
+  /* helper shorthands */
+  var b  = function(a){ return 'hsla('+h+',68%,70%,'+a+')'; };   // border/bdr tint
+  var a1 = function(a){ return 'hsla('+h+',88%,62%,'+a+')'; };   // a1 tint
+  var a2 = function(a){ return 'hsla('+h+',82%,68%,'+a+')'; };   // a2 tint
+  var bg = function(l){ return 'hsl('+h+',62%,'+l+'%)'; };       // solid bg shade
+
+  /* 3. Finance hero card border */
+  css += '.fx-hero{border-color:'+b('.22')+'!important}';
+
+  /* 4. Modal / sheet backgrounds (contain semantic colors — explicit override) */
+  css += '.bowl-modal{background:linear-gradient(160deg,'+bg(14)+','+bg(9)+')!important;border-color:'+b('.25')+'!important}'
+       + '.bowl-celebrate-inner{background:linear-gradient(160deg,'+bg(18)+','+bg(11)+')!important}'
+       + '.fab-sheet{background:linear-gradient(175deg,'+bg(13)+','+bg(10)+')!important;border-color:'+b('.22')+'!important}'
+       + '.fab-sug-list{background:'+bg(13)+'!important;border-color:'+b('.3')+'!important}';
+
+  /* 5. Buttons with hardcoded blue gradient stops */
+  css += '.save-btn{background:linear-gradient(135deg,'+a1('.9')+','+a1('.6')+')!important}'
+       + '.abtn.p{background:linear-gradient(135deg,'+a1('.9')+','+a1('.5')+')!important}';
+
+  /* 6. Banners / notice cards (inline-styled HTML) */
+  css += '#backup-notice,#first-use-banner,#np-banner{border-color:'+b('.25')+'!important;background:linear-gradient(135deg,'+a1('.12')+','+a1('.06')+')!important}'
+       + '.score-evidence{background:'+a1('.08')+'!important;border-color:'+a2('.25')+'!important}';
+
+  /* 7. ── ALL-PAGE border & background overrides ─────────────────────────── */
+
+  /* Today page — habit list */
+  css += '.hc{border-bottom-color:'+b('.1')+'!important}'
+       + '.hc-chk{border-color:'+b('.45')+'!important}'
+       + '.hc:hover .hc-chk{border-color:'+a2('.8')+'!important;background:'+a2('.06')+'!important}'
+       + '.hc-list{border-color:'+b('.12')+'!important}'
+       + 'textarea:focus{border-color:'+a2('.5')+'!important}';
+
+  /* Today page — workout/week strip */
+  css += '.wk-day-btn{border-color:'+b('.18')+'!important}'
+       + '.wk-card:hover{border-color:'+b('.3')+'!important}';
+
+  /* Today page — edit panel */
+  css += '.epd-habit{border-color:'+b('.18')+'!important}'
+       + '.epd-habit:hover{border-color:'+b('.35')+'!important}'
+       + '.epd-habit.on{background:'+a1('.18')+'!important;border-color:'+a2('.5')+'!important}'
+       + '.epd-chk{border-color:'+b('.4')+'!important}'
+       + '.epd-date-input:focus{border-color:'+a2('.55')+'!important}';
+
+  /* Today page — misc */
+  css += '.abtn:hover{border-color:'+b('.4')+'!important}'
+       + '.save-btn:hover{box-shadow:0 8px 28px '+a1('.5')+'!important}';
+
+  /* Bowl page — library cards */
+  css += '.bowl-progress{border-color:'+b('.18')+'!important}'
+       + '.bowl-history{border-color:'+b('.15')+'!important}'
+       + '.bowl-lib-card{border-color:'+b('.15')+'!important}'
+       + '.bowl-lib-item{border-bottom-color:'+b('.1')+'!important}'
+       + '.bowl-lib-add:active{background:'+a1('.2')+'!important}'
+       + '.bowl-modal-input:focus{border-color:'+a2('.6')+'!important}';
+
+  /* Finance page — transaction sheet (FAB) */
+  css += '.fab-preset{border-color:'+b('.15')+'!important}'
+       + '.fab-preset.sel{background:'+a1('.18')+'!important;border-color:'+a2('.5')+'!important}'
+       + '.fab-amt-wrap{border-color:'+b('.15')+'!important}'
+       + '.fab-amt-wrap.active{border-color:'+a2('.4')+'!important}'
+       + '.fab-sug-item+.fab-sug-item{border-top-color:'+b('.1')+'!important}'
+       + '.fab-sug-item:hover,.fab-sug-item:active{background:'+a1('.18')+'!important}'
+       + '.fab-key:active{background:'+a1('.3')+'!important;border-color:'+a2('.45')+'!important}'
+       + '.fab-desc-inp:focus{border-color:'+a2('.6')+'!important}'
+       + '.fab-log-btn:active{box-shadow:0 2px 10px '+a1('.25')+'!important}'
+       + '.tx-item:hover,.tx-item:focus-within{background:'+a1('.06')+'!important}'
+       + '.tx-item:active{background:'+a1('.1')+'!important}'
+       + '.fin-input:focus{border-color:'+a2('.55')+'!important}'
+       + '.import-banner-btn:hover{background:linear-gradient(135deg,rgba(74,222,128,.32),'+a1('.28')+')!important}';
+
+  /* Finance page — edit modal close btn */
+  css += '.fnx-close-btn,button[onclick="fnxCloseEdit()"]{border-color:'+b('.2')+'!important}';
+
+  /* Gym page */
+  css += '.ab-chip.strength{border-color:'+a2('.25')+'!important}'
+       + '.ab-chip.strength:active{border-color:'+a2('.6')+'!important}'
+       + '.ab-chip::before{background:linear-gradient(135deg,'+a1('.18')+','+a2('.06')+')!important}'
+       + '.ab-hist-row.is-today{background:'+a1('.08')+'!important;border-color:'+a2('.22')+'!important}'
+       + '.ab-hist-pill.s{color:var(--a2)!important;background:'+a1('.10')+'!important;border-color:'+a2('.20')+'!important}'
+       + '.ab-emoji-btn.on{background:'+a1('.22')+'!important;border-color:'+a2('.6')+'!important;box-shadow:0 0 0 2px '+a2('.18')+'!important}'
+       + '.ab-detail-qb:active{background:'+a1('.18')+'!important;border-color:'+a2('.5')+'!important}'
+       + '.stype-btn.on.strength{background:'+a1('.2')+'!important;border-color:'+a2('.6')+'!important;box-shadow:0 0 20px '+a1('.2')+'!important}'
+       + '.add-set-btn:hover{background:'+a1('.2')+'!important;border-color:'+a2('.55')+'!important}'
+       + '.gym-hist-card:hover{border-color:'+b('.38')+'!important}'
+       + '.steps-inp:focus{border-color:'+a2('.55')+'!important}'
+       + '.set-inp:focus{border-color:'+a2('.55')+'!important}'
+       + '.bw-inp:focus{border-color:'+a2('.55')+'!important}'
+       + '.sh-day.today-cell{background:'+a1('.12')+'!important}'
+       + '.sh-day-inp:focus{border-color:'+a2('.6')+'!important}'
+       + '.sh-day-inp.has-val{border-color:'+a2('.4')+'!important;background:'+a1('.14')+'!important}';
+
+  /* Bottom nav */
+  css += '.bn-tab.active{background:'+a1('.28')+'!important}';
+
+  /* Hover border in media query */
+  css += '@media(hover:hover){.hc:hover{border-color:'+a2('.38')+'!important}}';
+
+  /* 8. Finance page CSS vars (bt-* family) */
+  var _fp = document.getElementById('pg-finance');
+  if(_fp){
+    _fp.style.setProperty('--bt-border',        b('.22'));
+    _fp.style.setProperty('--bt-border-strong', b('.35'));
+  }
+
+  var styleEl = document.getElementById('lifeOS-theme-tones');
+  if(!styleEl){ styleEl = document.createElement('style'); styleEl.id='lifeOS-theme-tones'; document.head.appendChild(styleEl); }
+  styleEl.textContent = css;
+}
+
 const THEME_PRESETS = {
   220: { bg1:"hsl(220,69%,20%)", bg2:"hsl(220,65%,30%)", bg3:"hsl(220,60%,43%)", a1:"hsl(220,100%,65%)", a2:"hsl(210,100%,74%)", sec:"hsl(215,80%,88%)", muted:"hsl(215,40%,65%)", bdr:"hsla(215,70%,70%,0.22)", div:"hsla(215,70%,70%,0.14)", card2:"hsla(220,60%,70%,0.20)" },
   155: { bg1:"hsl(155,65%,14%)", bg2:"hsl(155,60%,22%)", bg3:"hsl(155,55%,33%)", a1:"hsl(155,80%,50%)", a2:"hsl(160,80%,65%)", sec:"hsl(155,60%,85%)", muted:"hsl(155,35%,60%)", bdr:"hsla(155,60%,65%,0.22)", div:"hsla(155,60%,65%,0.14)", card2:"hsla(155,55%,60%,0.20)" },
@@ -9967,6 +10104,23 @@ function applyTheme(hue){
   /* Derive nav background from bg1 — convert hsl(...) → hsla(...,.92) */
   const navBg = t.bg1.replace(/^hsl\(/, 'hsla(').replace(/\)$/, ',.92)');
   r.style.setProperty('--nav-bg', navBg);
+  /* Rebuild heatmap cells with new theme colors */
+  if(typeof buildHeatmap === 'function') {
+    try { buildHeatmap(); } catch(e) {}
+  }
+  /* Update heatmap legend dots to match theme accent */
+  var _hmH = (t.a1.match(/\d+/)||['210'])[0];
+  var legendDots = document.querySelectorAll('.heatmap-legend-dots .hl-dot');
+  var intensities = [0, .28, .52, .76, .92, 1];
+  var alphas = ['rgba(255,255,255,.08)', 'hsla('+_hmH+',70%,58%,.28)', 'hsla('+_hmH+',75%,60%,.52)',
+                'hsla('+_hmH+',80%,62%,.76)', 'hsla('+_hmH+',85%,65%,.92)', 'hsl('+_hmH+',88%,68%)'];
+  legendDots.forEach(function(dot, i){ if(alphas[i]) dot.style.background = alphas[i]; });
+
+  /* ── hue-shift: drives CSS hue-rotate() on blue-heavy containers ── */
+  r.style.setProperty('--hue-shift', (hue - 210) + 'deg');
+
+  /* ── Apply all theme CSS overrides (tones, hue-rotate targets, borders) ── */
+  _applyToneCSS(hue);
 }
 
 function setTheme(hue, btn){
@@ -10565,7 +10719,7 @@ initTheme();
     _applyTrackPos(false);
     _syncNavUI(0);
     window.scrollTo(0, 0);
-    try{ _onPageEnter('today'); } catch(e){}
+    try{ _onPageEnter('finance'); } catch(e){}
   }, {once:true});
   // Nav date
   let days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -13029,9 +13183,9 @@ function renderBowl(){
           var tiers=['easy','medium','hard'];
           var _hardStrk=typeof getRwHardStreak==='function'?getRwHardStreak():0;
           var tierMeta={
-            easy:{label:'Easy',color:'rgba(107,182,255,.9)',bg:'rgba(18,38,80,.88)',border:'rgba(107,182,255,.28)',glow:'rgba(77,141,255,.35)'},
-            medium:{label:'Medium',color:'rgba(148,200,255,.95)',bg:'rgba(12,30,75,.90)',border:'rgba(77,141,255,.35)',glow:'rgba(77,141,255,.45)'},
-            hard:{label:'Hard',color:'rgba(200,225,255,1)',bg:'rgba(8,20,65,.92)',border:'rgba(148,190,255,.42)',glow:'rgba(148,190,255,.55)'}
+            easy:{label:'Easy',color:'var(--a2)',bg:'var(--bg2)',border:'var(--bdr)',glow:'var(--a1)'},
+            medium:{label:'Medium',color:'var(--sec)',bg:'var(--bg2)',border:'var(--bdr)',glow:'var(--a1)'},
+            hard:{label:'Hard',color:'#fff',bg:'var(--bg1)',border:'var(--div)',glow:'var(--a2)'}
           };
           tiers.forEach(function(t){
             var m=tierMeta[t];
@@ -13107,9 +13261,9 @@ function renderBowl(){
       else if(d.chosenTier==='skipped') _sC++;
     });
     var statsRow='<div style="display:flex;gap:8px;margin-top:10px;font-size:10px;font-family:var(--font-ui);font-weight:700">';
-    statsRow+='<span style="color:rgba(107,182,255,.9)">'+_eC+' Easy</span>';
-    statsRow+='<span style="color:rgba(148,200,255,.95)">'+_mC+' Med</span>';
-    statsRow+='<span style="color:rgba(200,225,255,1)">'+_hC+' Hard</span>';
+    statsRow+='<span style="color:var(--a2)">'+_eC+' Easy</span>';
+    statsRow+='<span style="color:var(--sec)">'+_mC+' Med</span>';
+    statsRow+='<span style="color:#fff">'+_hC+' Hard</span>';
     if(_sC) statsRow+='<span style="color:rgba(255,180,120,.6)">'+_sC+' Skip</span>';
     statsRow+='</div>';
     histEl.innerHTML=cells.join('')+statsRow;
@@ -13128,7 +13282,7 @@ function bowlShowDayDetail(dateKey){
   var dt=new Date(dateKey+'T12:00:00');
   var dayLabel=dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
   var tierLabels={easy:'Easy',medium:'Medium',hard:'Hard',skipped:'Skipped'};
-  var tierColors={easy:'rgba(107,182,255,.9)',medium:'rgba(148,200,255,.95)',hard:'rgba(200,225,255,1)',skipped:'rgba(255,180,120,.6)'};
+  var tierColors={easy:'var(--a2)',medium:'var(--sec)',hard:'#fff',skipped:'rgba(255,180,120,.6)'};
 
   var h='<div style="padding:18px 16px 24px">';
   h+='<div style="text-align:center;margin-bottom:14px">';
@@ -16272,7 +16426,7 @@ window.finMonthNav = function(delta){
 
 })();
 </script>
-<!-- ═══ iOS-SAFE CONFIRM MODAL (replaces window.confirm everywhere) ═══ -->
+
 <div class="ios-confirm-bg" id="ios-confirm-bg"></div>
 <div class="ios-confirm-sheet" id="ios-confirm-sheet">
   <div class="ios-confirm-msg" id="ios-confirm-msg">Are you sure?</div>

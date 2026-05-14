@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-13-finance-first-v8'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-14-vault-fixes-v12'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -2961,10 +2961,13 @@ textarea.auto-grow{overflow:hidden;resize:none}
 
 
 .fx-vials-stage{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;padding:0 4px}
+.fx-vials-stage.fx-vials-single{display:flex;justify-content:center;grid-template-columns:none}
+.fx-vials-stage.fx-vials-single .fx-vial-col{width:200px}
+.fx-vials-stage.fx-vials-single .fx-vial-tube-wrap{max-width:none;width:100%}
 .fx-vial-col{display:flex;flex-direction:column;align-items:center;gap:10px}
 
 
-.fx-vial-tube-wrap{position:relative;width:100%;max-width:130px;aspect-ratio:.38;display:flex;align-items:center;justify-content:center}
+.fx-vial-tube-wrap{position:relative;width:100%;max-width:160px;aspect-ratio:.38;display:flex;align-items:center;justify-content:center}
 .fx-vial-canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 12px 32px rgba(5,15,60,.4)) drop-shadow(0 2px 6px rgba(0,0,0,.3))}
 
 
@@ -2986,6 +2989,31 @@ textarea.auto-grow{overflow:hidden;resize:none}
   .fx-vial-pct{font-size:18px}
   .fx-vial-label-amt{font-size:16px}
 }
+
+/* ═══════════════════════════════════════════════
+   VAULT STAGE — Savings page
+═══════════════════════════════════════════════ */
+.vault-stage{display:flex;flex-direction:column;align-items:center;gap:18px;margin-bottom:24px;padding:0 4px}
+.vault-frame{position:relative;width:100%;max-width:420px;aspect-ratio:1;display:flex;align-items:center;justify-content:center}
+.vault-canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 18px 48px rgba(5,15,60,.5)) drop-shadow(0 4px 10px rgba(0,0,0,.35))}
+.vault-pct{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);font-family:var(--font-ui);font-size:22px;font-weight:900;color:rgba(255,255,255,.88);letter-spacing:-0.8px;text-shadow:0 2px 12px rgba(0,0,0,.7),0 0 22px rgba(120,180,255,.30);pointer-events:none;z-index:5;transition:opacity .4s}
+.vault-readout{text-align:center;display:flex;flex-direction:column;gap:6px;width:100%;max-width:360px}
+.vault-label{font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;color:var(--muted)}
+.vault-amount{font-family:var(--font-ui);font-size:34px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.05}
+.vault-sub{font-family:var(--font-ui);font-size:12px;font-weight:600;color:var(--muted)}
+.vault-progress-track{width:100%;max-width:300px;margin:8px auto 0;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;border:1px solid rgba(127,178,255,.18)}
+.vault-progress-fill{height:100%;background:linear-gradient(90deg,rgba(80,140,230,.85),rgba(150,210,255,.95));border-radius:3px;transition:width .4s cubic-bezier(.34,1.3,.64,1);box-shadow:0 0 12px rgba(120,180,255,.6)}
+.vault-add-btn{background:linear-gradient(180deg,rgba(127,178,255,.18),rgba(127,178,255,.08));border:1px solid rgba(127,178,255,.42);border-radius:12px;color:#fff;font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;padding:14px 28px;cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent;min-height:48px;width:100%;max-width:300px;box-shadow:0 4px 14px rgba(5,20,80,.35),inset 0 1px 0 rgba(255,255,255,.12)}
+.vault-add-btn:active{transform:scale(.97);background:linear-gradient(180deg,rgba(127,178,255,.28),rgba(127,178,255,.14))}
+.vault-goal-meta{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:360px;padding:14px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(127,178,255,.18);border-radius:12px;margin-top:6px}
+.vault-goal-meta-label{font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted)}
+.vault-goal-meta-val{font-family:var(--font-ui);font-size:14px;font-weight:800;color:#fff}
+@media(max-width:360px){
+  .vault-frame{max-width:300px}
+  .vault-pct{font-size:28px}
+  .vault-amount{font-size:28px}
+}
+
 .fx-tx-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
 .fx-tx-hdr-label{font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
 .fx-tx-count{font-family:var(--font-ui);font-size:10px;font-weight:700;color:rgba(255,255,255,.3)}
@@ -3103,6 +3131,11 @@ textarea.auto-grow{overflow:hidden;resize:none}
     <symbol id="icon-bolt" viewBox="0 0 24 24">
       <path fill="currentColor" d="M7 2v11h3v9l7-12h-4l4-8z"/>
     </symbol>
+
+    <!-- Vault/Safe icon -->
+    <symbol id="icon-vault" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm0 2v12h16V6H4zm10 6c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3 3 1.34 3 3zm-3-1.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zM11 7V5h1v2h-1zm0 12v-2h1v2h-1zm-7-7H2v-1h2v1zm0-3H2V8h2v1zm0 6H2v-1h2v1zm18-6h-2v-1h2v1zm-3 5h-1v-1h1v1zm0-7h-1V6h1v1z"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -3111,6 +3144,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div class="nav-tabs-wrap">
 <div class="nav-tabs">
 <button class="tab on" onclick="showPg('finance',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-finance"/></svg> Finance</button>
+<button class="tab" onclick="showPg('savings',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-vault"/></svg> Savings</button>
 <button class="tab" onclick="showPg('today',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-home"/></svg> Today</button>
 <button class="tab" onclick="showPg('bowl',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-bowl"/></svg> Bowl</button>
 <button class="tab" onclick="showPg('reward',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-gift"/></svg> Reward</button>
@@ -3123,10 +3157,11 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <nav class="bottom-nav" id="bottom-nav" aria-label="Main navigation">
 <div class="bottom-nav-inner">
 <button class="bn-tab active" id="bn-finance" onclick="navTo(0)" aria-current="page"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-finance"/></svg></div><div class="bn-lbl">Finance</div></button>
-<button class="bn-tab" id="bn-today" onclick="navTo(1)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-home"/></svg></div><div class="bn-lbl">Today</div></button>
-<button class="bn-tab" id="bn-bowl" onclick="navTo(2)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-bowl"/></svg></div><div class="bn-lbl">Bowl</div></button>
-<button class="bn-tab" id="bn-reward" onclick="navTo(3)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-gift"/></svg></div><div class="bn-lbl">Reward</div></button>
-<button class="bn-tab" id="bn-settings" onclick="navTo(4)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-settings"/></svg></div><div class="bn-lbl">Settings</div></button>
+<button class="bn-tab" id="bn-savings" onclick="navTo(1)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-vault"/></svg></div><div class="bn-lbl">Savings</div></button>
+<button class="bn-tab" id="bn-today" onclick="navTo(2)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-home"/></svg></div><div class="bn-lbl">Today</div></button>
+<button class="bn-tab" id="bn-bowl" onclick="navTo(3)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-bowl"/></svg></div><div class="bn-lbl">Bowl</div></button>
+<button class="bn-tab" id="bn-reward" onclick="navTo(4)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-gift"/></svg></div><div class="bn-lbl">Reward</div></button>
+<button class="bn-tab" id="bn-settings" onclick="navTo(5)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-settings"/></svg></div><div class="bn-lbl">Settings</div></button>
 </div>
 </nav>
 <div class="ptr-indicator" id="ptr-indicator">
@@ -3169,20 +3204,8 @@ textarea.auto-grow{overflow:hidden;resize:none}
     </div>
   </div>
 
-  <!-- ═══ TWO VIALS: Savings + Free Cash — big glass display ═══ -->
-  <div class="fx-vials-stage">
-    <div class="fx-vial-col" id="fx-vial-savings">
-      <div class="fx-vial-tube-wrap">
-        <canvas class="fx-vial-canvas" id="fx-canvas-savings" width="200" height="320"></canvas>
-        <div class="fx-vial-pct" id="fx-vial-pct-savings">0%</div>
-      </div>
-      <div class="fx-vial-label-block">
-        <div class="fx-vial-label-name">Savings</div>
-        <div class="fx-vial-label-amt" id="fx-vial-amt-savings">﷼ 0</div>
-        <div class="fx-vial-label-sub" id="fx-vial-sub-savings">of ﷼ 0 target</div>
-      </div>
-      <button class="fx-vial-edit-btn" onclick="fxOpenSavings()" aria-label="Add savings">+ Add</button>
-    </div>
+  <!-- ═══ LEFTOVER: bill stack — moved to Finance only; Savings lives on its own page ═══ -->
+  <div class="fx-vials-stage fx-vials-single">
     <div class="fx-vial-col" id="fx-vial-free">
       <div class="fx-vial-tube-wrap">
         <canvas class="fx-vial-canvas" id="fx-canvas-free" width="200" height="320"></canvas>
@@ -3234,6 +3257,43 @@ textarea.auto-grow{overflow:hidden;resize:none}
     <div id="fnx-vials-row"></div><div id="fnx-unsorted-badge"></div><div id="fnx-unsorted-count"></div>
     <div id="fnx-tx-search"></div>
   </div>
+
+</div>
+<div class="pg" id="pg-savings">
+
+  <!-- ═══ VAULT HERO ═══ -->
+  <div class="vault-stage">
+    <div class="vault-frame" onclick="fxOpenSavings()" style="cursor:pointer" aria-label="Add savings">
+      <canvas class="vault-canvas" id="fx-canvas-savings" width="400" height="400"></canvas>
+      <div class="vault-pct" id="fx-vial-pct-savings">0%</div>
+    </div>
+
+    <div class="vault-readout">
+      <div class="vault-label">Saved</div>
+      <div class="vault-amount" id="fx-vial-amt-savings">﷼ 0</div>
+      <div class="vault-sub" id="fx-vial-sub-savings">of ﷼ 0 target</div>
+      <div class="vault-progress-track">
+        <div class="vault-progress-fill" id="fx-vault-progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <button class="vault-add-btn" onclick="fxOpenSavings()" aria-label="Add to savings">+ Add to Savings</button>
+
+    <div class="vault-goal-meta">
+      <div>
+        <div class="vault-goal-meta-label">Goal</div>
+        <div class="vault-goal-meta-val" id="vault-goal-name">—</div>
+      </div>
+      <div style="text-align:right">
+        <div class="vault-goal-meta-label">To go</div>
+        <div class="vault-goal-meta-val" id="vault-goal-togo">﷼ 0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Savings History ═══ -->
+  <div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:24px 0 8px">Savings History</div>
+  <div id="vault-savings-log" style="display:flex;flex-direction:column;gap:6px;margin-bottom:90px"></div>
 
 </div>
 <div class="pg" id="pg-today">
@@ -4488,8 +4548,8 @@ function parseAmt(str){ return parseFloat(String(str).replace(/[^0-9.]/g,''))||0
 /* ════════════════════════════════════════════
    GESTURE NAVIGATION ENGINE
 ════════════════════════════════════════════ */
-const PAGE_IDS  = ['finance','today','bowl','reward','settings'];
-const PAGE_NAMES= ['Today','Gym','Bowl','Finance','Reward','Settings'];
+const PAGE_IDS  = ['finance','savings','today','bowl','reward','settings'];
+const PAGE_NAMES= ['Finance','Savings','Today','Bowl','Reward','Settings'];
 let curPage   = 0;
 let isAnimating = false;
 let _navDir = 1; /* +1 = forward, -1 = backward */
@@ -4509,9 +4569,9 @@ function navTo(idx, animate){
   _syncNavUI(idx);
   _onPageEnter(PAGE_IDS[idx]);
   _triggerHaptic('light');
-  /* Show FAB only on Today and Finance pages */
+  /* Show FAB only on Finance, Savings, and Reward pages */
   const fab=$id('tx-fab');
-  if(fab) fab.style.display=(idx===0||idx===3)?'':'none';
+  if(fab) fab.style.display=(idx===0||idx===1||idx===4)?'':'none';
 }
 
 function showPg(id, btn){
@@ -4604,6 +4664,7 @@ function _onPageEnter(id){
   if(id==='reward'){ rwCheckNewWeek(); renderReward(); }
   setTimeout(function(){
     if(id==='finance'){ _txShowAll=30; if(typeof _txSearchQuery!=='undefined') _txSearchQuery=''; if(typeof _txFilterType!=='undefined') _txFilterType=''; renderFinance(); }
+    if(id==='savings') { if(typeof renderSavingsPage==='function') renderSavingsPage(); if(typeof _fxVialBootCanvas==='function') _fxVialBootCanvas(); }
     if(id==='gym')     renderGym();
     /* review merged into battlepass — renderWeeklyScore called there */
     if(id==='reward')  { rwCheckNewWeek(); renderReward(); }
@@ -9951,7 +10012,7 @@ function _applyToneCSS(hue){
   /* 2. hue-rotate on self-contained blue containers (no semantic color children) */
   css += '#bowl-machine-canvas{filter:hue-rotate(var(--hue-shift,0deg)) drop-shadow(0 8px 24px rgba(8,24,80,.45))!important}'
        + '.tc-cabinet{filter:hue-rotate(var(--hue-shift,0deg))!important}'
-       + '.fx-vial-canvas{filter:hue-rotate(var(--hue-shift,0deg))!important}'
+       + '.fx-vial-canvas, .vault-canvas{filter:hue-rotate(var(--hue-shift,0deg))!important}'
        + '.fx-hero-mesh{filter:hue-rotate(var(--hue-shift,0deg))!important}'
        + '.rest-timer-bar{filter:hue-rotate(var(--hue-shift,0deg))!important}'
        + '#bowl-challenge-area{filter:hue-rotate(var(--hue-shift,0deg))!important}';
@@ -14368,283 +14429,1019 @@ function fxRenderVials(f, mk, stats){
   if(savSub) savSub.textContent = savingsTarget > 0 ? 'of '+fnxFmt(savingsTarget)+' target' : 'set target in ⚙';
   if(savPct) savPct.textContent = savingsTarget > 0 ? Math.round((savedAmt/savingsTarget)*100)+'%' : '—';
 
+  /* Vault page extras */
+  var vaultProg = document.getElementById('fx-vault-progress-fill');
+  if(vaultProg){
+    var pct = savingsTarget > 0 ? Math.min(100, (savedAmt/savingsTarget)*100) : 0;
+    vaultProg.style.width = pct + '%';
+  }
+  var goalName = document.getElementById('vault-goal-name');
+  if(goalName) goalName.textContent = eg ? (eg.name || 'Emergency Fund') : 'Set goal in ⚙';
+  var goalTogo = document.getElementById('vault-goal-togo');
+  if(goalTogo){
+    var togo = Math.max(0, savingsTarget - savedAmt);
+    goalTogo.textContent = savingsTarget > 0 ? fnxFmt(togo) : '—';
+  }
+  if(typeof fxRenderSavingsLog === 'function') fxRenderSavingsLog();
+
   /* Boot canvas animation if not running */
   if(!_fxVialAnimId) _fxVialBootCanvas();
 }
 
 function _fxVialBootCanvas(){
-  var c1 = document.getElementById('fx-canvas-savings');
-  var c2 = document.getElementById('fx-canvas-free');
-  if(!c1 || !c2) return;
-
-  /* Size canvases for retina */
-  [c1,c2].forEach(function(c){
+  /* Size each canvas independently, only if it has dimensions (visible page).
+     Safe to call repeatedly — re-sizes if dimensions change (e.g. new page enter). */
+  function sizeCanvas(c, fallbackAspect){
+    if(!c) return false;
     var wrap = c.parentElement;
-    var w = wrap.offsetWidth || 100;
-    var h = wrap.offsetHeight || Math.round(w / 0.38);
+    var w = wrap.offsetWidth || 0;
+    if(w <= 0) return false; /* page hidden, skip */
+    var h = wrap.offsetHeight || Math.round(w / fallbackAspect);
+    if(h <= 0) return false;
+    /* avoid resizing if already at this size */
+    if(c._cssW === w && c._cssH === h) return true;
     var dpr = window.devicePixelRatio || 1;
     c.style.width = w + 'px';
     c.style.height = h + 'px';
     c.width = Math.round(w * dpr);
     c.height = Math.round(h * dpr);
+    c.getContext('2d').setTransform(1,0,0,1,0,0);
     c.getContext('2d').scale(dpr, dpr);
     c._cssW = w;
     c._cssH = h;
-  });
+    /* mark for redraw — force state re-init so anything sized to W gets rebuilt */
+    if(c.id === 'fx-canvas-savings') _fxVialState.savings._init = false;
+    if(c.id === 'fx-canvas-free')    _fxVialState.free._init    = false;
+    return true;
+  }
+  var c1 = document.getElementById('fx-canvas-savings'); /* now on pg-savings (vault) */
+  var c2 = document.getElementById('fx-canvas-free');    /* on pg-finance (cash stack) */
+  sizeCanvas(c1, 1.0);   /* vault: square */
+  sizeCanvas(c2, 0.38);  /* cash stack: tall */
 
-  /* Bubbles state */
-  _fxVialState.savings.bubbles = [];
-  _fxVialState.free.bubbles = [];
+  /* Vault + cash stack state — only init once */
+  if(!_fxVialState.savings._initOnce){
+    _fxVialState.savings._initOnce = true;
+    _fxVialState.savings._init = false;
+    _fxVialState.savings._particles = [];
+    _fxVialState.savings._bundles = [];
+    _fxVialState.savings._ambient = [];
+  }
+  if(!_fxVialState.free._initOnce){
+    _fxVialState.free._initOnce = true;
+    _fxVialState.free._init = false;
+    _fxVialState.free._bills = [];
+    _fxVialState.free._ambient = [];
+  }
 
-  _fxVialAnimId = requestAnimationFrame(_fxVialDraw);
+  if(!_fxVialAnimId) _fxVialAnimId = requestAnimationFrame(_fxVialDraw);
 }
 
 function _fxVialDraw(ts){
   _fxVialTime = ts * 0.001;
-  _fxDrawOneVial('fx-canvas-savings', _fxVialState.savings, 'gold');
-  _fxDrawOneVial('fx-canvas-free', _fxVialState.free, 'spending');
+  /* Savings = glass vault with cash bundles */
+  var c1 = document.getElementById('fx-canvas-savings');
+  if(c1 && c1._cssW){
+    var ctx1 = c1.getContext('2d');
+    var W1 = c1._cssW, H1 = c1._cssH;
+    ctx1.clearRect(0, 0, W1, H1);
+    _fxDrawVault(ctx1, W1, H1, _fxVialTime, _fxVialState.savings);
+  }
+  /* Leftover = cash bill stack */
+  var c2 = document.getElementById('fx-canvas-free');
+  if(c2 && c2._cssW){
+    var ctx2 = c2.getContext('2d');
+    var W2 = c2._cssW, H2 = c2._cssH;
+    ctx2.clearRect(0, 0, W2, H2);
+    _fxDrawCashStack(ctx2, W2, H2, _fxVialTime, _fxVialState.free);
+  }
   _fxVialAnimId = requestAnimationFrame(_fxVialDraw);
 }
 
-function _fxDrawOneVial(canvasId, state, theme){
-  var c = document.getElementById(canvasId);
-  if(!c) return;
-  var ctx = c.getContext('2d');
-  var W = c._cssW || 100;
-  var H = c._cssH || 260;
-  var t = _fxVialTime;
-  ctx.clearRect(0, 0, W, H);
+/* ═══════════════════════════════════════════════
+   GLASS VAULT — Savings page
+   Tinted glass cabinet with chrome bezel,
+   stacks of banded cash bundles on shelves,
+   interior LED glow, ambient bokeh, glass sweep
+═══════════════════════════════════════════════ */
+function _fxDrawVault(ctx, W, H, t, state) {
+  var BUNDLE_COLS = 3;
+  var BUNDLE_ROWS = 3;
+  var BUNDLE_MAX = BUNDLE_COLS * BUNDLE_ROWS;
+  function clamp(v,lo,hi){return v<lo?lo:v>hi?hi:v}
+  function hash(n){var x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)}
 
-  /* Potion-bottle shape — elegant proportions */
-  var neckW = W * 0.30;
-  var neckTop = H * 0.01;
-  var neckBot = H * 0.24;
-  var shoulderY = H * 0.39;
-  var bodyL = W * 0.07;
-  var bodyR = W * 0.93;
-  var bodyW = bodyR - bodyL;
-  var bodyBot = H * 0.96;
-  var cornerR = W * 0.14;
-  var neckL = W/2 - neckW/2;
-  var neckR = W/2 + neckW/2;
-  var bodyTop = shoulderY; /* alias for liquid calc */
+  /* ── State init ─────────────────────────────── */
+  if(!state._init){
+    state._init=true; state._lastT=t; state._eased=state.level||0;
+    state._lastFull=Math.floor(state._eased*BUNDLE_MAX);
+    state._bundles=state._bundles||[];
+    state._ambient=state._ambient||[];
+    state._particles=state._particles||[];
+    state._dialAngle = 0;
+    state._dialSpin  = 0;
+    for(var i=state._bundles.length;i<BUNDLE_MAX;i++){
+      state._bundles.push({xJitter:(hash(i*7.13+1)-0.5)*0.04,rot:(hash(i*5.27+3)-0.5)*0.06,dropT:1,landed:true});
+    }
+    if(!state._ambient.length){
+      for(var i=0;i<26;i++){
+        state._ambient.push({x:Math.random(),y:Math.random(),vx:(Math.random()-0.5)*0.018,vy:-0.012-Math.random()*0.028,size:0.4+Math.random()*1.4,phase:Math.random()*Math.PI*2,alpha:0.05+Math.random()*0.22,bright:Math.random()<0.20});
+      }
+    }
+  }
 
-  /* Animate liquid level */
-  var speed = 0.035;
-  state.level += (state.target - state.level) * speed;
-  if(Math.abs(state.target - state.level) < 0.001) state.level = state.target;
-  var lev = state.level;
-  var liquidTop = bodyBot - (bodyBot - bodyTop) * lev;
+  var dt=t-state._lastT;
+  if(!isFinite(dt)||dt<0)dt=0.016;
+  if(dt>0.08)dt=0.05;
+  state._lastT=t;
 
-  ctx.save();
-  function glassPath(){
+  /* Animate level toward target */
+  var tgt=clamp(state.target!=null?state.target:(state.level||0),0,1);
+  var k=1-Math.exp(-dt*3.4);
+  state._eased+=(tgt-state._eased)*k;
+  if(Math.abs(tgt-state._eased)<1e-4)state._eased=tgt;
+  state.level=state._eased;
+
+  /* Dial spin animation */
+  state._dialSpin = (state._dialSpin || 0);
+  state._dialSpin += dt * 18.0 * state.level;
+  state._dialAngle = state._dialSpin;
+
+  var exact=state._eased*BUNDLE_MAX;
+  var fullN=Math.floor(exact+1e-6);
+  var topFrac=clamp(exact-fullN,0,1);
+  var visN=Math.min(BUNDLE_MAX,fullN+(topFrac>0.02?1:0));
+
+  if(fullN>state._lastFull){
+    for(var i=state._lastFull;i<fullN;i++){var b=state._bundles[i];if(b){b.dropT=0;b.landed=false;}}
+  }
+  state._lastFull=fullN;
+
+  /* ═══════════════════════════════════════
+     GEOMETRY — industrial steel safe
+  ═══════════════════════════════════════ */
+  var pad = Math.min(W,H)*0.05;
+  var vx = pad, vy = pad;
+  var vw = W - pad*2, vh = H - pad*2;
+
+  /* Safe body proportions */
+  var bodyX = vx + vw*0.12;   /* leave space for hinges on left */
+  var bodyY = vy;
+  var bodyW = vw * 0.88;
+  var bodyH = vh;
+  var bR    = Math.min(W,H)*0.038;  /* corner radius */
+
+  /* Interior glass window */
+  var winPadX = bodyW*0.13;
+  var winPadT = bodyH*0.10;
+  var winPadB = bodyH*0.36;         /* leave room at bottom for dial */
+  var winX = bodyX + winPadX;
+  var winY = bodyY + winPadT;
+  var winW = bodyW - winPadX*2;
+  var winH = bodyH - winPadT - winPadB;
+  var winR = Math.min(winW,winH)*0.06;
+
+  /* Dial position — center bottom of safe door */
+  var dialX = bodyX + bodyW*0.50;
+  var dialY = bodyY + bodyH*0.775;
+  var dialR  = Math.min(bodyW,bodyH)*0.115;
+
+  /* Handle position — right side */
+  var hndX = bodyX + bodyW*0.88;
+  var hndY = bodyY + bodyH*0.44;
+  var hndH = bodyH*0.24;
+  var hndW = bodyW*0.055;
+
+  function rrPath(x,y,w,h,r){
+    r=Math.min(r,w/2,h/2);
     ctx.beginPath();
-    ctx.moveTo(neckL, neckTop);
-    ctx.lineTo(neckR, neckTop);
-    ctx.lineTo(neckR, neckBot);
-    /* Right shoulder — graceful outward flare */
-    ctx.bezierCurveTo(
-      neckR, neckBot + (shoulderY - neckBot) * 0.55,
-      bodyR, neckBot + (shoulderY - neckBot) * 0.45,
-      bodyR, shoulderY
-    );
-    ctx.lineTo(bodyR, bodyBot - cornerR);
-    ctx.quadraticCurveTo(bodyR, bodyBot, bodyR - cornerR, bodyBot);
-    ctx.lineTo(bodyL + cornerR, bodyBot);
-    ctx.quadraticCurveTo(bodyL, bodyBot, bodyL, bodyBot - cornerR);
-    ctx.lineTo(bodyL, shoulderY);
-    /* Left shoulder — mirror */
-    ctx.bezierCurveTo(
-      bodyL, neckBot + (shoulderY - neckBot) * 0.45,
-      neckL, neckBot + (shoulderY - neckBot) * 0.55,
-      neckL, neckBot
-    );
-    ctx.lineTo(neckL, neckTop);
+    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
     ctx.closePath();
   }
 
-  /* Glass fill — very subtle transparency */
-  glassPath();
-  ctx.fillStyle = 'rgba(180,220,255,0.06)';
+  /* ── 1. Overall drop shadow ── */
+  ctx.save();
+  ctx.shadowColor='rgba(0,5,20,0.70)';
+  ctx.shadowBlur=Math.min(W,H)*0.09;
+  ctx.shadowOffsetY=Math.min(W,H)*0.03;
+  ctx.shadowOffsetX=Math.min(W,H)*0.015;
+  ctx.fillStyle='rgba(6,14,36,1)';
+  rrPath(bodyX,bodyY,bodyW,bodyH,bR);
+  ctx.fill();
+  ctx.restore();
+
+  /* ── 2. Safe body — heavy brushed steel ── */
+  ctx.save();
+  rrPath(bodyX,bodyY,bodyW,bodyH,bR);
+  ctx.clip();
+
+  /* Main body gradient — dark gunmetal steel */
+  var bodyG=ctx.createLinearGradient(bodyX,bodyY,bodyX+bodyW,bodyY+bodyH);
+  bodyG.addColorStop(0,   'rgba(28,42,72,1)');
+  bodyG.addColorStop(0.18,'rgba(38,58,95,1)');
+  bodyG.addColorStop(0.45,'rgba(48,70,112,1)');
+  bodyG.addColorStop(0.72,'rgba(32,50,84,1)');
+  bodyG.addColorStop(1,   'rgba(18,28,52,1)');
+  ctx.fillStyle=bodyG;
+  ctx.fillRect(bodyX,bodyY,bodyW,bodyH);
+
+  /* Side-to-side steel sheen */
+  var sheenG=ctx.createLinearGradient(bodyX,0,bodyX+bodyW,0);
+  sheenG.addColorStop(0,   'rgba(255,255,255,0.04)');
+  sheenG.addColorStop(0.22,'rgba(255,255,255,0.10)');
+  sheenG.addColorStop(0.50,'rgba(255,255,255,0.16)');
+  sheenG.addColorStop(0.78,'rgba(255,255,255,0.08)');
+  sheenG.addColorStop(1,   'rgba(255,255,255,0.03)');
+  ctx.fillStyle=sheenG;
+  ctx.fillRect(bodyX,bodyY,bodyW,bodyH);
+
+  /* Brushed horizontal steel lines */
+  for(var bl=0;bl<20;bl++){
+    var blY=bodyY+bodyH*(bl/20)+bodyH*0.025;
+    ctx.beginPath();ctx.moveTo(bodyX+2,blY);ctx.lineTo(bodyX+bodyW-2,blY);
+    ctx.strokeStyle='rgba(160,200,255,'+(0.025+0.01*(bl%3))+')';
+    ctx.lineWidth=0.4;ctx.stroke();
+  }
+
+  /* Riveted panel lines (vertical) */
+  var panelX1=bodyX+bodyW*0.08, panelX2=bodyX+bodyW*0.92;
+  ctx.strokeStyle='rgba(80,120,180,0.35)';
+  ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(panelX1,bodyY+bodyH*0.04);ctx.lineTo(panelX1,bodyY+bodyH*0.96);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(panelX2,bodyY+bodyH*0.04);ctx.lineTo(panelX2,bodyY+bodyH*0.96);ctx.stroke();
+  /* Top/bottom horizontal panel lines */
+  ctx.beginPath();ctx.moveTo(bodyX+bodyW*0.08,bodyY+bodyH*0.04);ctx.lineTo(bodyX+bodyW*0.92,bodyY+bodyH*0.04);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(bodyX+bodyW*0.08,bodyY+bodyH*0.96);ctx.lineTo(bodyX+bodyW*0.92,bodyY+bodyH*0.96);ctx.stroke();
+
+  /* ── 3. Rivets on panel border ── */
+  function drawRivet(rx,ry,rr){
+    var rg=ctx.createRadialGradient(rx-rr*0.3,ry-rr*0.3,0,rx,ry,rr);
+    rg.addColorStop(0,'rgba(220,240,255,0.95)');
+    rg.addColorStop(0.5,'rgba(130,170,220,0.85)');
+    rg.addColorStop(1,'rgba(30,55,100,0.90)');
+    ctx.fillStyle=rg;ctx.beginPath();ctx.arc(rx,ry,rr,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(0,8,28,0.55)';ctx.lineWidth=0.5;
+    ctx.beginPath();ctx.arc(rx,ry,rr,0,Math.PI*2);ctx.stroke();
+  }
+  var rivR=Math.min(bodyW,bodyH)*0.016;
+  var rivSpacingX=(bodyX+bodyW*0.92 - (bodyX+bodyW*0.08));
+  var rivSpacingY=(bodyY+bodyH*0.96 - (bodyY+bodyH*0.04));
+  /* Corner rivets */
+  drawRivet(bodyX+bodyW*0.08,bodyY+bodyH*0.04,rivR);
+  drawRivet(bodyX+bodyW*0.92,bodyY+bodyH*0.04,rivR);
+  drawRivet(bodyX+bodyW*0.08,bodyY+bodyH*0.96,rivR);
+  drawRivet(bodyX+bodyW*0.92,bodyY+bodyH*0.96,rivR);
+  /* Mid-edge rivets */
+  drawRivet(bodyX+bodyW*0.08,bodyY+bodyH*0.50,rivR);
+  drawRivet(bodyX+bodyW*0.92,bodyY+bodyH*0.50,rivR);
+  drawRivet(bodyX+bodyW*0.50,bodyY+bodyH*0.04,rivR);
+  drawRivet(bodyX+bodyW*0.50,bodyY+bodyH*0.96,rivR);
+
+  ctx.restore();
+
+  /* ── 4. Door bezel frame around glass window ── */
+  var doorBZ=Math.min(bodyW,bodyH)*0.028;
+  /* Outer door frame shadow */
+  ctx.save();
+  ctx.shadowColor='rgba(0,4,16,0.60)';
+  ctx.shadowBlur=doorBZ*2.5;
+  ctx.shadowOffsetY=doorBZ*0.5;
+  rrPath(winX-doorBZ,winY-doorBZ,winW+doorBZ*2,winH+doorBZ*2,winR+doorBZ);
+  ctx.fillStyle='rgba(0,0,0,0.001)';
+  ctx.fill();
+  ctx.restore();
+
+  /* Door bezel ring — chrome/steel */
+  ctx.save();
+  rrPath(winX-doorBZ,winY-doorBZ,winW+doorBZ*2,winH+doorBZ*2,winR+doorBZ);
+  rrPath(winX,winY,winW,winH,winR);
+  ctx.save();
+  ctx.clip('evenodd');
+  /* Bezel top face */
+  var bzTopG=ctx.createLinearGradient(0,winY-doorBZ,0,winY);
+  bzTopG.addColorStop(0,'rgba(240,248,255,0.92)');
+  bzTopG.addColorStop(0.6,'rgba(160,200,245,0.82)');
+  bzTopG.addColorStop(1,'rgba(70,110,175,0.78)');
+  ctx.fillStyle=bzTopG;
+  ctx.fillRect(winX-doorBZ,winY-doorBZ,winW+doorBZ*2,doorBZ+2);
+  /* Bezel bottom face */
+  var bzBotG=ctx.createLinearGradient(0,winY+winH,0,winY+winH+doorBZ);
+  bzBotG.addColorStop(0,'rgba(30,60,120,0.80)');
+  bzBotG.addColorStop(1,'rgba(90,140,200,0.72)');
+  ctx.fillStyle=bzBotG;
+  ctx.fillRect(winX-doorBZ,winY+winH,winW+doorBZ*2,doorBZ+2);
+  /* Bezel left face */
+  var bzLeftG=ctx.createLinearGradient(winX-doorBZ,0,winX,0);
+  bzLeftG.addColorStop(0,'rgba(200,228,255,0.88)');
+  bzLeftG.addColorStop(1,'rgba(65,105,170,0.80)');
+  ctx.fillStyle=bzLeftG;
+  ctx.fillRect(winX-doorBZ,winY-doorBZ,doorBZ+2,winH+doorBZ*2);
+  /* Bezel right face */
+  var bzRightG=ctx.createLinearGradient(winX+winW,0,winX+winW+doorBZ,0);
+  bzRightG.addColorStop(0,'rgba(55,95,165,0.80)');
+  bzRightG.addColorStop(1,'rgba(180,215,252,0.88)');
+  ctx.fillStyle=bzRightG;
+  ctx.fillRect(winX+winW,winY-doorBZ,doorBZ+2,winH+doorBZ*2);
+  ctx.restore();
+  ctx.restore();
+
+  /* ── 5. Glass interior — vault contents ── */
+  ctx.save();
+  rrPath(winX,winY,winW,winH,winR);
+  ctx.clip();
+
+  /* Interior back wall */
+  var bgGrad=ctx.createLinearGradient(0,winY,0,winY+winH);
+  bgGrad.addColorStop(0,'rgba(5,12,34,1)');
+  bgGrad.addColorStop(0.5,'rgba(8,18,50,1)');
+  bgGrad.addColorStop(1,'rgba(14,28,64,1)');
+  ctx.fillStyle=bgGrad;
+  ctx.fillRect(winX,winY,winW,winH);
+
+  /* Back wall vignette */
+  var vig=ctx.createRadialGradient(winX+winW/2,winY+winH*0.4,0,winX+winW/2,winY+winH*0.4,Math.max(winW,winH)*0.75);
+  vig.addColorStop(0,'rgba(30,65,140,0.20)');
+  vig.addColorStop(0.55,'rgba(4,10,28,0)');
+  vig.addColorStop(1,'rgba(0,2,10,0.60)');
+  ctx.fillStyle=vig;ctx.fillRect(winX,winY,winW,winH);
+
+  /* Vertical panel lines on back wall */
+  for(var pl=1;pl<4;pl++){
+    var px=winX+(winW/4)*pl;
+    var plg=ctx.createLinearGradient(0,winY,0,winY+winH);
+    plg.addColorStop(0,'rgba(60,110,200,0)');
+    plg.addColorStop(0.5,'rgba(60,110,200,0.07)');
+    plg.addColorStop(1,'rgba(60,110,200,0)');
+    ctx.strokeStyle=plg;ctx.lineWidth=0.8;
+    ctx.beginPath();ctx.moveTo(px,winY+winH*0.06);ctx.lineTo(px,winY+winH*0.94);ctx.stroke();
+  }
+
+  /* LED floor strip glow */
+  var ledY=winY+winH*0.94;
+  var ledPulse=0.85+Math.sin(t*1.6)*0.12;
+  var ledGrad=ctx.createRadialGradient(winX+winW/2,ledY,0,winX+winW/2,ledY,winW*0.7);
+  ledGrad.addColorStop(0,'rgba(140,200,255,'+(0.35*ledPulse)+')');
+  ledGrad.addColorStop(0.4,'rgba(90,160,240,'+(0.16*ledPulse)+')');
+  ledGrad.addColorStop(1,'rgba(60,120,210,0)');
+  ctx.fillStyle=ledGrad;
+  ctx.fillRect(winX,winY+winH*0.65,winW,winH*0.4);
+  /* LED strip line */
+  var stripG=ctx.createLinearGradient(winX,0,winX+winW,0);
+  stripG.addColorStop(0,'rgba(120,180,255,0)');
+  stripG.addColorStop(0.2,'rgba(180,220,255,'+(0.60*ledPulse)+')');
+  stripG.addColorStop(0.5,'rgba(230,245,255,'+(0.90*ledPulse)+')');
+  stripG.addColorStop(0.8,'rgba(180,220,255,'+(0.60*ledPulse)+')');
+  stripG.addColorStop(1,'rgba(120,180,255,0)');
+  ctx.fillStyle=stripG;
+  ctx.fillRect(winX+winW*0.06,ledY-1,winW*0.88,1.8);
+
+  /* Ambient bokeh particles */
+  for(var pi=0;pi<state._ambient.length;pi++){
+    var p=state._ambient[pi];
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.phase+=dt*1.5;
+    if(p.y<-0.05){p.y=1.05;p.x=Math.random();}
+    if(p.x<-0.05)p.x=1.05;else if(p.x>1.05)p.x=-0.05;
+    var bpx=winX+p.x*winW,bpy=winY+p.y*winH;
+    var bpa=p.alpha*(0.4+0.6*Math.sin(p.phase));
+    var bpr=p.size*3.2;
+    var bpg=ctx.createRadialGradient(bpx,bpy,0,bpx,bpy,bpr);
+    if(p.bright){bpg.addColorStop(0,'rgba(220,240,255,'+bpa+')');bpg.addColorStop(1,'rgba(220,240,255,0)');}
+    else{bpg.addColorStop(0,'rgba(110,170,240,'+bpa+')');bpg.addColorStop(1,'rgba(110,170,240,0)');}
+    ctx.fillStyle=bpg;ctx.fillRect(bpx-bpr,bpy-bpr,bpr*2,bpr*2);
+  }
+
+  /* ── Cash bundle grid ── */
+  var gridPadX=winW*0.07,gridPadTop=winH*0.08,gridPadBot=winH*0.08;
+  var gridW=winW-gridPadX*2,gridH=winH-gridPadTop-gridPadBot;
+  var gridX=winX+gridPadX,gridY=winY+gridPadTop;
+  var bundleW=(gridW/BUNDLE_COLS)*0.88;
+  var bundleH=(gridH/BUNDLE_ROWS)*0.72;
+  var colGap=(gridW-bundleW*BUNDLE_COLS)/Math.max(1,BUNDLE_COLS-1);
+  var rowGap=(gridH-bundleH*BUNDLE_ROWS)/Math.max(1,BUNDLE_ROWS-1);
+
+  /* Shelves */
+  for(var sr=0;sr<BUNDLE_ROWS;sr++){
+    var shelfY=gridY+bundleH+sr*(bundleH+rowGap)-rowGap*0.25;
+    var shelfH=Math.max(3,rowGap*0.45);
+    if(sr>=BUNDLE_ROWS-1)continue;
+    var shG=ctx.createLinearGradient(0,shelfY,0,shelfY+shelfH);
+    shG.addColorStop(0,'rgba(160,195,240,0.55)');
+    shG.addColorStop(0.3,'rgba(220,238,255,0.65)');
+    shG.addColorStop(0.5,'rgba(245,252,255,0.78)');
+    shG.addColorStop(0.7,'rgba(200,225,250,0.62)');
+    shG.addColorStop(1,'rgba(80,120,180,0.52)');
+    ctx.fillStyle=shG;ctx.fillRect(gridX-gridPadX*0.3,shelfY,gridW+gridPadX*0.6,shelfH);
+    ctx.fillStyle='rgba(255,255,255,0.38)';
+    ctx.fillRect(gridX-gridPadX*0.3,shelfY,gridW+gridPadX*0.6,0.8);
+    var shShadow=ctx.createLinearGradient(0,shelfY+shelfH,0,shelfY+shelfH+shelfH*1.5);
+    shShadow.addColorStop(0,'rgba(0,4,16,0.48)');shShadow.addColorStop(1,'rgba(0,4,16,0)');
+    ctx.fillStyle=shShadow;ctx.fillRect(gridX-gridPadX*0.2,shelfY+shelfH,gridW+gridPadX*0.4,shelfH*1.5);
+  }
+
+  /* Bundle helper */
+  function drawBundle(cx,cy,bw,bh,lt,opacity){
+    ctx.save();ctx.globalAlpha=opacity;
+    var bRn=Math.min(bw*0.06,bh*0.12,4);
+    function bundleRect(x,y,w,h){
+      var r=Math.min(bRn,w/2,h/2);
+      ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+      ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+      ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+      ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+    }
+    bundleRect(cx-bw/2,cy-bh/2,bw,bh);
+    var bodyG2=ctx.createLinearGradient(cx-bw/2,0,cx+bw/2,0);
+    bodyG2.addColorStop(0,'rgba('+Math.round(14*lt)+','+Math.round(36*lt)+','+Math.round(88*lt)+',1)');
+    bodyG2.addColorStop(0.25,'rgba('+Math.round(34*lt)+','+Math.round(78*lt)+','+Math.round(160*lt)+',1)');
+    bodyG2.addColorStop(0.5,'rgba('+Math.round(58*lt)+','+Math.round(118*lt)+','+Math.round(212*lt)+',1)');
+    bodyG2.addColorStop(0.75,'rgba('+Math.round(34*lt)+','+Math.round(78*lt)+','+Math.round(160*lt)+',1)');
+    bodyG2.addColorStop(1,'rgba('+Math.round(14*lt)+','+Math.round(36*lt)+','+Math.round(88*lt)+',1)');
+    ctx.fillStyle=bodyG2;ctx.fill();
+    bundleRect(cx-bw/2,cy-bh/2,bw,bh);
+    var vG=ctx.createLinearGradient(0,cy-bh/2,0,cy+bh/2);
+    vG.addColorStop(0,'rgba(240,250,255,'+(0.30*lt)+')');
+    vG.addColorStop(0.15,'rgba(240,250,255,'+(0.08*lt)+')');
+    vG.addColorStop(0.3,'rgba(240,250,255,0)');
+    vG.addColorStop(0.7,'rgba(0,5,18,0)');
+    vG.addColorStop(1,'rgba(0,5,18,0.60)');
+    ctx.fillStyle=vG;ctx.fill();
+    for(var ln=1;ln<7;ln++){
+      var lnY=cy-bh/2+(bh/7)*ln;
+      ctx.beginPath();ctx.moveTo(cx-bw/2+1,lnY);ctx.lineTo(cx+bw/2-1,lnY);
+      ctx.lineWidth=0.5;ctx.strokeStyle='rgba(0,4,16,'+(0.25+0.10*ln/7)+')';ctx.stroke();
+      ctx.beginPath();ctx.moveTo(cx-bw/2+1,lnY-0.5);ctx.lineTo(cx+bw/2-1,lnY-0.5);
+      ctx.lineWidth=0.4;ctx.strokeStyle='rgba(240,250,255,'+(0.08*lt)+')';ctx.stroke();
+    }
+    var bandH=bh*0.28,bandY=cy-bandH/2;
+    var bandG=ctx.createLinearGradient(0,bandY,0,bandY+bandH);
+    bandG.addColorStop(0,'rgba(225,238,255,'+(0.88*lt)+')');
+    bandG.addColorStop(0.5,'rgba(245,252,255,'+(0.96*lt)+')');
+    bandG.addColorStop(1,'rgba(180,210,250,'+(0.88*lt)+')');
+    ctx.fillStyle=bandG;ctx.fillRect(cx-bw/2,bandY,bw,bandH);
+    ctx.fillStyle='rgba(0,8,28,0.48)';
+    ctx.fillRect(cx-bw/2,bandY-0.6,bw,0.6);ctx.fillRect(cx-bw/2,bandY+bandH,bw,0.6);
+    if(bw>22){
+      var nW=bw*0.30,nH=bandH*0.42;
+      ctx.fillStyle='rgba(30,70,150,'+(0.78*lt)+')';
+      ctx.fillRect(cx-nW/2,cy-nH/2,nW,nH);
+      ctx.fillStyle='rgba(110,170,240,'+(0.55*lt)+')';
+      ctx.fillRect(cx-nW/2+1,cy-nH/2+1,nW-2,0.6);
+    }
+    var spG=ctx.createLinearGradient(cx-bw/2,0,cx+bw/2,0);
+    spG.addColorStop(0.40,'rgba(255,255,255,0)');
+    spG.addColorStop(0.50,'rgba(255,255,255,'+(0.48*lt)+')');
+    spG.addColorStop(0.60,'rgba(255,255,255,0)');
+    ctx.fillStyle=spG;ctx.fillRect(cx-bw/2,bandY,bw,bandH);
+    ctx.lineWidth=0.5;ctx.strokeStyle='rgba(160,200,250,'+(0.45*lt)+')';
+    bundleRect(cx-bw/2,cy-bh/2,bw,bh);ctx.stroke();
+    ctx.restore();
+  }
+
+  for(var i=0;i<visN;i++){
+    var b=state._bundles[i];
+    if(b.dropT<1)b.dropT=Math.min(1,b.dropT+dt*2.4);
+    var row=Math.floor(i/BUNDLE_COLS);
+    var colInRow=i%BUNDLE_COLS;
+    var rowFromTop=(BUNDLE_ROWS-1)-row;
+    var cellX=gridX+colInRow*(bundleW+colGap)+bundleW/2;
+    var cellY=gridY+rowFromTop*(bundleH+rowGap)+bundleH/2;
+    var dE=1-Math.pow(1-b.dropT,3);
+    var descend=(1-dE)*-bundleH*3.2;
+    var bounce=0;
+    if(b.dropT>0.78&&b.dropT<1){var bb=(b.dropT-0.78)/0.22;bounce=Math.sin(bb*Math.PI)*(1-bb)*bundleH*0.18;}
+    var isTopB=(i===fullN)&&topFrac<0.98;
+    var frac=isTopB?topFrac:1;
+    var bwScale=bundleW*(0.85+0.15*frac);
+    var bhScale=bundleH*frac;
+    var lt=0.78+0.22*(i/Math.max(1,BUNDLE_MAX-1));
+    ctx.save();
+    ctx.translate(cellX+b.xJitter*bundleW,cellY+descend-bounce);
+    ctx.rotate(b.rot);
+    drawBundle(0,0,bwScale,bhScale,lt,frac>0.05?1:0);
+    ctx.restore();
+  }
+
+  /* Glass tint overlay */
+  ctx.fillStyle='rgba(40,95,185,0.07)';
+  ctx.fillRect(winX,winY,winW,winH);
+
+  /* Glass sweep reflections */
+  var sweepT=(t*0.032)%1.6-0.3;
+  ctx.save();
+  ctx.globalCompositeOperation='lighter';
+  var sweepX=winX+winW*sweepT;
+  var grad=ctx.createLinearGradient(sweepX,winY,sweepX+winW*0.28,winY+winH);
+  grad.addColorStop(0,'rgba(255,255,255,0)');grad.addColorStop(0.35,'rgba(220,240,255,0.04)');
+  grad.addColorStop(0.50,'rgba(240,248,255,0.12)');grad.addColorStop(0.65,'rgba(220,240,255,0.04)');
+  grad.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=grad;ctx.fillRect(winX,winY,winW,winH);
+  var sweep2X=winX+winW*(sweepT-0.40);
+  var grad2=ctx.createLinearGradient(sweep2X,winY,sweep2X+winW*0.10,winY+winH);
+  grad2.addColorStop(0,'rgba(255,255,255,0)');grad2.addColorStop(0.5,'rgba(220,240,255,0.06)');grad2.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=grad2;ctx.fillRect(winX,winY,winW,winH);
+  ctx.restore();
+
+  /* Glass corner highlight */
+  var cG=ctx.createRadialGradient(winX+winW*0.10,winY+winH*0.08,0,winX+winW*0.10,winY+winH*0.08,Math.min(winW,winH)*0.55);
+  cG.addColorStop(0,'rgba(255,255,255,0.16)');cG.addColorStop(0.3,'rgba(220,240,255,0.07)');cG.addColorStop(1,'rgba(220,240,255,0)');
+  ctx.fillStyle=cG;ctx.fillRect(winX,winY,winW,winH);
+
+  /* Top shine */
+  var tsh=ctx.createLinearGradient(0,winY,0,winY+winH*0.20);
+  tsh.addColorStop(0,'rgba(255,255,255,0.24)');tsh.addColorStop(0.5,'rgba(255,255,255,0.07)');tsh.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=tsh;ctx.fillRect(winX,winY,winW,winH*0.20);
+
+  ctx.restore(); /* end glass clip */
+
+  /* Inner seam shadow around glass window */
+  ctx.save();
+  ctx.shadowColor='rgba(0,4,18,0.80)';ctx.shadowBlur=doorBZ*3;
+  ctx.strokeStyle='rgba(0,4,18,0.001)';ctx.lineWidth=1;
+  rrPath(winX,winY,winW,winH,winR);ctx.stroke();
+  ctx.restore();
+
+  /* ── 6. COMBINATION DIAL — center bottom of safe door ── */
+  ctx.save();
+
+  /* Dial recess socket */
+  var socketG=ctx.createRadialGradient(dialX,dialY,0,dialX,dialY,dialR*1.5);
+  socketG.addColorStop(0,'rgba(0,4,18,0.85)');socketG.addColorStop(0.55,'rgba(0,6,22,0.60)');socketG.addColorStop(1,'rgba(0,6,22,0)');
+  ctx.fillStyle=socketG;ctx.beginPath();ctx.arc(dialX,dialY,dialR*1.5,0,Math.PI*2);ctx.fill();
+
+  /* Outer bezel ring of dial */
+  var outerBzR=dialR*1.18;
+  var obG=ctx.createRadialGradient(dialX-dialR*0.2,dialY-dialR*0.25,0,dialX,dialY,outerBzR);
+  obG.addColorStop(0,'rgba(220,238,255,1)');
+  obG.addColorStop(0.35,'rgba(150,190,240,1)');
+  obG.addColorStop(0.70,'rgba(70,110,175,1)');
+  obG.addColorStop(1,'rgba(25,45,90,1)');
+  ctx.fillStyle=obG;ctx.beginPath();ctx.arc(dialX,dialY,outerBzR,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(0,6,22,0.80)';ctx.lineWidth=0.8;
+  ctx.beginPath();ctx.arc(dialX,dialY,outerBzR,0,Math.PI*2);ctx.stroke();
+
+  /* Dial wheel face */
+  var dialFaceG=ctx.createRadialGradient(dialX-dialR*0.22,dialY-dialR*0.28,0,dialX,dialY,dialR);
+  dialFaceG.addColorStop(0,'rgba(55,88,145,1)');
+  dialFaceG.addColorStop(0.4,'rgba(35,62,115,1)');
+  dialFaceG.addColorStop(0.75,'rgba(20,40,85,1)');
+  dialFaceG.addColorStop(1,'rgba(10,20,50,1)');
+  ctx.fillStyle=dialFaceG;ctx.beginPath();ctx.arc(dialX,dialY,dialR,0,Math.PI*2);ctx.fill();
+
+  /* Dial knurl ridges (radial lines around edge) */
+  var numRidges=36;
+  for(var ri=0;ri<numRidges;ri++){
+    var rAngle=(ri/numRidges)*Math.PI*2;
+    var ridgeLen=dialR*0.14;
+    var r0=dialR*0.82,r1=dialR*0.98;
+    ctx.beginPath();
+    ctx.moveTo(dialX+Math.cos(rAngle)*r0,dialY+Math.sin(rAngle)*r0);
+    ctx.lineTo(dialX+Math.cos(rAngle)*r1,dialY+Math.sin(rAngle)*r1);
+    ctx.strokeStyle='rgba(180,215,255,0.28)';ctx.lineWidth=Math.max(0.6,dialR*0.022);ctx.stroke();
+  }
+
+  /* Dial number ring (tick marks at cardinal + ordinal positions) */
+  var numTicks=40;
+  for(var ni=0;ni<numTicks;ni++){
+    var nAngle=(ni/numTicks)*Math.PI*2;
+    var isMajor=(ni%5===0);
+    var tLen=isMajor?dialR*0.18:dialR*0.09;
+    var tr0=dialR*0.56,tr1=tr0+tLen;
+    ctx.beginPath();
+    ctx.moveTo(dialX+Math.cos(nAngle)*tr0,dialY+Math.sin(nAngle)*tr0);
+    ctx.lineTo(dialX+Math.cos(nAngle)*tr1,dialY+Math.sin(nAngle)*tr1);
+    ctx.strokeStyle=isMajor?'rgba(200,225,255,0.80)':'rgba(140,175,225,0.45)';
+    ctx.lineWidth=isMajor?1.2:0.6;ctx.stroke();
+  }
+
+  /* Rotating indicator line (spins slowly) */
+  ctx.save();
+  ctx.translate(dialX,dialY);
+  ctx.rotate(state._dialAngle);
+  /* Indicator bar */
+  var indG=ctx.createLinearGradient(0,-dialR*0.50,0,dialR*0.15);
+  indG.addColorStop(0,'rgba(180,220,255,0.95)');
+  indG.addColorStop(0.6,'rgba(100,160,240,0.80)');
+  indG.addColorStop(1,'rgba(40,80,160,0)');
+  ctx.fillStyle=indG;
+  ctx.fillRect(-dialR*0.045,-dialR*0.50,dialR*0.09,dialR*0.65);
+  /* Indicator tip cap */
+  ctx.fillStyle='rgba(240,248,255,1)';
+  ctx.beginPath();ctx.arc(0,-dialR*0.50,dialR*0.055,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  /* Center boss (raised hub) */
+  var cBossG=ctx.createRadialGradient(dialX-dialR*0.12,dialY-dialR*0.15,0,dialX,dialY,dialR*0.24);
+  cBossG.addColorStop(0,'rgba(230,245,255,1)');
+  cBossG.addColorStop(0.4,'rgba(145,185,235,1)');
+  cBossG.addColorStop(0.8,'rgba(55,90,155,1)');
+  cBossG.addColorStop(1,'rgba(20,38,80,1)');
+  ctx.fillStyle=cBossG;ctx.beginPath();ctx.arc(dialX,dialY,dialR*0.24,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(0,6,24,0.70)';ctx.lineWidth=0.8;
+  ctx.beginPath();ctx.arc(dialX,dialY,dialR*0.24,0,Math.PI*2);ctx.stroke();
+
+  /* Center pin */
+  var pinG=ctx.createRadialGradient(dialX-dialR*0.04,dialY-dialR*0.05,0,dialX,dialY,dialR*0.08);
+  pinG.addColorStop(0,'rgba(255,255,255,1)');pinG.addColorStop(0.6,'rgba(160,200,245,1)');pinG.addColorStop(1,'rgba(40,75,145,1)');
+  ctx.fillStyle=pinG;ctx.beginPath();ctx.arc(dialX,dialY,dialR*0.08,0,Math.PI*2);ctx.fill();
+
+  /* Dial specular sheen */
+  var dialSheen=ctx.createRadialGradient(dialX-dialR*0.28,dialY-dialR*0.32,0,dialX,dialY,dialR);
+  dialSheen.addColorStop(0,'rgba(255,255,255,0.18)');
+  dialSheen.addColorStop(0.3,'rgba(255,255,255,0.06)');
+  dialSheen.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=dialSheen;ctx.beginPath();ctx.arc(dialX,dialY,dialR,0,Math.PI*2);ctx.fill();
+
+  /* Dial label mark at top */
+  ctx.fillStyle='rgba(200,225,255,0.80)';
+  ctx.beginPath();
+  ctx.arc(dialX,dialY-outerBzR+dialR*0.12,dialR*0.055,0,Math.PI*2);
   ctx.fill();
 
-  /* ── Draw liquid ── */
-  if(lev > 0.005){
-    ctx.save();
-    glassPath();
-    ctx.clip();
+  ctx.restore();
 
-    /* Wave surface */
-    var waveAmp = 3 + lev * 4;
-    ctx.beginPath();
-    ctx.moveTo(bodyL - 2, bodyBot + 5);
-    ctx.lineTo(bodyL - 2, liquidTop);
-    for(var wx = bodyL; wx <= bodyR; wx += 2){
-      var wNorm = (wx - bodyL) / bodyW;
-      var wy = liquidTop + Math.sin(wNorm * Math.PI * 3 + t * 2.2) * waveAmp
-                         + Math.sin(wNorm * Math.PI * 5 - t * 1.5) * waveAmp * 0.4;
-      ctx.lineTo(wx, wy);
+  /* ── 7. DOOR HANDLE — right side lever ── */
+  ctx.save();
+
+  /* Handle backplate / escutcheon */
+  var bpW=hndW*2.8, bpH=hndH*1.20, bpX=hndX-bpW/2, bpY=hndY-bpH*0.1;
+  var bpR=Math.min(bpW,bpH)*0.20;
+  ctx.shadowColor='rgba(0,4,18,0.65)';ctx.shadowBlur=bpW*0.5;ctx.shadowOffsetX=-bpW*0.2;
+  rrPath(bpX,bpY,bpW,bpH,bpR);
+  var bpG=ctx.createLinearGradient(bpX,bpY,bpX+bpW,bpY+bpH);
+  bpG.addColorStop(0,'rgba(55,85,145,1)');bpG.addColorStop(0.4,'rgba(75,110,175,1)');
+  bpG.addColorStop(0.7,'rgba(45,72,128,1)');bpG.addColorStop(1,'rgba(28,48,92,1)');
+  ctx.fillStyle=bpG;ctx.fill();
+  ctx.shadowColor='transparent';
+
+  /* Backplate border */
+  ctx.lineWidth=0.8;ctx.strokeStyle='rgba(180,215,255,0.45)';
+  rrPath(bpX,bpY,bpW,bpH,bpR);ctx.stroke();
+
+  /* Handle bar (vertical lever) */
+  var hbR=hndW*0.42;
+  /* Lever grip */
+  var levG=ctx.createLinearGradient(hndX-hndW*0.5,0,hndX+hndW*0.5,0);
+  levG.addColorStop(0,'rgba(200,225,255,0.92)');
+  levG.addColorStop(0.3,'rgba(160,195,245,0.90)');
+  levG.addColorStop(0.55,'rgba(240,250,255,0.98)');
+  levG.addColorStop(0.75,'rgba(150,188,238,0.88)');
+  levG.addColorStop(1,'rgba(60,95,165,0.82)');
+  ctx.fillStyle=levG;
+  rrPath(hndX-hndW*0.5,hndY,hndW,hndH,hbR);
+  ctx.fill();
+  ctx.strokeStyle='rgba(0,8,30,0.55)';ctx.lineWidth=0.8;
+  rrPath(hndX-hndW*0.5,hndY,hndW,hndH,hbR);ctx.stroke();
+
+  /* Handle highlight stripe */
+  var hlev=ctx.createLinearGradient(hndX-hndW*0.5,0,hndX+hndW*0.5,0);
+  hlev.addColorStop(0,'rgba(255,255,255,0)');hlev.addColorStop(0.45,'rgba(255,255,255,0.28)');hlev.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=hlev;
+  rrPath(hndX-hndW*0.5,hndY,hndW,hndH*0.45,hbR);ctx.fill();
+
+  /* Handle top/bottom caps */
+  function drawHandleCap(cx2,cy2){
+    var cg=ctx.createRadialGradient(cx2-hndW*0.15,cy2-hndW*0.15,0,cx2,cy2,hndW*0.62);
+    cg.addColorStop(0,'rgba(235,248,255,1)');cg.addColorStop(0.5,'rgba(150,190,240,1)');cg.addColorStop(1,'rgba(40,70,140,1)');
+    ctx.fillStyle=cg;ctx.beginPath();ctx.arc(cx2,cy2,hndW*0.62,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(0,6,24,0.60)';ctx.lineWidth=0.6;
+    ctx.beginPath();ctx.arc(cx2,cy2,hndW*0.62,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,0.55)';
+    ctx.beginPath();ctx.arc(cx2-hndW*0.14,cy2-hndW*0.16,hndW*0.14,0,Math.PI*2);ctx.fill();
+  }
+  drawHandleCap(hndX,hndY-hndW*0.3);
+  drawHandleCap(hndX,hndY+hndH+hndW*0.3);
+
+  ctx.restore();
+
+  /* ── 8. HINGES — left side of safe body ── */
+  ctx.save();
+  var hingeX=bodyX+bodyW*0.04;
+  var hingePositions=[bodyY+bodyH*0.22, bodyY+bodyH*0.78];
+  var hingeW=bodyW*0.06, hingeH=bodyH*0.11;
+  for(var hi2=0;hi2<hingePositions.length;hi2++){
+    var hgY=hingePositions[hi2]-hingeH/2;
+    /* Hinge backplate */
+    var hgR=hingeW*0.22;
+    ctx.shadowColor='rgba(0,6,20,0.65)';ctx.shadowBlur=hingeW*0.8;ctx.shadowOffsetX=hingeW*0.3;
+    rrPath(hingeX-hingeW*0.5,hgY,hingeW,hingeH,hgR);
+    var hgBodyG=ctx.createLinearGradient(hingeX-hingeW*0.5,0,hingeX+hingeW*0.5,0);
+    hgBodyG.addColorStop(0,'rgba(210,232,255,0.95)');
+    hgBodyG.addColorStop(0.3,'rgba(170,205,248,0.90)');
+    hgBodyG.addColorStop(0.55,'rgba(240,250,255,0.98)');
+    hgBodyG.addColorStop(0.75,'rgba(140,182,234,0.88)');
+    hgBodyG.addColorStop(1,'rgba(55,88,158,0.82)');
+    ctx.fillStyle=hgBodyG;ctx.fill();
+    ctx.shadowColor='transparent';
+    ctx.strokeStyle='rgba(0,8,28,0.55)';ctx.lineWidth=0.7;
+    rrPath(hingeX-hingeW*0.5,hgY,hingeW,hingeH,hgR);ctx.stroke();
+    /* Hinge pin hole */
+    var pinHG=ctx.createRadialGradient(hingeX,hgY+hingeH/2,0,hingeX,hgY+hingeH/2,hingeW*0.28);
+    pinHG.addColorStop(0,'rgba(0,4,18,0.90)');pinHG.addColorStop(0.5,'rgba(4,12,35,0.65)');pinHG.addColorStop(1,'rgba(4,12,35,0)');
+    ctx.fillStyle=pinHG;ctx.beginPath();ctx.arc(hingeX,hgY+hingeH/2,hingeW*0.28,0,Math.PI*2);ctx.fill();
+    /* Pin head */
+    var phG=ctx.createRadialGradient(hingeX-hingeW*0.07,hgY+hingeH/2-hingeW*0.07,0,hingeX,hgY+hingeH/2,hingeW*0.16);
+    phG.addColorStop(0,'rgba(235,248,255,1)');phG.addColorStop(0.5,'rgba(140,182,232,1)');phG.addColorStop(1,'rgba(38,65,130,1)');
+    ctx.fillStyle=phG;ctx.beginPath();ctx.arc(hingeX,hgY+hingeH/2,hingeW*0.16,0,Math.PI*2);ctx.fill();
+    /* Hinge knuckle lines */
+    for(var kl=1;kl<4;kl++){
+      var klY=hgY+(hingeH/4)*kl;
+      ctx.beginPath();ctx.moveTo(hingeX-hingeW*0.4,klY);ctx.lineTo(hingeX+hingeW*0.4,klY);
+      ctx.strokeStyle='rgba(0,8,28,0.30)';ctx.lineWidth=0.5;ctx.stroke();
+      ctx.beginPath();ctx.moveTo(hingeX-hingeW*0.4,klY+0.6);ctx.lineTo(hingeX+hingeW*0.4,klY+0.6);
+      ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=0.4;ctx.stroke();
     }
-    ctx.lineTo(bodyR + 2, liquidTop);
-    ctx.lineTo(bodyR + 2, bodyBot + 5);
-    ctx.closePath();
+  }
+  ctx.restore();
 
-    /* Liquid gradient */
-    var lg;
-    if(theme === 'gold'){
-      lg = ctx.createLinearGradient(0, liquidTop, 0, bodyBot);
-      lg.addColorStop(0, 'rgba(255,233,154,0.95)');
-      lg.addColorStop(0.4, 'rgba(255,217,125,0.9)');
-      lg.addColorStop(1, 'rgba(200,160,60,0.85)');
-    } else if(theme === 'spending'){
-      lg = ctx.createLinearGradient(0, liquidTop, 0, bodyBot);
-      if(lev > 0.5){
-        lg.addColorStop(0, 'rgba(126,200,255,0.9)');
-        lg.addColorStop(0.4, 'rgba(77,141,255,0.85)');
-        lg.addColorStop(1, 'rgba(45,96,232,0.8)');
-      } else if(lev > 0.2){
-        lg.addColorStop(0, 'rgba(255,210,100,0.9)');
-        lg.addColorStop(0.5, 'rgba(255,180,60,0.85)');
-        lg.addColorStop(1, 'rgba(230,140,30,0.8)');
-      } else {
-        lg.addColorStop(0, 'rgba(255,140,100,0.95)');
-        lg.addColorStop(0.4, 'rgba(255,90,70,0.9)');
-        lg.addColorStop(1, 'rgba(200,50,40,0.85)');
-      }
-    } else {
-      lg = ctx.createLinearGradient(0, liquidTop, 0, bodyBot);
-      lg.addColorStop(0, 'rgba(126,200,255,0.9)');
-      lg.addColorStop(0.4, 'rgba(77,141,255,0.85)');
-      lg.addColorStop(1, 'rgba(45,96,232,0.8)');
-    }
-    ctx.fillStyle = lg;
-    ctx.fill();
+  /* ── 9. NAMEPLATE — below window, above dial ── */
+  ctx.save();
+  var npW=bodyW*0.52, npH=bodyH*0.060;
+  var npX=bodyX+(bodyW-npW)/2, npY=winY+winH+doorBZ+(bodyY+bodyH*0.64-winY-winH-doorBZ)*0.18;
+  var npR=npH*0.30;
+  /* Nameplate body */
+  ctx.shadowColor='rgba(0,4,18,0.55)';ctx.shadowBlur=npH*0.8;ctx.shadowOffsetY=npH*0.3;
+  rrPath(npX,npY,npW,npH,npR);
+  var npG=ctx.createLinearGradient(npX,npY,npX+npW,npY+npH);
+  npG.addColorStop(0,'rgba(55,80,140,1)');npG.addColorStop(0.3,'rgba(75,110,175,1)');
+  npG.addColorStop(0.6,'rgba(55,85,148,1)');npG.addColorStop(1,'rgba(32,52,100,1)');
+  ctx.fillStyle=npG;ctx.fill();
+  ctx.shadowColor='transparent';
+  /* Nameplate border */
+  var npBorder=ctx.createLinearGradient(npX,npY,npX+npW,npY+npH);
+  npBorder.addColorStop(0,'rgba(200,225,255,0.65)');npBorder.addColorStop(0.5,'rgba(140,180,235,0.45)');npBorder.addColorStop(1,'rgba(60,95,168,0.55)');
+  ctx.strokeStyle=npBorder;ctx.lineWidth=0.8;
+  rrPath(npX,npY,npW,npH,npR);ctx.stroke();
+  /* Top highlight */
+  ctx.fillStyle='rgba(255,255,255,0.14)';
+  rrPath(npX+1,npY+1,npW-2,npH*0.45,npR);ctx.fill();
+  /* Engraved text lines (simulated) */
+  var lineH=npH*0.15;
+  var lineY1=npY+npH*0.30, lineY2=npY+npH*0.62;
+  /* Main line — wide */
+  var lineG=ctx.createLinearGradient(npX+npW*0.12,0,npX+npW*0.88,0);
+  lineG.addColorStop(0,'rgba(200,225,255,0)');
+  lineG.addColorStop(0.1,'rgba(200,225,255,0.70)');
+  lineG.addColorStop(0.5,'rgba(230,248,255,0.90)');
+  lineG.addColorStop(0.9,'rgba(200,225,255,0.70)');
+  lineG.addColorStop(1,'rgba(200,225,255,0)');
+  ctx.fillStyle=lineG;
+  ctx.fillRect(npX+npW*0.12,lineY1,npW*0.76,lineH);
+  /* Sub line — narrower */
+  var line2G=ctx.createLinearGradient(npX+npW*0.25,0,npX+npW*0.75,0);
+  line2G.addColorStop(0,'rgba(160,195,235,0)');
+  line2G.addColorStop(0.2,'rgba(160,195,235,0.55)');
+  line2G.addColorStop(0.5,'rgba(180,215,250,0.70)');
+  line2G.addColorStop(0.8,'rgba(160,195,235,0.55)');
+  line2G.addColorStop(1,'rgba(160,195,235,0)');
+  ctx.fillStyle=line2G;
+  ctx.fillRect(npX+npW*0.25,lineY2,npW*0.50,lineH*0.7);
+  ctx.restore();
 
-    /* Surface highlight line */
-    ctx.beginPath();
-    for(var sx = bodyL + 4; sx <= bodyR - 4; sx += 2){
-      var sNorm = (sx - bodyL) / bodyW;
-      var sy = liquidTop + Math.sin(sNorm * Math.PI * 3 + t * 2.2) * waveAmp
-                         + Math.sin(sNorm * Math.PI * 5 - t * 1.5) * waveAmp * 0.4;
-      if(sx === bodyL + 4) ctx.moveTo(sx, sy);
-      else ctx.lineTo(sx, sy);
-    }
-    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+  /* ── 10. Safe body outer chrome bezel frame ── */
+  ctx.save();
+  /* Top bezel highlight */
+  var tBzH=Math.min(bodyH,bodyW)*0.022;
+  var tBzG=ctx.createLinearGradient(0,bodyY,0,bodyY+tBzH);
+  tBzG.addColorStop(0,'rgba(240,250,255,0.88)');tBzG.addColorStop(1,'rgba(140,180,230,0.30)');
+  ctx.fillStyle=tBzG;
+  rrPath(bodyX,bodyY,bodyW,bodyH,bR);
+  ctx.save();ctx.clip();
+  ctx.fillRect(bodyX,bodyY,bodyW,tBzH);
+  ctx.restore();
 
-    /* ── Bubbles ── */
-    if(!state.bubbles) state.bubbles = [];
-    /* Spawn new bubbles */
-    if(Math.random() < 0.06 && state.bubbles.length < 8){
-      state.bubbles.push({
-        x: bodyL + cornerR + Math.random() * (bodyW - cornerR*2),
-        y: bodyBot - 4,
-        r: 1.5 + Math.random() * 3,
-        speed: 0.3 + Math.random() * 0.6,
-        wobble: Math.random() * Math.PI * 2
+  /* Outer rim stroke — chrome edge */
+  var rimG=ctx.createLinearGradient(bodyX,bodyY,bodyX+bodyW,bodyY+bodyH);
+  rimG.addColorStop(0,'rgba(230,245,255,0.65)');
+  rimG.addColorStop(0.35,'rgba(160,200,248,0.40)');
+  rimG.addColorStop(0.65,'rgba(80,120,185,0.35)');
+  rimG.addColorStop(1,'rgba(30,55,110,0.55)');
+  ctx.strokeStyle=rimG;ctx.lineWidth=Math.max(1.0,bodyW*0.006);
+  rrPath(bodyX+0.6,bodyY+0.6,bodyW-1.2,bodyH-1.2,bR);ctx.stroke();
+
+  /* Bottom shadow rim */
+  var botRimG=ctx.createLinearGradient(0,bodyY+bodyH-bodyH*0.018,0,bodyY+bodyH);
+  botRimG.addColorStop(0,'rgba(0,4,18,0)');botRimG.addColorStop(1,'rgba(0,4,18,0.55)');
+  ctx.fillStyle=botRimG;
+  rrPath(bodyX,bodyY,bodyW,bodyH,bR);
+  ctx.save();ctx.clip();
+  ctx.fillRect(bodyX,bodyY+bodyH-bodyH*0.04,bodyW,bodyH*0.05);
+  ctx.restore();
+
+  ctx.restore();
+}
+
+
+/* ═══════════════════════════════════════════════
+   CASH BILL STACK — Leftover / Spending vial
+   Folded blue notes viewed edge-on, drop physics,
+   reflective floor, ambient particles
+═══════════════════════════════════════════════ */
+function _fxDrawCashStack(ctx, W, H, t, state){
+  var BILL_MAX = 14;
+  function clamp(v,lo,hi){return v<lo?lo:v>hi?hi:v}
+  function hash(n){var x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)}
+
+  if(!state._init){
+    state._init=true; state._lastT=t; state._eased=state.level||0;
+    state._lastFull=Math.floor(state._eased*BILL_MAX);
+    state._bills=state._bills||[];
+    state._ambient=state._ambient||[];
+    for(var i=state._bills.length;i<BILL_MAX;i++){
+      state._bills.push({
+        xOff:(hash(i*9.13+1)-0.5)*(W*0.05),
+        widthVar:1.0 - hash(i*3.71+5)*0.08,
+        rot:(hash(i*5.27+7)-0.5)*0.045,
+        dropT:1,
+        landed:true
       });
     }
-    /* Update & draw bubbles */
-    for(var bi = state.bubbles.length - 1; bi >= 0; bi--){
-      var bub = state.bubbles[bi];
-      bub.y -= bub.speed;
-      bub.x += Math.sin(t * 3 + bub.wobble) * 0.3;
-      if(bub.y < liquidTop + 2){ state.bubbles.splice(bi, 1); continue; }
-      ctx.beginPath();
-      ctx.arc(bub.x, bub.y, bub.r, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.25)';
-      ctx.fill();
-      /* Tiny highlight on bubble */
-      ctx.beginPath();
-      ctx.arc(bub.x - bub.r*0.3, bub.y - bub.r*0.3, bub.r*0.35, 0, Math.PI*2);
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      ctx.fill();
+    if(!state._ambient.length){
+      for(var i=0;i<32;i++){
+        state._ambient.push({x:Math.random(),y:Math.random(),vx:(Math.random()-0.5)*0.022,
+          vy:-0.014-Math.random()*0.035,size:0.4+Math.random()*1.4,phase:Math.random()*Math.PI*2,
+          alpha:0.05+Math.random()*0.22,bright:Math.random()<0.20});
+      }
+    }
+  }
+
+  var dt=t-state._lastT;
+  if(!isFinite(dt)||dt<0)dt=0.016;
+  if(dt>0.08)dt=0.05;
+  state._lastT=t;
+
+  var tgt=clamp(state.target!=null?state.target:(state.level||0),0,1);
+  var k=1-Math.exp(-dt*3.4);
+  state._eased+=(tgt-state._eased)*k;
+  if(Math.abs(tgt-state._eased)<1e-4)state._eased=tgt;
+  state.level=state._eased;
+
+  var exact=state._eased*BILL_MAX;
+  var fullN=Math.floor(exact+1e-6);
+  var topFrac=clamp(exact-fullN,0,1);
+  var visN=Math.min(BILL_MAX,fullN+(topFrac>0.02?1:0));
+
+  if(fullN>state._lastFull){
+    for(var i=state._lastFull;i<fullN;i++){var b=state._bills[i];if(b){b.dropT=0;b.landed=false;}}
+  }
+  state._lastFull=fullN;
+
+  var cx=W*0.5, baseY=H*0.84;
+  var billW=W*0.88;
+  var billH=Math.max(8, Math.min(W*0.10, H*0.045));
+  var step=billH*0.88;
+
+  /* Background ambient glow */
+  var bg=ctx.createRadialGradient(cx,baseY-billH*4,0,cx,baseY-billH*4,Math.max(W,H)*0.75);
+  bg.addColorStop(0,'rgba(45,95,175,0.20)');
+  bg.addColorStop(0.5,'rgba(22,50,108,0.06)');
+  bg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  /* Ambient floating particles */
+  for(var pi=0;pi<state._ambient.length;pi++){
+    var p=state._ambient[pi];
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.phase+=dt*1.8;
+    if(p.y<-0.05){p.y=1.05;p.x=Math.random();}
+    if(p.x<-0.05)p.x=1.05;else if(p.x>1.05)p.x=-0.05;
+    var px=p.x*W,py=p.y*H;
+    var pa=p.alpha*(0.4+0.6*Math.sin(p.phase));
+    var pr=p.size*3.0;
+    var pg=ctx.createRadialGradient(px,py,0,px,py,pr);
+    if(p.bright){pg.addColorStop(0,'rgba(210,240,255,'+pa+')');pg.addColorStop(1,'rgba(210,240,255,0)');}
+    else{pg.addColorStop(0,'rgba(120,180,250,'+pa+')');pg.addColorStop(1,'rgba(120,180,250,0)');}
+    ctx.fillStyle=pg;ctx.fillRect(px-pr,py-pr,pr*2,pr*2);
+  }
+
+  function drawBill(b,i,opacityScale){
+    var isTopB=(i===fullN)&&topFrac<0.98;
+    var frac=isTopB?topFrac:1;
+    var dE=1-Math.pow(1-b.dropT,3);
+    var descend=(1-dE)*-billH*7;
+    var bounce=0;
+    if(b.dropT>0.78&&b.dropT<1){
+      var bb=(b.dropT-0.78)/0.22;
+      bounce=Math.sin(bb*Math.PI)*(1-bb)*billH*0.18;
+    }
+    var settled=baseY-i*step-billH*0.5;
+    var y=settled+descend-bounce;
+    var x=cx+b.xOff;
+    var bW=billW*b.widthVar;
+    var bH=billH*frac;
+    var pos=i/Math.max(1,BILL_MAX-1);
+    var lt=(0.62+pos*0.38)*opacityScale;
+
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(b.rot);
+
+    /* Bill body — deep blue paper gradient */
+    var bgB=ctx.createLinearGradient(-bW/2,0,bW/2,0);
+    bgB.addColorStop(0,  'rgba('+Math.round(18*lt)+','+Math.round(44*lt)+','+Math.round(102*lt)+',1)');
+    bgB.addColorStop(0.25,'rgba('+Math.round(42*lt)+','+Math.round(88*lt)+','+Math.round(168*lt)+',1)');
+    bgB.addColorStop(0.5, 'rgba('+Math.round(62*lt)+','+Math.round(120*lt)+','+Math.round(212*lt)+',1)');
+    bgB.addColorStop(0.75,'rgba('+Math.round(42*lt)+','+Math.round(88*lt)+','+Math.round(168*lt)+',1)');
+    bgB.addColorStop(1,  'rgba('+Math.round(18*lt)+','+Math.round(44*lt)+','+Math.round(102*lt)+',1)');
+    ctx.fillStyle=bgB;
+    ctx.fillRect(-bW/2,-bH/2,bW,bH);
+
+    /* Vertical paper-edge gradient (top lit, bottom shadowed) */
+    if(bH>3.5){
+      var vg=ctx.createLinearGradient(0,-bH/2,0,bH/2);
+      vg.addColorStop(0,'rgba(245,252,255,'+(0.30*lt)+')');
+      vg.addColorStop(0.25,'rgba(245,252,255,0)');
+      vg.addColorStop(0.75,'rgba(0,5,20,0)');
+      vg.addColorStop(1,'rgba(0,5,20,0.55)');
+      ctx.fillStyle=vg;
+      ctx.fillRect(-bW/2,-bH/2,bW,bH);
     }
 
+    /* Top edge highlight — paper edge catching light */
+    var th=ctx.createLinearGradient(0,-bH/2,0,-bH/2+Math.max(1,bH*0.18));
+    th.addColorStop(0,'rgba(245,252,255,'+(0.85*lt)+')');
+    th.addColorStop(1,'rgba(245,252,255,0)');
+    ctx.fillStyle=th;
+    ctx.fillRect(-bW/2,-bH/2,bW,Math.max(1,bH*0.18));
+
+    /* Bottom dark seam — where it meets bill below */
+    ctx.fillStyle='rgba(0,3,14,0.7)';
+    ctx.fillRect(-bW/2,bH/2-Math.max(0.6,bH*0.10),bW,Math.max(0.6,bH*0.10));
+
+    /* Side security strips (left + right edge bands) */
+    if(bH>4){
+      var stripeH=bH-Math.max(1,bH*0.30);
+      ctx.fillStyle='rgba(165,210,255,'+(0.32*lt)+')';
+      ctx.fillRect(-bW/2+bW*0.08, -bH/2+bH*0.18, Math.max(0.8,bW*0.012), stripeH);
+      ctx.fillRect( bW/2-bW*0.08-Math.max(0.8,bW*0.012), -bH/2+bH*0.18, Math.max(0.8,bW*0.012), stripeH);
+    }
+
+    /* Central specular shine line (chrome highlight band) */
+    var sp=ctx.createLinearGradient(-bW/2,0,bW/2,0);
+    sp.addColorStop(0.42,'rgba(255,255,255,0)');
+    sp.addColorStop(0.48,'rgba(245,252,255,'+(0.20*lt)+')');
+    sp.addColorStop(0.50,'rgba(255,255,255,'+(0.40*lt)+')');
+    sp.addColorStop(0.52,'rgba(245,252,255,'+(0.20*lt)+')');
+    sp.addColorStop(0.58,'rgba(255,255,255,0)');
+    ctx.fillStyle=sp;
+    ctx.fillRect(-bW/2,-bH/2+Math.max(0.5,bH*0.10),bW,bH-Math.max(1,bH*0.20));
+
+    /* Outer thin border */
+    ctx.lineWidth=Math.max(0.4,bW*0.0015);
+    ctx.strokeStyle='rgba(180,215,255,'+(0.35*lt)+')';
+    ctx.strokeRect(-bW/2,-bH/2,bW,bH);
+
     ctx.restore();
   }
 
-  /* ── Glass outline ── */
-  glassPath();
-  var glassBorder = ctx.createLinearGradient(bodyL, bodyTop, bodyR, bodyBot);
-  glassBorder.addColorStop(0, 'rgba(180,220,255,0.5)');
-  glassBorder.addColorStop(0.5, 'rgba(126,200,255,0.25)');
-  glassBorder.addColorStop(1, 'rgba(100,160,255,0.4)');
-  ctx.strokeStyle = glassBorder;
-  ctx.lineWidth = 1.8;
-  ctx.stroke();
-
-  /* ── Glass shine (left edge reflection) ── */
-  ctx.save();
-  ctx.globalAlpha = 0.25;
-  ctx.beginPath();
-  ctx.moveTo(bodyL + 5, shoulderY + 8);
-  ctx.lineTo(bodyL + 5, bodyBot - cornerR - 8);
-  ctx.lineWidth = 2.5;
-  ctx.lineCap = 'round';
-  var shineG = ctx.createLinearGradient(0, shoulderY + 8, 0, bodyBot - cornerR - 8);
-  shineG.addColorStop(0, 'rgba(255,255,255,0)');
-  shineG.addColorStop(0.2, 'rgba(255,255,255,0.7)');
-  shineG.addColorStop(0.8, 'rgba(255,255,255,0.5)');
-  shineG.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.strokeStyle = shineG;
-  ctx.stroke();
-  ctx.restore();
-
-  /* ── Neck shine ── */
-  ctx.save();
-  ctx.globalAlpha = 0.18;
-  ctx.beginPath();
-  ctx.moveTo(neckL + 3, neckTop + 6);
-  ctx.lineTo(neckL + 3, neckBot - 2);
-  ctx.lineWidth = 1.5;
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-  ctx.stroke();
-  ctx.restore();
-
-  /* ── Neck cap / rim ── */
-  ctx.save();
-  var capG = ctx.createLinearGradient(neckL - 4, 0, neckR + 4, 0);
-  capG.addColorStop(0, 'rgba(160,200,255,0.3)');
-  capG.addColorStop(0.5, 'rgba(200,230,255,0.5)');
-  capG.addColorStop(1, 'rgba(160,200,255,0.3)');
-  ctx.fillStyle = capG;
-  /* Neck cap / rim — manual rounded rect for compat */
-  var capX = neckL - 3, capY2 = neckTop - 2, capW2 = neckW + 6, capH2 = 5, capR2 = 2.5;
-  ctx.beginPath();
-  ctx.moveTo(capX + capR2, capY2);
-  ctx.lineTo(capX + capW2 - capR2, capY2);
-  ctx.quadraticCurveTo(capX + capW2, capY2, capX + capW2, capY2 + capR2);
-  ctx.lineTo(capX + capW2, capY2 + capH2 - capR2);
-  ctx.quadraticCurveTo(capX + capW2, capY2 + capH2, capX + capW2 - capR2, capY2 + capH2);
-  ctx.lineTo(capX + capR2, capY2 + capH2);
-  ctx.quadraticCurveTo(capX, capY2 + capH2, capX, capY2 + capH2 - capR2);
-  ctx.lineTo(capX, capY2 + capR2);
-  ctx.quadraticCurveTo(capX, capY2, capX + capR2, capY2);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(180,220,255,0.4)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.restore();
-
-  /* ── Ambient glow under vial ── */
-  if(lev > 0.1){
+  /* Reflection */
+  if(visN>0){
     ctx.save();
-    var glowColor = theme === 'gold' ? 'rgba(255,217,125,' : (theme==='spending'&&lev<0.2) ? 'rgba(255,100,80,' : 'rgba(126,200,255,';
-    var glowG = ctx.createRadialGradient(W/2, bodyBot + 4, 0, W/2, bodyBot + 4, bodyW * 0.6);
-    glowG.addColorStop(0, glowColor + (0.12 + Math.sin(t*1.5)*0.04) + ')');
-    glowG.addColorStop(1, glowColor + '0)');
-    ctx.fillStyle = glowG;
-    ctx.beginPath();
-    ctx.ellipse(W/2, bodyBot + 8, bodyW * 0.6, 14, 0, 0, Math.PI*2);
-    ctx.fill();
+    ctx.translate(cx,baseY);
+    ctx.scale(1,-0.55);
+    ctx.translate(-cx,-baseY);
+    ctx.globalAlpha=0.30;
+    for(var i=0;i<visN;i++){
+      drawBill(state._bills[i], i, 0.7);
+    }
     ctx.restore();
+    var fade=ctx.createLinearGradient(0,baseY,0,baseY+billH*5);
+    fade.addColorStop(0,'rgba(4,9,18,0)');
+    fade.addColorStop(1,'rgba(4,9,18,1)');
+    ctx.fillStyle=fade;ctx.fillRect(0,baseY,W,H-baseY);
   }
 
+  /* Floor glow */
+  var fg=ctx.createRadialGradient(cx,baseY,0,cx,baseY,billW*0.85);
+  fg.addColorStop(0,'rgba(120,180,250,0.28)');
+  fg.addColorStop(0.5,'rgba(80,140,210,0.07)');
+  fg.addColorStop(1,'rgba(80,140,210,0)');
+  ctx.fillStyle=fg;
+  ctx.fillRect(0,baseY-billH*0.6,W,billH*2);
+
+  /* Contact shadow */
+  var shI=0.30+0.42*(visN/BILL_MAX);
+  var shR=billW*0.55*(1.05+0.04*visN);
+  ctx.save();
+  ctx.translate(cx,baseY+2);
+  ctx.scale(1,0.28);
+  var sg2=ctx.createRadialGradient(0,0,0,0,0,shR);
+  sg2.addColorStop(0,'rgba(0,0,0,'+shI+')');
+  sg2.addColorStop(0.5,'rgba(0,0,0,'+(shI*0.45)+')');
+  sg2.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=sg2;
+  ctx.beginPath();ctx.arc(0,0,shR,0,Math.PI*2);ctx.fill();
   ctx.restore();
+
+  /* Draw the bill stack */
+  for(var i=0;i<visN;i++){
+    var b=state._bills[i];
+    if(b.dropT<1){
+      b.dropT=Math.min(1,b.dropT+dt*2.6);
+    }
+    drawBill(b, i, 1.0);
+  }
 }
 
 /* Leftover vial tap → set leftover amount */
@@ -14732,13 +15529,49 @@ function fxRenderBottleLog(){
   }).join('');
 }
 
+/* ── Savings history log (Savings page) ── */
+function fxRenderSavingsLog(){
+  var el = document.getElementById('vault-savings-log');
+  if(!el) return;
+  var f = getF();
+  var log = f.savingsLog || [];
+  if(!log.length){
+    el.innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--muted);font-family:var(--font-ui);font-size:12px;font-weight:600">No deposits yet — tap the vault to add</div>';
+    return;
+  }
+  el.innerHTML = log.map(function(e){
+    var isAdd = e.dir === 1;
+    var color = isAdd ? 'var(--green)' : 'var(--red)';
+    var bg    = isAdd ? 'rgba(74,222,128,.07)' : 'rgba(255,100,100,.07)';
+    var bdr   = isAdd ? 'rgba(74,222,128,.2)'  : 'rgba(255,100,100,.18)';
+    var sign  = isAdd ? '+' : '\u2212';
+    var sar   = '\uFDFC';
+    var prefix = e.set ? 'set to ' : '';
+    return '<div style="display:flex;align-items:center;background:'+bg+';border:1px solid '+bdr+';border-radius:10px;padding:10px 14px;gap:10px">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-family:var(--font-ui);font-size:12px;font-weight:800;color:'+color+'">'+sign+' '+sar+(+e.amt).toLocaleString()+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-top:2px">'+e.date+' &nbsp;&middot;&nbsp; '+prefix+'was '+sar+Math.round(e.prev).toLocaleString()+' &rarr; '+sar+Math.round(e.next).toLocaleString()+'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+/* renderSavingsPage — called from _onPageEnter when user lands on Savings */
+function renderSavingsPage(){
+  /* fnxRender already updates the UI bindings via fxRenderVials; just nudge it */
+  if(typeof fnxRender === 'function') fnxRender();
+  else if(typeof renderFinance === 'function') renderFinance();
+  fxRenderSavingsLog();
+}
+
 (function(){
   var _origNavTo = window.navTo;
   window.navTo = function(idx){
     if(typeof _origNavTo==="function") _origNavTo(idx);
-    if(idx===2) setTimeout(fxRenderBottleLog, 150);
+    if(idx===0) setTimeout(fxRenderBottleLog, 150);   /* Finance */
+    if(idx===1) setTimeout(fxRenderSavingsLog, 150);  /* Savings */
   };
-  setTimeout(fxRenderBottleLog, 1200);
+  setTimeout(function(){ fxRenderBottleLog(); fxRenderSavingsLog(); }, 1200);
 })();
 
 /* Monkey-patch confirmCMUpdate to handle leftover + savings modes */
@@ -14767,8 +15600,17 @@ window.confirmCMUpdate = function(){
     if(!f.goals) f.goals=[];
     var eg = f.goals.find(function(g){return (g.name||'').toLowerCase().indexOf('emergency')>-1});
     if(!eg){ eg = {id:Date.now(), icon:'🛡️', name:'Emergency Fund', target:0, saved:0, deadline:''}; f.goals.push(eg); }
+    var prevSaved = eg.saved || 0;
     if(setVal!==null) eg.saved = Math.max(0, setVal);
     else eg.saved = Math.max(0, (eg.saved||0) + amt);
+    /* Log this deposit */
+    if(!f.savingsLog) f.savingsLog = [];
+    var sNow = new Date();
+    var sDateStr = sNow.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) + ' ' + sNow.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    var deltaAmt = setVal!==null ? (eg.saved - prevSaved) : amt;
+    var logDir = deltaAmt >= 0 ? 1 : -1;
+    f.savingsLog.unshift({ dir: logDir, amt: Math.abs(deltaAmt), prev: prevSaved, next: eg.saved, date: sDateStr, set: setVal!==null });
+    if(f.savingsLog.length > 50) f.savingsLog = f.savingsLog.slice(0, 50);
     setF(f);
     if(typeof closeModal==='function') closeModal('cm-update-modal');
     fnxRender();
@@ -14997,15 +15839,16 @@ window.finMonthNav = function(delta){
   }
 })();
 
-/* Pause vial animation when leaving finance page, resume on enter */
+/* Pause vial animation when leaving finance/savings pages, resume on enter */
 (function(){
   var _origNavTo = window.navTo;
   if(typeof _origNavTo !== 'function') return;
   window.navTo = function(idx, animate){
     _origNavTo(idx, animate);
-    /* Check if finance page is active */
-    var finActive = (typeof PAGE_IDS !== 'undefined' && PAGE_IDS[idx] === 'finance');
-    if(finActive){
+    /* Check if finance OR savings page is active — both have canvases */
+    var pgId = (typeof PAGE_IDS !== 'undefined') ? PAGE_IDS[idx] : '';
+    var needsCanvas = (pgId === 'finance' || pgId === 'savings');
+    if(needsCanvas){
       if(!_fxVialAnimId) _fxVialBootCanvas();
     } else {
       if(_fxVialAnimId){ cancelAnimationFrame(_fxVialAnimId); _fxVialAnimId = null; }
@@ -15222,7 +16065,7 @@ window.finMonthNav = function(delta){
 
   /* ── Fixed ball count: always 80–90 balls, independent of habit library ── */
   var _isMobile = /iPhone|Android|Mobile/i.test(navigator.userAgent);
-  var FIXED_BALL_COUNT = _isMobile ? 65 : 85;
+  var FIXED_BALL_COUNT = _isMobile ? 48 : 65;
 
   /* ── Logical draw size — always 340×390, CSS scales via style ── */
   var W = 340, H = 390;
@@ -15519,7 +16362,7 @@ window.finMonthNav = function(delta){
   /* ── Init physics balls — always FIXED_BALL_COUNT ── */
   function _initBalls(){
     _balls = [];
-    var r0 = 7;
+    var r0 = 9;
     for(var i=0; i<FIXED_BALL_COUNT; i++){
       var angle = Math.random() * Math.PI * 2;
       var dist  = Math.pow(Math.random(), 0.5) * (GR - 20) * 0.80;
@@ -15528,7 +16371,7 @@ window.finMonthNav = function(delta){
         y: GY + 14 + Math.sin(angle)*dist*0.50,
         vx:(Math.random()-0.5)*0.3,
         vy:(Math.random()-0.5)*0.3,
-        r: r0 + Math.random()*1.4,
+        r: r0 + Math.random()*1.8,
         col: PALETTE[i % PALETTE.length],
         phase: Math.random()*Math.PI*2,
         libIdx: -1

@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-16-chip-sounds-v23'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-18-reward-v27'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -182,7 +182,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bowl-btn.complete{background:linear-gradient(135deg,#4ade80,#22c55e);box-shadow:0 4px 14px rgba(74,222,128,.3)}
 .bowl-btn.reroll{background:rgba(255,255,255,.07);border:1px solid rgba(255,217,125,.3);color:var(--gold);box-shadow:none;flex:0 0 auto;padding:12px 16px}
 .bowl-btn.reroll:active{background:rgba(255,217,125,.12)}
-.bowl-btn.skip{background:rgba(255,100,100,.08);border:1px solid rgba(255,100,100,.25);color:rgba(255,130,120,.85);box-shadow:none;flex:0 0 auto;padding:12px 14px}
+/* .bowl-btn.skip removed — skip system eliminated */
 .bowl-crank-row{display:flex;flex-direction:column;align-items:center;gap:10px;margin:4px auto 12px;padding:0;width:100%;max-width:100%;}
 .bowl-crank-btn{background:linear-gradient(135deg,rgba(255,217,125,.14),rgba(255,190,80,.08));border:1.5px solid rgba(255,217,125,.35);border-radius:50px;color:var(--gold);font-family:var(--font-ui);font-size:13.5px;font-weight:800;padding:15px 36px;cursor:pointer;letter-spacing:.5px;transition:transform .14s,box-shadow .22s,background .18s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;box-shadow:0 4px 20px rgba(255,217,125,.12),inset 0 1px 0 rgba(255,255,255,.06);min-height:50px;display:inline-flex;align-items:center;gap:9px}
 .bowl-crank-btn:hover{background:linear-gradient(135deg,rgba(255,217,125,.22),rgba(255,190,80,.14));box-shadow:0 6px 28px rgba(255,217,125,.18),inset 0 1px 0 rgba(255,255,255,.08)}
@@ -196,6 +196,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bowl-reroll-btn:hover{background:rgba(255,217,125,.18)}
 .bowl-reroll-btn:active{transform:scale(.96)}
 .bowl-reroll-btn:disabled{opacity:.4;cursor:not-allowed}
+.bowl-accept-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 20px;background:linear-gradient(135deg,rgba(77,141,255,.18),rgba(126,200,255,.10));border:1.5px solid rgba(107,182,255,.45);border-radius:12px;color:var(--a2);font-family:var(--font-ui);font-size:14px;font-weight:800;letter-spacing:.3px;cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:50px;margin-top:10px}
+.bowl-accept-btn:hover{background:linear-gradient(135deg,rgba(77,141,255,.28),rgba(126,200,255,.18));box-shadow:0 4px 20px rgba(77,141,255,.2)}
+.bowl-accept-btn:active{transform:scale(.97)}
 .bowl-progress{background:rgba(255,255,255,.04);border:1px solid rgba(127,178,255,.18);border-radius:8px;padding:12px 14px;margin-bottom:10px}
 .bowl-progress-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
 .bowl-progress-lbl{font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
@@ -3350,6 +3353,31 @@ textarea.auto-grow{overflow:hidden;resize:none}
     </div>
   </div>
 </div>
+<!-- Clear All Data confirmation modal -->
+<div class="modal-bg" id="clear-all-modal">
+  <div class="modal" style="max-width:100%;text-align:center">
+    <div style="font-size:32px;margin-bottom:12px">🗑️</div>
+    <div class="modal-title" style="text-align:center;color:#FF8B8B">Delete everything?</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:8px">This permanently erases all habits, streaks, finance data, gym sessions, bowl progress — everything.</div>
+    <div style="font-size:12px;color:rgba(74,222,128,.7);margin-bottom:20px;padding:8px 12px;background:rgba(74,222,128,.06);border-radius:6px;border:1px solid rgba(74,222,128,.15)">A backup will be exported first automatically.</div>
+    <div class="modal-btns" style="justify-content:center">
+      <button class="fin-btn" onclick="confirmClearAll()" style="background:rgba(255,100,100,.22);border-color:rgba(255,100,100,.4);color:#FF8B8B;flex:1">Delete All</button>
+      <button class="fin-btn ghost" onclick="closeModal('clear-all-modal')" style="flex:1">Cancel</button>
+    </div>
+  </div>
+</div>
+<!-- Reset Finance confirmation modal -->
+<div class="modal-bg" id="reset-finance-modal">
+  <div class="modal" style="max-width:100%;text-align:center">
+    <div style="font-size:32px;margin-bottom:12px">💰</div>
+    <div class="modal-title" style="text-align:center;color:#FFD97D">Reset finance data?</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">This resets all expense categories to zero. Transactions and goals are preserved. The page will reload.</div>
+    <div class="modal-btns" style="justify-content:center">
+      <button class="fin-btn" onclick="confirmResetFinance()" style="background:rgba(255,180,0,.2);border-color:rgba(255,180,0,.4);color:#FFD97D;flex:1">Reset Finance</button>
+      <button class="fin-btn ghost" onclick="closeModal('reset-finance-modal')" style="flex:1">Cancel</button>
+    </div>
+  </div>
+</div>
 <div class="rest-timer-bar" id="rest-timer-bar">
   <div class="rest-timer-label">Rest</div>
   <div class="rest-timer-count" id="rest-timer-count">90</div>
@@ -3801,6 +3829,9 @@ function _onPageEnter(id){
       document.querySelectorAll('.hc-rate-row').forEach(function(r){ if(r.parentNode) r.parentNode.removeChild(r); });
       renderTodayPage();
       if(typeof renderRewardStrip==='function') renderRewardStrip();
+    }
+    if(id==='settings'){
+      if(typeof renderScheduleSlider==='function') renderScheduleSlider();
     }
   }, CONFIG.PAGE_ENTER_DELAY);
 }
@@ -5093,7 +5124,7 @@ function importData(e){
          4. Always remove today's draw so the crank works fresh after import. */
       if(!d.bowl){
         /* Backup had no bowl — inject a clean stub so the block below always runs */
-        d.bowl = { dailyDraws: [], draws: [], tripleDraws: [], rerollsByCycle: {} };
+        d.bowl = { dailyDraws: [], draws: [], tripleDraws: [], weeklyRerolls: { weekKey:'', used:0 } };
       }
       /* Wipe library — getBowl() will repopulate from BOWL_DEFAULT_LIBRARY */
       delete d.bowl.library;
@@ -5286,14 +5317,11 @@ function _doExcelExport(){
 }
 let _resetFinArmed=false;let _resetFinTimer=null;
 function resetFinanceData(){
-  if(!_resetFinArmed){
-    _resetFinArmed=true;
-    clearTimeout(_resetFinTimer);
-    _resetFinTimer=setTimeout(function(){ _resetFinArmed=false; },3000);
-    toast('⚠️ Tap "Reset Finance" again within 3s to confirm');
-    return;
-  }
-  _resetFinArmed=false; clearTimeout(_resetFinTimer);
+  var modal=document.getElementById('reset-finance-modal');
+  if(modal){ modal.classList.add('on'); return; }
+}
+function confirmResetFinance(){
+  closeModal('reset-finance-modal');
   let s=gs();
   s.finance={
     income:0,
@@ -5331,14 +5359,11 @@ function resetFinanceData(){
 }
 let _clearAllArmed=false;let _clearAllTimer=null;
 function clearAll(){
-  if(!_clearAllArmed){
-    _clearAllArmed=true;
-    clearTimeout(_clearAllTimer);
-    _clearAllTimer=setTimeout(function(){ _clearAllArmed=false; },3000);
-    toast('⚠️ Tap "Clear All" again within 3s to confirm — this deletes EVERYTHING');
-    return;
-  }
-  _clearAllArmed=false; clearTimeout(_clearAllTimer);
+  var modal=document.getElementById('clear-all-modal');
+  if(modal){ modal.classList.add('on'); return; }
+}
+function confirmClearAll(){
+  closeModal('clear-all-modal');
   exportData();
   _stateCache=null;
   localStorage.removeItem('lifeOS');
@@ -6958,7 +6983,7 @@ const BOWL_SYSTEM_START = '2026-04-18'; /* Bowl tier scoring applies to cycles s
 const BOWL_XP_EASY = 15;
 const BOWL_XP_MEDIUM = 30;
 const BOWL_XP_HARD = 50;
-const BOWL_REROLL_COST = 30; /* XP cost for 4th+ reroll per day */
+/* reroll cost removed — weekly budget system replaces it */
 const BOWL_PTS_EASY = 10;
 const BOWL_PTS_MEDIUM = 30;
 const BOWL_PTS_HARD = 60;
@@ -6970,7 +6995,7 @@ const BOWL_DEFAULT_LIBRARY = [
 
   /* ═══ PHYSICAL ═══ */
   {id:'t_pushups', name:'Pushups', icon:'💪', tone:'strawberry', weight:5,
-    easy:{desc:'10 pushups. Drop and do them now.',pts:10},
+    easy:{desc:'15 pushups. Drop and do them right now.',pts:10},
     medium:{desc:'3 sets of 10, right now. Rest 60 sec between sets.',pts:30},
     hard:{desc:'Max reps in one set, rest 2 min, repeat × 3. Log your numbers. Beat it next time.',pts:60}},
 
@@ -6980,29 +7005,29 @@ const BOWL_DEFAULT_LIBRARY = [
     hard:{desc:'4 × 25 + 10 single-leg each side. Your posterior chain will know about this.',pts:60}},
 
   {id:'t_walk', name:'Zone 2 Walk', icon:'🚶', tone:'blueberry', weight:5,
-    easy:{desc:'Pace the apartment for 5 min. Hallway laps count.',pts:10},
+    easy:{desc:'15 min walk — apartment laps, hallway, stairs, whatever. Just move.',pts:10},
     medium:{desc:'30 min apartment pacing or stairs. Arms swinging, ~120 BPM. AirPods tracking.',pts:30},
     hard:{desc:'40 min Zone 2 — outside if it\'s daylight, stairs/apartment if not. Log average HR.',pts:60}},
 
-  {id:'t_hiit', name:'HIIT', icon:'🔥', tone:'tangerine', weight:5,
+  {id:'t_hiit', name:'HIIT', icon:'🔥', tone:'tangerine', weight:5, deleted:true,
     easy:{desc:'1 min jumping jacks in the living room. Right now.',pts:10},
     medium:{desc:'14 min HIIT. Your actual protocol. Full send.',pts:30},
     hard:{desc:'Two 14-min rounds with 10 min rest between. Log both.',pts:60}},
 
-  {id:'t_mobility', name:'Mobility', icon:'🧘', tone:'cotton', weight:5,
+  {id:'t_mobility', name:'Mobility', icon:'🧘', tone:'cotton', weight:4,
     easy:{desc:'Couch stretch 2 min each leg. Right now on the floor.',pts:10},
     medium:{desc:'Hip flexors + thoracic rotation + couch stretch. 15 min.',pts:30},
     hard:{desc:'30 min full mobility session. Find a YouTube follow-along and do the whole thing.',pts:60}},
 
-  {id:'t_cold_shower', name:'Cold Shower', icon:'🧊', tone:'cotton', weight:5,
+  {id:'t_cold_shower', name:'Cold Shower', icon:'🧊', tone:'cotton', weight:5, deleted:true,
     easy:{desc:'30 seconds cold at the end of your shower. Breathe through it.',pts:10},
     medium:{desc:'90 seconds full cold. No warm phase.',pts:30},
     hard:{desc:'2 min cold from the very start. The first 30 seconds is the whole battle.',pts:60}},
 
   {id:'t_gym', name:'Gym Session', icon:'🏋️', tone:'strawberry', weight:5,
-    easy:{desc:'Bodyweight only — 3×10 pushups + 3×20 glute bridges at home. Works on any day.',pts:10},
+    easy:{desc:'Pick two machines if you go, or 3×15 pushups + 3×20 glute bridges at home. Minimum viable session.',pts:10},
     medium:{desc:'Full split — lat pulldown, chest press, leg press, leg curl. All 4.',pts:30},
-    hard:{desc:'Full split + 14 min HIIT after. No skipping.',pts:60}},
+    hard:{desc:'Full split + 15 min Zone 2 walk after. Extra credit, no excuses.',pts:60}},
 
   /* ═══ NUTRITION ═══ */
   {id:'t_if', name:'Intermittent Fast', icon:'⏱️', tone:'grape', weight:2, deleted:true,
@@ -7046,17 +7071,17 @@ const BOWL_DEFAULT_LIBRARY = [
     hard:{desc:'4 days of meals portioned and labeled. Spreadsheet-brain this.',pts:60}},
 
   /* ═══ MIND / LEARNING ═══ */
-  {id:'t_pl300', name:'PL-300 Study', icon:'📊', tone:'grape', weight:3,
-    easy:{desc:'5 flashcards. Keep the knowledge warm.',pts:10},
+  {id:'t_pl300', name:'PL-300 Study', icon:'📊', tone:'grape', weight:4,
+    easy:{desc:'5 flashcards or re-read one concept page from your last session. Keep the thread warm.',pts:10},
     medium:{desc:'One micro-session: concept → analogy → trap → quiz. 25 min.',pts:30},
     hard:{desc:'Full practice exam section or build a sample report. 60 min.',pts:60}},
 
-  {id:'t_dax', name:'DAX Drill', icon:'🧮', tone:'grape', weight:3,
+  {id:'t_dax', name:'DAX Drill', icon:'🧮', tone:'grape', weight:2,
     easy:{desc:'Write one CALCULATE measure from memory. Then verify.',pts:10},
     medium:{desc:'Write 3 measures from memory. Time yourself.',pts:30},
     hard:{desc:'Build a full DAX pattern you haven\'t used: time intelligence, semi-additive, or dynamic segmentation.',pts:60}},
 
-  {id:'t_trading', name:'Trading Research', icon:'📈', tone:'tangerine', weight:3,
+  {id:'t_trading', name:'Trading Research', icon:'📈', tone:'tangerine', weight:3, deleted:true,
     easy:{desc:'Read one article about a stock, ETF, or market concept. Write one sentence takeaway.',pts:10},
     medium:{desc:'30 min deep dive into one trade idea. Take notes.',pts:30},
     hard:{desc:'Build a watchlist of 5 tickers. One paragraph thesis on each — why you\'d enter and what your exit is.',pts:60}},
@@ -7081,8 +7106,18 @@ const BOWL_DEFAULT_LIBRARY = [
     medium:{desc:'Write and run a real query. Window functions or CTEs.',pts:30},
     hard:{desc:'Full analysis pipeline. CTE chain, window functions. Save the script.',pts:60}},
 
+  {id:'t_banana', name:'BANANA Sprint', icon:'🍌', tone:'banana', weight:4,
+    easy:{desc:'Open your current BANANA project and review it for 10 min. Write down one specific thing to fix or add next.',pts:10},
+    medium:{desc:'30 min focused build session on your next portfolio dashboard. No planning, no research — hands on keyboard, building.',pts:30},
+    hard:{desc:'60 min deep work session. Ship something visible — a new page, a finished visual, a LinkedIn post draft. Screenshot your progress.',pts:60}},
+
+  {id:'t_pq_automate', name:'Power Query / Automate', icon:'⚙️', tone:'apple', weight:2,
+    easy:{desc:'Open Power Query, load any messy data source, and clean one column. Rename, fix types, remove nulls. 10 min.',pts:10},
+    medium:{desc:'Build a full transform pipeline — merge two tables, reshape, handle errors, output clean. 25 min.',pts:30},
+    hard:{desc:'Build or improve a real automation. A Power Automate flow for work, or a Power Query pipeline you can reuse in BANANA. Save it.',pts:60}},
+
   /* ═══ RELATIONSHIPS ═══ */
-  {id:'t_cats', name:'Cat Time', icon:'🐱', tone:'bubblegum', weight:4,
+  {id:'t_cats', name:'Cat Time', icon:'🐱', tone:'bubblegum', weight:3,
     easy:{desc:'5 min actual playtime with both cats. Laser, string, whatever.',pts:10},
     medium:{desc:'Clean litter + fresh water + 15 min play + brush them.',pts:30},
     hard:{desc:'Full grooming session + rearrange their space or introduce something new.',pts:60}},
@@ -7107,8 +7142,13 @@ const BOWL_DEFAULT_LIBRARY = [
     medium:{desc:'Take over something she normally handles without being asked.',pts:30},
     hard:{desc:'Plan something small but thoughtful. Homemade, within budget. Effort over money.',pts:60}},
 
+  {id:'t_safa_quality', name:'Safa Quality Time', icon:'💑', tone:'bubblegum', weight:3,
+    easy:{desc:'15 min phones-away conversation. Ask her about her day and actually listen. No screens.',pts:10},
+    medium:{desc:'Do something together — cook, watch a show, walk around the block. Phones in another room for the duration.',pts:30},
+    hard:{desc:'Plan and execute an at-home date night. Cook together or order something nice, pick a movie, no phones for the full evening. Effort over money.',pts:60}},
+
   /* ═══ MENTAL HEALTH / RECHARGE ═══ */
-  {id:'t_journal', name:'Journal', icon:'📓', tone:'blueberry', weight:2,
+  {id:'t_journal', name:'Journal', icon:'📓', tone:'blueberry', weight:3,
     easy:{desc:'One sentence. What happened today, how it felt.',pts:10},
     medium:{desc:'Free write 10 min. No structure. Just dump.',pts:30},
     hard:{desc:'20 min deep. Where are you vs where you want to be. Operation88, everything. Be honest.',pts:60}},
@@ -7120,7 +7160,7 @@ const BOWL_DEFAULT_LIBRARY = [
 
   {id:'t_gratitude', name:'Gratitude', icon:'🙏', tone:'cotton', weight:2,
     easy:{desc:'Name 3 things that went well today. Specific, not generic.',pts:10},
-    medium:{desc:'5 things, one sentence each on why. Go beyond surface.',pts:30},
+    medium:{desc:'5 things, one sentence each on why it matters. Then pick the one that surprised you and sit with it for a minute.',pts:30},
     hard:{desc:'Write a gratitude letter to someone — Safa, a parent, a friend. Then decide: send it or don\'t. But the writing has to be real.',pts:60}},
 
   {id:'t_screen_break', name:'Screen Break', icon:'📵', tone:'grape', weight:2, deleted:true,
@@ -7138,10 +7178,15 @@ const BOWL_DEFAULT_LIBRARY = [
     medium:{desc:'Two episodes back to back. Enjoy it properly.',pts:30},
     hard:{desc:'3+ episode block. Don\'t stop at a cliffhanger.',pts:60}},
 
-  {id:'t_sleep', name:'Sleep Protocol', icon:'😴', tone:'grape', weight:2,
+  {id:'t_sleep', name:'Sleep Protocol', icon:'😴', tone:'grape', weight:3,
     easy:{desc:'Set a bedtime alarm tonight. When it goes off, wind down. No debate.',pts:10},
     medium:{desc:'Screens off 30 min before bed. Log what time you slept.',pts:30},
-    hard:{desc:'In bed within 30 min of drawing this. Phone down from this moment. Full 8 hours.',pts:60}},
+    hard:{desc:'Tonight: screens off by 10pm, in bed by 10:30, phone charging in another room. Full 8 hours. No negotiation.',pts:60}},
+
+  {id:'t_creative', name:'Creative / Tamiya', icon:'🎨', tone:'banana', weight:2,
+    easy:{desc:'15 min on a model kit, cooking experiment, or any hands-on creative thing. No screen involved.',pts:10},
+    medium:{desc:'30 min focused session. Actual progress on a build, a recipe from scratch, or anything tactile.',pts:30},
+    hard:{desc:'60 min session. Finish a build stage, try a complex recipe, photograph what you made. The output is the experience, not a deliverable.',pts:60}},
 
   /* ═══ HOME / ADMIN ═══ */
   {id:'t_kitchen', name:'Kitchen Clean', icon:'🧹', tone:'apple', weight:2,
@@ -7290,7 +7335,7 @@ function rwWipeLevel(){
   setReward(rw);
 }
 
-/* ── Habit Perfect Day Bonus — +5 pts toward reward level ──
+/* ── Habit Perfect Day Bonus — 1.15× multiplier on that day's Bowl pts ──
    Rules:
    - Challenge must be completed that day (real tier, not skipped/bonus)
    - All scheduled habits must be done that day
@@ -7323,13 +7368,16 @@ function _grantHabitBonus(dateKey){
   if(!stepsForDay.length) return;
   var allDone=stepsForDay.every(function(st){ return !!dayData[st]; });
   if(!allDone) return;
-  /* Grant it */
+  /* Grant it — 1.15× multiplier on that day's Bowl pts */
   b.habitBonus[dateKey]=true;
-  dd.pts=(dd.pts||0)+5;
+  var basePts=dd.pts||0;
+  var bonusPts=Math.round(basePts*0.15);
+  if(bonusPts<1) bonusPts=1; /* minimum 1pt so Easy days still feel it */
+  dd.pts=basePts+bonusPts;
   setBowl(b);
   if(typeof renderRewardStrip==='function') setTimeout(renderRewardStrip,200);
   if(typeof renderBowl==='function') setTimeout(renderBowl,200);
-  toast('⭐ Perfect Day bonus — +5 pts!');
+  toast('⭐ Perfect Day — 1.15× bonus (+'+bonusPts+' pts)');
 }
 
 function rwHandleTierUpload(inp, tier){
@@ -7419,6 +7467,20 @@ function rwClaimReward(){
   var score=getRwLevelScore();
   if(score.pts<REWARD_LEVEL_TARGET){ toast('Not there yet — '+score.pts+'/'+REWARD_LEVEL_TARGET+' pts.'); return; }
   var todayKey2=localKey(today);
+  /* Compute stats for history */
+  var b=getBowl();
+  var levelStart=rw.active.levelStartDate||rw.active.setDate||todayKey2;
+  var _eC=0,_mC=0,_hC=0,_totalDays=0;
+  b.dailyDraws.forEach(function(dd){
+    if(dd.date<levelStart||dd.date>todayKey2) return;
+    if(!dd.chosenTier||dd.chosenTier==='skipped') return;
+    if(dd.chosenTier==='easy') _eC++;
+    else if(dd.chosenTier==='medium') _mC++;
+    else if(dd.chosenTier==='hard') _hC++;
+  });
+  _totalDays=_eC+_mC+_hC;
+  var _startD=new Date(levelStart+'T12:00:00');
+  var _calDays=Math.max(1,Math.round((today.getTime()-_startD.getTime())/86400000)+1);
   /* Archive */
   if(!rw.history) rw.history=[];
   rw.history.unshift({
@@ -7429,7 +7491,13 @@ function rwClaimReward(){
     levelNum:rw.active.levelNum||1,
     setDate:rw.active.setDate||todayKey2,
     claimedAt:Date.now(),
-    pts:score.pts
+    pts:score.pts,
+    calendarDays:_calDays,
+    activeDays:_totalDays,
+    easyCount:_eC,
+    mediumCount:_mC,
+    hardCount:_hC,
+    avgPtsPerDay:_totalDays>0?Math.round(score.pts/_totalDays):0
   });
   /* Celebration */
   rwShowCelebration(rw.active);
@@ -7454,16 +7522,36 @@ function rwArchiveAndReset(){
     if(!rw.active) return;
     if(!rw.history) rw.history=[];
     var score=getRwLevelScore();
+    var todayKey2=localKey(today);
+    var b=getBowl();
+    var levelStart=rw.active.levelStartDate||rw.active.setDate||todayKey2;
+    var _eC=0,_mC=0,_hC=0;
+    b.dailyDraws.forEach(function(dd){
+      if(dd.date<levelStart||dd.date>todayKey2) return;
+      if(!dd.chosenTier||dd.chosenTier==='skipped') return;
+      if(dd.chosenTier==='easy') _eC++;
+      else if(dd.chosenTier==='medium') _mC++;
+      else if(dd.chosenTier==='hard') _hC++;
+    });
+    var _totalDays=_eC+_mC+_hC;
+    var _startD=new Date(levelStart+'T12:00:00');
+    var _calDays=Math.max(1,Math.round((today.getTime()-_startD.getTime())/86400000)+1);
     rw.history.unshift({
       name:rw.active.name,
       price:rw.active.price||null,
       imageData:rw.active.imageData||null,
       imageUrl:rw.active.imageUrl||null,
       levelNum:rw.active.levelNum||1,
-      setDate:rw.active.setDate||localKey(today),
+      setDate:rw.active.setDate||todayKey2,
       archivedAt:Date.now(),
       pts:score.pts,
-      abandoned:true
+      abandoned:true,
+      calendarDays:_calDays,
+      activeDays:_totalDays,
+      easyCount:_eC,
+      mediumCount:_mC,
+      hardCount:_hC,
+      avgPtsPerDay:_totalDays>0?Math.round(score.pts/_totalDays):0
     });
     rw.active=null;
     setReward(rw);
@@ -7584,6 +7672,37 @@ function renderReward(){
       +'<span>🔥 '+streak+' day streak</span>'
       +'<span>'+pct+'% complete</span>'
       +'</div>';
+    /* ETA + Hard streak row */
+    var _hardStrk2=0; try{ _hardStrk2=getRwHardStreak()||0; }catch(e){}
+    var _etaHtml='';
+    if(!isUnlocked && pts>0 && streak>0){
+      var _levelStart=a.levelStartDate||null;
+      var _daysActive=0;
+      if(_levelStart){
+        var _lsd=new Date(_levelStart+'T12:00:00');
+        _daysActive=Math.max(1,Math.round((today.getTime()-_lsd.getTime())/86400000));
+      }
+      if(_daysActive>0){
+        var _avgPts=Math.round(pts/_daysActive);
+        var _remaining=REWARD_LEVEL_TARGET-pts;
+        var _etaDays=_avgPts>0?Math.ceil(_remaining/_avgPts):0;
+        if(_etaDays>0 && _etaDays<999){
+          _etaHtml+='<span style="color:var(--sec)">📅 ~'+_etaDays+' day'+(_etaDays===1?'':'s')+' left at '+_avgPts+' pts/day</span>';
+        }
+      }
+    }
+    var _hardHtml='';
+    if(_hardStrk2>=2){
+      _hardHtml+='<span style="color:#fff">⚡ '+_hardStrk2+' Hards in a row';
+      if(_hardStrk2>=3) _hardHtml+=' <span style="color:var(--gold);font-size:10px">+10 bonus</span>';
+      _hardHtml+='</span>';
+    }
+    if(_etaHtml||_hardHtml){
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-top:8px;flex-wrap:wrap;gap:4px">';
+      html+=_etaHtml||'<span></span>';
+      html+=_hardHtml||'';
+      html+='</div>';
+    }
     html+='</div>';
 
     /* Action buttons */
@@ -7595,16 +7714,46 @@ function renderReward(){
       +'<button class="rw-btn red" onclick="rwArchiveAndReset()">Archive</button>'
       +'</div>';
 
+    /* How scoring works — collapsible */
+    html+='<div style="margin-top:14px">';
+    html+='<button onclick="rwToggleDetails(this)" style="background:none;border:none;cursor:pointer;font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.3px;padding:6px 0;-webkit-tap-highlight-color:transparent"><span>▸ How scoring works</span></button>';
+    html+='<div id="rw-details-body" style="display:none;margin-top:8px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(127,178,255,.12);border-radius:8px;font-size:11.5px;color:var(--sec);line-height:1.7">';
+    html+='<div style="margin-bottom:8px;font-weight:700;color:var(--a2)">Points per challenge</div>';
+    html+='Easy = 10 · Medium = 30 · Hard = 60<br>';
+    html+='<div style="margin:8px 0 8px;font-weight:700;color:var(--a2)">Bonuses</div>';
+    html+='<b style="color:#fff">Hard streak:</b> 3+ consecutive Hards → +10 per Hard<br>';
+    html+='<b style="color:#fff">Perfect Day:</b> All habits done + challenge completed → 1.15× that day\'s pts<br>';
+    html+='<div style="margin:8px 0 8px;font-weight:700;color:var(--red)">Streak wipe</div>';
+    html+='Miss any day without completing a challenge → all level pts reset to zero. No exceptions.<br>';
+    html+='<div style="margin-top:8px;color:var(--muted);font-size:10.5px">Target: '+REWARD_LEVEL_TARGET+' pts to unlock your reward.</div>';
+    html+='</div></div>';
+
     /* History */
     var history=rw.history||[];
     if(history.length>0){
       html+='<div style="margin-top:16px">';
-      html+='<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Past Rewards</div>';
+      html+='<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Past Rewards</div>';
       history.slice(0,5).forEach(function(h){
-        html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(127,178,255,.1);font-size:12px">'
-          +'<span style="color:var(--sec)">'+h.name+'</span>'
-          +'<span style="color:'+(h.abandoned?'var(--muted)':'var(--green)')+';">'+(h.abandoned?'Archived':'✓ Claimed')+'</span>'
-          +'</div>';
+        var _stColor=h.abandoned?'var(--muted)':'var(--green)';
+        var _stText=h.abandoned?'Archived':'✓ Claimed';
+        html+='<div style="padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(127,178,255,.1);border-radius:8px;margin-bottom:8px">';
+        html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">';
+        html+='<span style="font-family:var(--font-ui);font-size:13px;font-weight:700;color:var(--sec)">'+h.name+'</span>';
+        html+='<span style="font-size:11px;font-weight:700;color:'+_stColor+'">'+_stText+'</span>';
+        html+='</div>';
+        var _hS=(h.calendarDays||h.activeDays||h.hardCount!==undefined);
+        if(_hS){
+          var _sa=[];
+          if(h.calendarDays) _sa.push(h.calendarDays+' days');
+          if(h.hardCount) _sa.push(h.hardCount+'H');
+          if(h.mediumCount) _sa.push(h.mediumCount+'M');
+          if(h.easyCount) _sa.push(h.easyCount+'E');
+          if(h.avgPtsPerDay) _sa.push('~'+h.avgPtsPerDay+' pts/day');
+          html+='<div style="font-size:10.5px;color:var(--muted);line-height:1.4">'+(h.pts||0)+' pts · '+_sa.join(' · ')+'</div>';
+        } else if(h.pts){
+          html+='<div style="font-size:10.5px;color:var(--muted)">'+(h.pts||0)+' pts</div>';
+        }
+        html+='</div>';
       });
       html+='</div>';
     }
@@ -9200,7 +9349,7 @@ function getBowl(){
      reward functions — but guards against future file reorganisation. */
   if(typeof BOWL_DEFAULT_LIBRARY === 'undefined' || !BOWL_DEFAULT_LIBRARY){
     console.error('getBowl() called before BOWL_DEFAULT_LIBRARY was initialized.');
-    return { library:[], draws:[], tripleDraws:[], dailyDraws:[], rerollsByCycle:{}, systemStart:'2026-04-18' };
+    return { library:[], draws:[], tripleDraws:[], dailyDraws:[], weeklyRerolls:{ weekKey:'', used:0 }, systemStart:'2026-04-18' };
   }
   let s=gs();
   var _BSS = BOWL_SYSTEM_START || '2026-04-18';
@@ -9210,8 +9359,8 @@ function getBowl(){
       library: JSON.parse(JSON.stringify(BOWL_DEFAULT_LIBRARY)),
       draws: [],      /* legacy single draws */
       tripleDraws: [], /* legacy triple draws — kept for history */
-      dailyDraws: [],  /* NEW: {date, themeId, chosenTier, pts, xp, doneAt, rerolls} */
-      rerollsByCycle: {}
+      dailyDraws: [],  /* {date, themeId, chosenTier, pts, xp, doneAt, rerolls, accepted} */
+      weeklyRerolls: { weekKey:'', used:0 }
     };
     ss(s,true);
   }
@@ -9219,7 +9368,7 @@ function getBowl(){
   if(!s.bowl.draws) s.bowl.draws=[];
   if(!s.bowl.tripleDraws) s.bowl.tripleDraws=[];
   if(!s.bowl.dailyDraws) s.bowl.dailyDraws=[];
-  if(!s.bowl.rerollsByCycle) s.bowl.rerollsByCycle={};
+  if(!s.bowl.weeklyRerolls) s.bowl.weeklyRerolls={ weekKey:'', used:0 };
   if(!s.bowl.systemStart) s.bowl.systemStart=_BSS;
   /* Migration: upgrade library to theme format if needed */
   if(!s.bowl._themeLibMigrated){
@@ -9290,7 +9439,7 @@ function bowlDrawTheme(source){
     xp: 0,
     doneAt: null,
     rerolls: 0,
-    options: [theme.id],
+    accepted: false,
     drawnAt: Date.now(),
     drawnFrom: source||'manual'
   });
@@ -9504,27 +9653,52 @@ function bowlUndoTier(dateKey){
   setTimeout(function(){ renderBowl(); },120);
 }
 
-/* Reroll — 3 free per day, then costs XP */
+/* ── Weekly reroll helper ── */
+function bowlGetWeekKey(){
+  /* Monday-based ISO week key: YYYY-WNN */
+  var d=new Date(today);
+  var day=d.getDay()||7; /* Mon=1..Sun=7 */
+  d.setDate(d.getDate()+4-day); /* Thursday of this week */
+  var yearStart=new Date(d.getFullYear(),0,1);
+  var weekNum=Math.ceil(((d-yearStart)/86400000+1)/7);
+  return d.getFullYear()+'-W'+String(weekNum).padStart(2,'0');
+}
+function bowlGetWeeklyRerolls(){
+  var b=getBowl();
+  var wk=bowlGetWeekKey();
+  if(!b.weeklyRerolls||b.weeklyRerolls.weekKey!==wk){
+    b.weeklyRerolls={ weekKey:wk, used:0 };
+    setBowl(b);
+  }
+  return b.weeklyRerolls;
+}
+function bowlWeeklyRerollsLeft(){
+  var wr=bowlGetWeeklyRerolls();
+  return Math.max(0, 2 - wr.used);
+}
+
+/* Reroll — 2 per week, simple swap, no multi-option */
 function bowlRerollTheme(){
   var todayKey2=localKey(today);
   var b=getBowl();
   var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
   if(!dd){ toast('Draw a challenge first.'); return; }
   if(dd.chosenTier){ toast('Already completed — can\'t reroll.'); return; }
-  /* Init options array on first reroll — includes original draw */
-  if(!dd.options) dd.options=[dd.themeId];
-  var rerollCount=(dd.rerolls||0)+1;
-  /* Hard cap: 2 rerolls max (3 options total) */
-  if(rerollCount>2){ toast('Max 2 rerolls reached — pick from your 3 options below.'); setBowl(b); renderBowl(); return; }
-  /* Pick a new theme not already in options */
-  var excludeIds=dd.options.concat([]);
-  var newTheme=bowlPickThemeExcluding(excludeIds);
+  if(dd.accepted){ toast('Already accepted — commit to it!'); return; }
+  /* Check weekly budget */
+  var wr=bowlGetWeeklyRerolls();
+  var left=2-wr.used;
+  if(left<=0){ toast('No rerolls left this week. You\'re locked in.'); return; }
+  /* Pick a new theme excluding current */
+  var newTheme=bowlPickThemeExcluding([dd.themeId]);
   if(!newTheme){ toast('No other themes available.'); setBowl(b); return; }
-  dd.options.push(newTheme.id);
-  dd.rerolls=rerollCount;
-  dd.showingOptions=true;
-  /* Current displayed theme stays as last option for now — selection happens via UI */
+  /* Swap */
   dd.themeId=newTheme.id;
+  dd.rerolls=(dd.rerolls||0)+1;
+  dd.accepted=false;
+  /* Debit weekly budget */
+  wr.used++;
+  b.weeklyRerolls=wr;
   setBowl(b);
   /* Animate */
   _bowlAnimResume();
@@ -9532,8 +9706,9 @@ function bowlRerollTheme(){
   if(typeof _playGumballCrank==='function') _playGumballCrank();
   if(window._gbSetExcited){ window._gbSetExcited(null,2500,function(){}); }
   else { if(typeof _playBallsShaking==='function') _playBallsShaking(2500); }
-  var rerollsLeft=2-rerollCount;
-  toast(rerollsLeft>0?('Rerolled! '+rerollsLeft+' reroll'+(rerollsLeft===1?'':'s')+' left.'):'Last reroll used — pick your challenge below.');
+  var newLeft=2-wr.used;
+  if(newLeft>0) toast('Rerolled! '+newLeft+' reroll'+(newLeft===1?'':'s')+' left this week.');
+  else toast('Last reroll used. You\'re locked in for the week.');
   setTimeout(function(){ _stateCache=null; renderBowl(); },700);
 }
 
@@ -9558,73 +9733,21 @@ function bowlPickThemeExcluding(excludeIds){
   return lib[lib.length-1];
 }
 
-/* User selects which of the 3 options to pursue — sets themeId to chosen one */
-function bowlSelectOption(themeId){
+/* Accept challenge — micro-commitment before tier picker appears */
+function bowlAcceptChallenge(){
   var todayKey2=localKey(today);
   var b=getBowl();
   var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
-  if(!dd||dd.chosenTier){ return; }
-  dd.themeId=themeId;
-  /* Keep dd.options alive so user can go back to selection view */
-  dd.showingOptions=false;
+  if(!dd){ return; }
+  dd.accepted=true;
   setBowl(b);
+  toast('Challenge accepted. Pick your tier.');
   renderBowl();
 }
 
-function bowlBackToOptions(){
-  var todayKey2=localKey(today);
-  var b=getBowl();
-  var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
-  if(!dd||dd.chosenTier) return;
-  dd.showingOptions=true;
-  setBowl(b);
-  renderBowl();
-}
-
-/* Undo last reroll — restore previous challenge */
-function bowlUndoReroll(){
-  var todayKey2=localKey(today);
-  var b=getBowl();
-  var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
-  if(!dd||!dd.prevThemeId){ toast('Nothing to undo.'); return; }
-  if(dd.chosenTier){ toast('Already completed — can\'t undo reroll.'); return; }
-  var prevTheme=bowlGetLibBall(dd.prevThemeId);
-  if(!prevTheme||prevTheme.deleted){ toast('Previous challenge no longer exists.'); return; }
-  dd.themeId=dd.prevThemeId;
-  delete dd.prevThemeId;
-  dd.rerolls=Math.max(0,(dd.rerolls||1)-1);
-  setBowl(b);
-  toast('↩ Restored: '+prevTheme.name);
-  renderBowl();
-}
-
-/* Skip today's challenge — marks as intentionally passed (0 pts, no streak break) */
-function bowlSkipToday(){
-  var todayKey2=localKey(today);
-  var b=getBowl();
-  var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
-  if(!dd){ toast('No challenge drawn.'); return; }
-  if(dd.chosenTier){ toast('Already completed.'); return; }
-  _confirm('Skip today\'s challenge? It will be marked as skipped (0 pts, no streak break).', function(){
-    dd.chosenTier='skipped';
-    dd.pts=0;
-    dd.xp=0;
-    dd.doneAt=Date.now();
-    setBowl(b);
-    toast('Skipped — no penalty. Come back tomorrow.');
-    renderBowl();
-  }, {okLabel:'Skip'});
-}
-
-/* Cycle key — tied to reward cycleStartDate, falls back to weekStart-style key */
-function bowlCurrentCycleKey(){
-  const rw=(gs().reward)||{};
-  if(rw.active&&rw.active.cycleStartDate) return rw.active.cycleStartDate;
-  /* No active cycle: use a floor key so rerolls track per ~14 day window */
-  const dayNum=Math.floor(today.getTime()/86400000);
-  const cycleStart=dayNum-(dayNum%14);
-  return 'nocycle-'+cycleStart;
-}
+/* bowlSkipToday, bowlUndoReroll, bowlSelectOption, bowlBackToOptions — REMOVED */
+/* Skip eliminated: Easy tier is the pressure release valve */
+/* Multi-option picker eliminated: reroll is a simple swap */
 
 /* Count completed draws within current reward cycle */
 function bowlCloseCelebrate(){
@@ -9733,9 +9856,9 @@ function renderBowl(){
   /* ── Dynamic subtitle ── */
   var bowlSubEl=document.querySelector('.bowl-sub');
   if(bowlSubEl){
-    if(dd&&dd.chosenTier&&dd.chosenTier!=='skipped') bowlSubEl.textContent='Challenge complete! You chose '+dd.chosenTier+' for +'+dd.pts+' pts.';
-    else if(dd&&dd.chosenTier==='skipped') bowlSubEl.textContent='Challenge skipped today. Come back tomorrow.';
-    else if(dd) bowlSubEl.textContent='Challenge drawn — pick your difficulty below.';
+    if(dd&&dd.chosenTier) bowlSubEl.textContent='Challenge complete! You chose '+dd.chosenTier+' for +'+dd.pts+' pts.';
+    else if(dd&&dd.accepted) bowlSubEl.textContent='Challenge accepted — pick your difficulty below.';
+    else if(dd) bowlSubEl.textContent='Challenge drawn — accept it or reroll.';
     else bowlSubEl.textContent='Pull the crank — one challenge, three difficulty tiers. You choose.';
   }
 
@@ -9751,15 +9874,16 @@ function renderBowl(){
     if(crankHint){
       if(dd.chosenTier){
         crankHint.textContent='Done for today. Come back tomorrow for a new challenge.';
+      } else if(dd.accepted){
+        crankHint.innerHTML='<span style="font-family:var(--font-ui);font-size:11px;color:var(--a2);font-weight:700">✓ Accepted — pick your tier below</span>';
       } else {
-        var rerollsLeft2=2-(dd.rerolls||0);
+        var rerollsLeft2=bowlWeeklyRerollsLeft();
         var _hintH='<div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap">';
         if(rerollsLeft2>0){
-          _hintH+='<button class="bowl-reroll-btn" onclick="bowlRerollTheme()">↺ Reroll <span style="opacity:.7;font-size:10px">('+rerollsLeft2+' left)</span></button>';
+          _hintH+='<button class="bowl-reroll-btn" onclick="bowlRerollTheme()">↺ Reroll <span style="opacity:.7;font-size:10px">('+rerollsLeft2+'/week left)</span></button>';
         } else {
-          _hintH+='<span style="font-family:var(--font-ui);font-size:11px;color:var(--muted);padding:4px 8px">No rerolls left — pick below</span>';
+          _hintH+='<span style="font-family:var(--font-ui);font-size:11px;color:var(--muted);padding:4px 8px">No rerolls left this week</span>';
         }
-        _hintH+='<button class="bowl-reroll-btn" style="background:rgba(255,100,100,.08);border-color:rgba(255,100,100,.25);color:rgba(255,130,120,.85)" onclick="bowlSkipToday()">Skip today</button>';
         _hintH+='</div>';
         crankHint.innerHTML=_hintH;
       }
@@ -9778,26 +9902,6 @@ function renderBowl(){
   if(challengeArea){
     if(!dd){
       challengeArea.innerHTML='<div style="text-align:center;padding:24px 16px;color:var(--muted);font-size:12px;font-style:italic">Pull the crank to draw today\'s challenge.</div>';
-    } else if(dd.options && dd.options.length>1 && !dd.chosenTier && dd.showingOptions!==false){
-      /* ── Multi-option selection view (after rerolls) ── */
-      var _optH='<div style="margin-bottom:8px;text-align:center;font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase">Choose your challenge</div>';
-      _optH+='<div style="display:flex;flex-direction:column;gap:8px">';
-      dd.options.forEach(function(tid, idx){
-        var ot=bowlGetLibBall(tid);
-        if(!ot) return;
-        var oc=TONE_COLORS[ot.tone]||'#6B9FFF';
-        var isActive=tid===dd.themeId;
-        _optH+='<button onclick="bowlSelectOption(\'' +tid+ '\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;background:'+(isActive?'rgba(77,141,255,.18)':'rgba(255,255,255,.05)')+';border:1.5px solid '+(isActive?'rgba(107,182,255,.6)':'rgba(127,178,255,.15)')+';border-radius:10px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all .18s">';
-        _optH+='<div style="width:36px;height:36px;border-radius:50%;background:'+oc+';display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative">'+bowlBallSvg(ot.icon,18)+'<div style="position:absolute;top:8%;left:18%;width:42%;height:28%;border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.8) 0%,rgba(255,255,255,.2) 55%,transparent 80%);pointer-events:none"></div></div>';
-        _optH+='<div style="flex:1;min-width:0">';
-        _optH+='<div style="font-family:var(--font-ui);font-size:13px;font-weight:800;color:#fff;margin-bottom:2px">'+ot.name+'</div>';
-        _optH+='<div style="font-family:var(--font-ui);font-size:10px;color:var(--muted)">Easy +10 · Medium +30 · Hard +60</div>';
-        _optH+='</div>';
-        if(isActive) _optH+='<div style="font-family:var(--font-ui);font-size:9px;font-weight:800;color:var(--a2);letter-spacing:.5px;flex-shrink:0">CURRENT</div>';
-        _optH+='</button>';
-      });
-      _optH+='</div>';
-      challengeArea.innerHTML=_optH;
     } else {
       var theme=bowlGetLibBall(dd.themeId);
       /* Safety net: if themeId not found, library may be stale — force reload from defaults */
@@ -9820,12 +9924,8 @@ function renderBowl(){
         h+='<div style="width:56px;height:56px;border-radius:50%;background:'+color+';display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-bottom:8px;filter:drop-shadow(0 4px 16px rgba(0,0,0,.5));position:relative">'+bowlBallSvg(theme.icon,26)+'<div style="content:\'\';position:absolute;top:8%;left:18%;width:42%;height:28%;border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.8) 0%,rgba(255,255,255,.2) 55%,transparent 80%);pointer-events:none"></div></div>';
         h+='<div style="font-family:var(--font-ui);font-size:18px;font-weight:900;color:#fff;letter-spacing:-.3px">'+theme.name+'</div>';
         h+='</div>';
-        /* Back to options button — only if options exist and tier not chosen */
-        if(dd.options && dd.options.length>1 && !dd.chosenTier){
-          h+='<button onclick="bowlBackToOptions()" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.06);border:1px solid rgba(127,178,255,.2);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:700;padding:7px 14px;cursor:pointer;margin-bottom:12px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:36px">← Back to all options</button>';
-        }
 
-        if(dd.chosenTier&&dd.chosenTier!=='skipped'){
+        if(dd.chosenTier){
           /* Already completed — show result */
           var tierColors={easy:'#4ade80',medium:'#fb923c',hard:'#ff6b8a'};
           var tierLabels={easy:'Easy',medium:'Medium',hard:'Hard'};
@@ -9836,14 +9936,11 @@ function renderBowl(){
           h+='<div style="font-size:22px;font-weight:900;color:'+tc+'">+'+dd.pts+' pts</div>';
           h+='</div>';
           h+='<button onclick="bowlUndoTier()" style="display:block;width:100%;margin-top:8px;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:10px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;letter-spacing:.3px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:background .15s">↩ Undo — picked by mistake</button>';
-        } else if(dd.chosenTier==='skipped'){
-          h+='<div style="background:rgba(255,100,100,.06);border:1px solid rgba(255,100,100,.2);border-radius:12px;padding:16px;text-align:center">';
-          h+='<div style="font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,180,120,.7);margin-bottom:4px">Skipped</div>';
-          h+='<div style="font-size:11px;color:var(--muted)">No points earned</div>';
-          h+='</div>';
-          h+='<button onclick="bowlUndoTier()" style="display:block;width:100%;margin-top:8px;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:10px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;letter-spacing:.3px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:background .15s">↩ Undo skip — do it after all</button>';
+        } else if(!dd.accepted){
+          /* ── Accept gate — must commit before seeing tier picker ── */
+          h+='<button class="bowl-accept-btn" onclick="bowlAcceptChallenge()">✓ Accept Challenge</button>';
         } else {
-          /* Tier picker — 3 cards */
+          /* Tier picker — 3 cards (only shown after accepting) */
           var tiers=['easy','medium','hard'];
           var _hardStrk=typeof getRwHardStreak==='function'?getRwHardStreak():0;
           var tierMeta={
@@ -9870,11 +9967,13 @@ function renderBowl(){
         }
         challengeArea.innerHTML=h;
       }
-    } /* end else (options or single view) */
+    }
   }
 
   /* ── Progress card — point-based ── */
   var cs=getBowlTierScore();
+  var hardStreakVal=typeof getRwHardStreak==='function'?getRwHardStreak():0;
+  var dailyStreakVal=typeof getRwDailyStreak==='function'?getRwDailyStreak():0;
   var pStat=document.getElementById('bowl-progress-stat');
   var pFill=document.getElementById('bowl-progress-fill');
   var pSub=document.getElementById('bowl-progress-sub');
@@ -9885,6 +9984,30 @@ function renderBowl(){
     else if(cs.pts>=1500) pSub.textContent='⚡ '+(REWARD_LEVEL_TARGET-cs.pts)+' pts to go — almost there!';
     else if(cs.pts>=800) pSub.textContent='🔥 '+cs.pts+' / '+REWARD_LEVEL_TARGET+' pts · keep the streak alive.';
     else pSub.textContent=cs.pts+' / '+REWARD_LEVEL_TARGET+' pts · every Hard counts.';
+  }
+  /* Hard streak + daily streak badges */
+  var _bpStreakRow=document.getElementById('bowl-streak-badges');
+  if(!_bpStreakRow){
+    var _progCard=document.getElementById('bowl-progress-card');
+    if(_progCard){
+      var _sr=document.createElement('div');
+      _sr.id='bowl-streak-badges';
+      _sr.style.cssText='display:flex;gap:8px;margin-top:10px;flex-wrap:wrap';
+      _progCard.appendChild(_sr);
+      _bpStreakRow=_sr;
+    }
+  }
+  if(_bpStreakRow){
+    var _bsh='';
+    _bsh+='<div style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:6px;font-family:var(--font-ui);font-size:11px;font-weight:700">';
+    _bsh+='<span style="color:var(--a2)">🔥 '+dailyStreakVal+'</span><span style="color:var(--muted)">day streak</span></div>';
+    if(hardStreakVal>=2){
+      _bsh+='<div style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(200,225,255,.06);border:1px solid rgba(200,225,255,.22);border-radius:6px;font-family:var(--font-ui);font-size:11px;font-weight:700">';
+      _bsh+='<span style="color:#fff">⚡ '+hardStreakVal+'</span><span style="color:var(--muted)">Hards in a row</span>';
+      if(hardStreakVal>=3) _bsh+='<span style="color:var(--gold);font-size:9px;margin-left:2px">+10 bonus active</span>';
+      _bsh+='</div>';
+    }
+    _bpStreakRow.innerHTML=_bsh;
   }
 
   /* ── History — last 14 or 30 calendar days ── */
@@ -9898,11 +10021,10 @@ function renderBowl(){
       var _dk=localKey(_dd);
       var draw=b.dailyDraws.find(function(x){ return x.date===_dk; });
       var done=draw&&draw.chosenTier&&draw.chosenTier!=='skipped';
-      var skipped=draw&&draw.chosenTier==='skipped';
       var isPast=_dk<todayKey2;
       var isToday=_dk===todayKey2;
       /* no-draw past days = 'miss' (missed entirely) */
-      var cls=done?'done':skipped?'miss':(draw&&!draw.chosenTier&&isToday)?'pending':(draw&&!draw.chosenTier&&isPast)?'miss':(!draw&&isPast)?'miss':(!draw&&isToday)?'pending':'pending';
+      var cls=done?'done':(draw&&draw.chosenTier==='skipped')?'miss':(draw&&!draw.chosenTier&&isToday)?'pending':(draw&&!draw.chosenTier&&isPast)?'miss':(!draw&&isPast)?'miss':(!draw&&isToday)?'pending':'pending';
       if(!draw&&isToday) cls='pending';
       var theme=draw?bowlGetLibBall(draw.themeId):null;
       var icon=theme?bowlBallSvg(theme.icon,13):'';
@@ -9965,9 +10087,9 @@ function bowlShowDayDetail(dateKey){
     /* Allow undo for any past or present day */
     h+='<button onclick="bowlUndoTier(\''+dateKey+'\');bowlCloseDayDetail()" style="width:100%;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;cursor:pointer;min-height:40px">↩ Undo — pick a different tier</button>';
   } else if(dd.chosenTier==='skipped'){
-    h+='<div style="text-align:center;padding:12px;color:rgba(255,180,120,.7);font-size:12px;font-weight:700">Skipped</div>';
-    /* Allow undo skip for any day */
-    h+='<button onclick="bowlUndoTier(\''+dateKey+'\');bowlCloseDayDetail()" style="width:100%;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;cursor:pointer;min-height:40px">↩ Undo skip — mark complete instead</button>';
+    /* Legacy skipped entries — treat as miss, allow retroactive completion */
+    h+='<div style="text-align:center;padding:12px;color:rgba(255,180,120,.7);font-size:12px;font-weight:700">Skipped (legacy)</div>';
+    h+='<button onclick="bowlUndoTier(\''+dateKey+'\');bowlCloseDayDetail()" style="width:100%;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;cursor:pointer;min-height:40px">↩ Undo — mark complete instead</button>';
   } else if(isPast){
     /* Missed / uncompleted past day — offer retroactive completion */
     h+='<div style="text-align:center;padding:8px;color:rgba(255,130,120,.7);font-size:11px;margin-bottom:10px">Not completed</div>';

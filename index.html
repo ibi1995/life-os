@@ -7841,6 +7841,73 @@ function _getAudioCtx(){
 /* Expose so canvas engines share one AudioContext — guaranteed singleton */
 window._getSharedAudioCtx = _getAudioCtx;
 
+/* ── Shared Master Bus + Micro-Reverb ──
+   All page-level sounds route here instead of raw ctx.destination.
+   Adds a subtle algorithmic reverb (feedback delay network) for spatial depth,
+   plus a limiter to prevent clipping on rapid multi-fires. */
+var _masterBus = null;
+var _masterComp = null;
+var _reverbSend = null;
+var _reverbReturn = null;
+window._getMasterBus = function(){
+  var ctx = _getAudioCtx();
+  if(!ctx) return null;
+  if(_masterBus) return _masterBus;
+  try{
+    /* Master compressor/limiter */
+    _masterComp = ctx.createDynamicsCompressor();
+    _masterComp.threshold.value = -12;
+    _masterComp.knee.value = 6;
+    _masterComp.ratio.value = 6;
+    _masterComp.attack.value = 0.004;
+    _masterComp.release.value = 0.08;
+    _masterComp.connect(ctx.destination);
+
+    /* Dry path — master gain into compressor */
+    _masterBus = ctx.createGain();
+    _masterBus.gain.value = 0.85;
+    _masterBus.connect(_masterComp);
+
+    /* Micro-reverb: short feedback delay network (simulates small room) */
+    var dryGain = ctx.createGain(); dryGain.gain.value = 1.0;
+    var wetGain = ctx.createGain(); wetGain.gain.value = 0.08; /* very subtle */
+
+    /* Two tap delays at prime-number ms for diffusion */
+    var d1 = ctx.createDelay(0.1); d1.delayTime.value = 0.021; /* 21ms */
+    var d2 = ctx.createDelay(0.1); d2.delayTime.value = 0.037; /* 37ms */
+    var fb1 = ctx.createGain(); fb1.gain.value = 0.25;
+    var fb2 = ctx.createGain(); fb2.gain.value = 0.18;
+    /* Tone shaping — cut lows and extreme highs from reverb tail */
+    var rvLP = ctx.createBiquadFilter(); rvLP.type = 'lowpass'; rvLP.frequency.value = 5000;
+    var rvHP = ctx.createBiquadFilter(); rvHP.type = 'highpass'; rvHP.frequency.value = 300;
+
+    /* Reverb send bus */
+    _reverbSend = ctx.createGain(); _reverbSend.gain.value = 1.0;
+    _reverbSend.connect(d1); _reverbSend.connect(d2);
+    d1.connect(fb1); fb1.connect(d1); /* feedback loop 1 */
+    d2.connect(fb2); fb2.connect(d2); /* feedback loop 2 */
+    d1.connect(rvHP); d2.connect(rvHP);
+    rvHP.connect(rvLP); rvLP.connect(wetGain);
+    wetGain.connect(_masterComp);
+
+    /* Return node for convenience — sounds connect to _masterBus for dry, _reverbSend for wet */
+    _reverbReturn = _reverbSend;
+  }catch(e){
+    /* Fallback: if reverb creation fails, just use a plain gain */
+    if(!_masterBus){
+      _masterBus = ctx.createGain();
+      _masterBus.gain.value = 0.85;
+      _masterBus.connect(ctx.destination);
+    }
+  }
+  return _masterBus;
+};
+/* Get reverb send — sounds that want spatial depth connect here too */
+window._getReverbSend = function(){
+  if(!_masterBus) window._getMasterBus();
+  return _reverbReturn || _masterBus;
+};
+
 /* _ensureAudioReady(cb): resumes the AudioContext then calls cb.
    On iOS, resume() is async — sounds scheduled before the promise resolves
    get dropped. This wrapper guarantees the context is running first. */
@@ -7873,59 +7940,65 @@ function _playTick(done){
   if(!_soundEnabled) return;
   window._ensureAudioReady(function(ctx){
     var now = ctx.currentTime + 0.02;
+    var bus = window._getMasterBus() || ctx.destination;
+    var rvb = window._getReverbSend() || bus;
 
   if(done){
-    /* ── Metal "ding" on check ── 
-       Inharmonic partials like a struck metal bar/coin.
-       Real metal has frequencies that are NOT integer multiples. */
-    const partials = [
-      { freq: 1046, amp: 0.22, decay: 0.55 }, /* fundamental */
-      { freq: 1865, amp: 0.14, decay: 0.38 }, /* 1.78× — inharmonic */
-      { freq: 2756, amp: 0.09, decay: 0.25 }, /* 2.63× */
-      { freq: 3820, amp: 0.05, decay: 0.18 }, /* 3.65× */
-      { freq: 5110, amp: 0.03, decay: 0.12 }  /* high shimmer */
+    /* ── Premium bell tone on check ── 
+       Lower fundamental (~820Hz, G5) for warmth/body.
+       Inharmonic partials with micro-detune for stereo depth.
+       Routed through master bus + reverb send. */
+    var partials = [
+      { freq: 820,  amp: 0.22, decay: 0.60 }, /* fundamental — warm bell zone */
+      { freq: 1460, amp: 0.14, decay: 0.42 }, /* 1.78× — inharmonic */
+      { freq: 2156, amp: 0.10, decay: 0.32 }, /* 2.63× — extended shimmer */
+      { freq: 2993, amp: 0.05, decay: 0.22 }, /* 3.65× */
+      { freq: 4003, amp: 0.03, decay: 0.18 }  /* high shimmer — longer tail */
     ];
     partials.forEach(function(p){
-      const osc  = ctx.createOscillator();
-      const gain = ctx.createGain();
+      /* Micro-detune: ±3 cents random for depth */
+      var detune = (Math.random() - 0.5) * 6;
+      var osc  = ctx.createOscillator();
+      var gain = ctx.createGain();
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(bus);
+      gain.connect(rvb); /* send to reverb too */
       osc.type = 'sine';
       osc.frequency.setValueAtTime(p.freq, now);
-      /* Sharp attack, metallic exponential decay */
+      osc.detune.setValueAtTime(detune, now);
       gain.gain.setValueAtTime(0, now);
       gain.gain.linearRampToValueAtTime(p.amp, now + 0.003);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + p.decay);
       osc.start(now);
       osc.stop(now + p.decay + 0.02);
     });
-    /* Add a short metallic transient "click" at impact */
-    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.015, ctx.sampleRate);
-    let data = buf.getChannelData(0);
-    for(let i = 0; i < data.length; i++){
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 4) * 0.35;
+    /* Metallic transient "click" at impact — slightly longer for presence */
+    var buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.018), ctx.sampleRate);
+    var data = buf.getChannelData(0);
+    for(var i = 0; i < data.length; i++){
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 3.5) * 0.30;
     }
-    let src  = ctx.createBufferSource();
-    const hpf  = ctx.createBiquadFilter();
+    var src  = ctx.createBufferSource();
+    var hpf  = ctx.createBiquadFilter();
     hpf.type = 'highpass';
-    hpf.frequency.value = 4000;
+    hpf.frequency.value = 3500;
     src.buffer = buf;
     src.connect(hpf);
-    hpf.connect(ctx.destination);
+    hpf.connect(bus);
     src.start(now);
 
   } else {
-    /* ── Muted metal thud on uncheck ── dull, lower resonance */
-    const partials2 = [
-      { freq: 420, amp: 0.15, decay: 0.18 },
-      { freq: 680, amp: 0.08, decay: 0.12 },
-      { freq: 980, amp: 0.04, decay: 0.08 }
+    /* ── Muted metal thud on uncheck ── dull, lower resonance + sub weight */
+    var partials2 = [
+      { freq: 380, amp: 0.14, decay: 0.18 },
+      { freq: 620, amp: 0.08, decay: 0.12 },
+      { freq: 900, amp: 0.04, decay: 0.08 }
     ];
     partials2.forEach(function(p){
-      const osc  = ctx.createOscillator();
-      const gain = ctx.createGain();
+      var osc  = ctx.createOscillator();
+      var gain = ctx.createGain();
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(bus);
       osc.type = 'sine';
       osc.frequency.setValueAtTime(p.freq, now);
       osc.frequency.exponentialRampToValueAtTime(p.freq * 0.88, now + p.decay);
@@ -7935,6 +8008,16 @@ function _playTick(done){
       osc.start(now);
       osc.stop(now + p.decay + 0.02);
     });
+    /* Sub thud for physical weight */
+    var sub = ctx.createOscillator();
+    var sg = ctx.createGain();
+    sub.type = 'triangle';
+    sub.frequency.setValueAtTime(120, now);
+    sub.frequency.exponentialRampToValueAtTime(60, now + 0.05);
+    sg.gain.setValueAtTime(0.12, now);
+    sg.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+    sub.connect(sg); sg.connect(bus);
+    sub.start(now); sub.stop(now + 0.08);
   }
   }); /* end _ensureAudioReady */
 }
@@ -7943,45 +8026,62 @@ function _playPerfectDay(){
   if(!_soundEnabled) return;
   window._ensureAudioReady(function(ctx){
     var now = ctx.currentTime + 0.02;
-    const chimes = [
+    var bus = window._getMasterBus() || ctx.destination;
+    var rvb = window._getReverbSend() || bus;
+    var chimes = [
       { time: 0,    fund: 523  },
       { time: 0.10, fund: 659  },
       { time: 0.20, fund: 784  },
       { time: 0.30, fund: 1047 },
       { time: 0.48, fund: 1319 }
     ];
-    chimes.forEach(function(ch){
-      const t = now + ch.time;
-      const harmonics = [1, 1.78, 2.63, 3.65];
+    chimes.forEach(function(ch, ci){
+      var t = now + ch.time;
+      var isLast = (ci === chimes.length - 1);
+      var harmonics = [1, 1.78, 2.63, 3.65];
       harmonics.forEach(function(mult, hi){
-        const osc  = ctx.createOscillator();
-        const gain = ctx.createGain();
+        var osc  = ctx.createOscillator();
+        var gain = ctx.createGain();
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(bus);
+        if(isLast) gain.connect(rvb); /* extra reverb on final note */
         osc.type = 'sine';
         osc.frequency.setValueAtTime(ch.fund * mult, t);
-        const amp   = [0.20, 0.10, 0.06, 0.03][hi];
-        const decay = [1.2,  0.7,  0.45, 0.28][hi];
+        osc.detune.setValueAtTime((Math.random()-0.5)*4, t); /* micro-detune */
+        var amp   = [0.20, 0.10, 0.06, 0.03][hi];
+        var decay = [1.2,  0.7,  0.45, 0.28][hi];
+        /* Final note: 1.5× longer decay for "finishing" feel */
+        if(isLast){ decay *= 1.5; amp *= 1.1; }
         gain.gain.setValueAtTime(0, t);
         gain.gain.linearRampToValueAtTime(amp, t + 0.003);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + decay);
         osc.start(t);
         osc.stop(t + decay + 0.05);
       });
-      const buf  = ctx.createBuffer(1, ctx.sampleRate * 0.012, ctx.sampleRate);
-      let data = buf.getChannelData(0);
-      for(let i = 0; i < data.length; i++){
+      var buf  = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.012), ctx.sampleRate);
+      var data = buf.getChannelData(0);
+      for(var i = 0; i < data.length; i++){
         data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 5) * 0.25;
       }
-      let src = ctx.createBufferSource();
-      const hpf = ctx.createBiquadFilter();
+      var src = ctx.createBufferSource();
+      var hpf = ctx.createBiquadFilter();
       hpf.type = 'highpass';
       hpf.frequency.value = 5000;
       src.buffer = buf;
       src.connect(hpf);
-      hpf.connect(ctx.destination);
+      hpf.connect(bus);
       src.start(t);
     });
+    /* Sub bloom under final note for warmth */
+    var subT = now + 0.48;
+    var subO = ctx.createOscillator();
+    var subG = ctx.createGain();
+    subO.type = 'sine';
+    subO.frequency.setValueAtTime(200, subT);
+    subG.gain.setValueAtTime(0.04, subT);
+    subG.gain.exponentialRampToValueAtTime(0.0001, subT + 0.8);
+    subO.connect(subG); subG.connect(bus);
+    subO.start(subT); subO.stop(subT + 0.85);
   }); /* end _ensureAudioReady */
 }
 
@@ -7989,33 +8089,43 @@ function _playPerfectDay(){
    GUMBALL MACHINE SOUNDS
 ════════════════════════════════════════════ */
 
-/* ── Crank click: 3 mechanical ratchet snaps ── */
+/* ── Crank click: 3 mechanical ratchet snaps — 3rd click heavier (final engagement) ── */
 function _playGumballCrank(){
   if(!_soundEnabled) return;
   window._ensureAudioReady(function(actx){
     var now = actx.currentTime + 0.02;
+    var bus = window._getMasterBus() || actx.destination;
     [0, 0.09, 0.175].forEach(function(offset, ci){
       var t = now + offset;
-      var len = Math.floor(actx.sampleRate * 0.018);
-      var buf = actx.createBuffer(1, len, actx.sampleRate);
+      var isLast = (ci === 2);
+      var noiseLen = Math.floor(actx.sampleRate * (isLast ? 0.028 : 0.022)); /* longer 3rd click */
+      var buf = actx.createBuffer(1, noiseLen, actx.sampleRate);
       var d = buf.getChannelData(0);
-      for(var i=0; i<len; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/len, 2.8) * 0.7;
+      for(var i=0; i<noiseLen; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/noiseLen, 2.8) * 0.7;
       var src = actx.createBufferSource(); src.buffer = buf;
       var bp = actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=700+ci*80; bp.Q.value=1.2;
       var g = actx.createGain();
-      g.gain.setValueAtTime(0.55, t);
-      g.gain.exponentialRampToValueAtTime(0.0001, t+0.018);
-      src.connect(bp); bp.connect(g); g.connect(actx.destination); src.start(t);
+      var clickVol = isLast ? 0.70 : 0.55; /* 3rd click louder */
+      g.gain.setValueAtTime(clickVol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.022);
+      src.connect(bp); bp.connect(g); g.connect(bus); src.start(t);
       var o = actx.createOscillator(); var og = actx.createGain();
       o.type='sine'; o.frequency.setValueAtTime(140-ci*15, t); o.frequency.exponentialRampToValueAtTime(70, t+0.06);
-      og.gain.setValueAtTime(0.18, t); og.gain.exponentialRampToValueAtTime(0.0001, t+0.07);
-      o.connect(og); og.connect(actx.destination); o.start(t); o.stop(t+0.08);
+      og.gain.setValueAtTime(isLast ? 0.22 : 0.18, t); og.gain.exponentialRampToValueAtTime(0.0001, t+0.07);
+      o.connect(og); og.connect(bus); o.start(t); o.stop(t+0.08);
+      /* Housing resonance on final click — sells "locked in" */
+      if(isLast){
+        var hr = actx.createOscillator(); var hg = actx.createGain();
+        hr.type='sine'; hr.frequency.setValueAtTime(500, t);
+        hg.gain.setValueAtTime(0.04, t); hg.gain.exponentialRampToValueAtTime(0.0001, t+0.04);
+        hr.connect(hg); hg.connect(bus); hr.start(t); hr.stop(t+0.05);
+      }
     });
     var sp = actx.createOscillator(); var sg = actx.createGain();
     sp.type='sine'; sp.frequency.setValueAtTime(380, now+0.22); sp.frequency.exponentialRampToValueAtTime(210, now+0.48);
     sg.gain.setValueAtTime(0.0001, now+0.22); sg.gain.linearRampToValueAtTime(0.12, now+0.224);
     sg.gain.exponentialRampToValueAtTime(0.0001, now+0.48);
-    sp.connect(sg); sg.connect(actx.destination); sp.start(now+0.22); sp.stop(now+0.5);
+    sp.connect(sg); sg.connect(bus); sp.start(now+0.22); sp.stop(now+0.5);
   });
 }
 
@@ -8103,7 +8213,12 @@ function _playBallsShaking(durationMs){
       intensity = 0.15 + Math.random() * 0.08;
     }
 
-    _playOneBallClank(actx, Math.max(0.08, intensity));
+    /* Use unified clank from canvas engine when available; fallback to local */
+    if(typeof window._gbPlayClank === 'function'){
+      window._gbPlayClank(Math.max(0.08, intensity));
+    } else {
+      _playOneBallClank(actx, Math.max(0.08, intensity));
+    }
 
     /* Faster clanks during peak, slower at edges.
        Mobile: ~2× wider intervals to stay under iOS audio node budget. */
@@ -9592,10 +9707,70 @@ function bowlChooseTier(tier){
     if(typeof window._gbSetExcited==='function') window._gbSetExcited(null,1800,function(){});
     window._ensureAudioReady(function(ctx){
       var now=ctx.currentTime+0.02;
-      var o=ctx.createOscillator(),g=ctx.createGain();
-      o.type='sine';o.frequency.setValueAtTime(880,now);o.frequency.exponentialRampToValueAtTime(1200,now+0.12);
-      g.gain.setValueAtTime(0.25,now);g.gain.exponentialRampToValueAtTime(0.0001,now+0.4);
-      o.connect(g);g.connect(ctx.destination);o.start(now);o.stop(now+0.42);
+      var bus = window._getMasterBus() || ctx.destination;
+      var rvb = window._getReverbSend() || bus;
+
+      /* ── Bowl Completion Fanfare ──
+         3-note ascending metallic chime + "pop" transient + sub bloom.
+         This is THE dopamine hit of the Bowl — make it count. */
+
+      /* 1. Initial "pop/capsule" transient — burst of energy */
+      var popLen = Math.floor(ctx.sampleRate * 0.02);
+      var popBuf = ctx.createBuffer(1, popLen, ctx.sampleRate);
+      var pd = popBuf.getChannelData(0);
+      for(var pi=0;pi<popLen;pi++){
+        pd[pi] = (Math.random()*2-1) * Math.pow(1-pi/popLen, 2) * 0.5;
+      }
+      var popSrc = ctx.createBufferSource(); popSrc.buffer = popBuf;
+      var popBP = ctx.createBiquadFilter(); popBP.type='bandpass'; popBP.frequency.value=2500; popBP.Q.value=1.5;
+      var popG = ctx.createGain(); popG.gain.setValueAtTime(0.5, now); popG.gain.exponentialRampToValueAtTime(0.001, now+0.04);
+      popSrc.connect(popBP); popBP.connect(popG); popG.connect(bus);
+      popSrc.start(now);
+
+      /* 2. Three-note ascending chime: E5 → G#5 → C#6 (bright major feel) */
+      var notes = [
+        { time: 0.03,  freq: 659,  amp: 0.18, decay: 0.50 },
+        { time: 0.12,  freq: 831,  amp: 0.20, decay: 0.45 },
+        { time: 0.22,  freq: 1109, amp: 0.22, decay: 0.65 }  /* final note rings longest */
+      ];
+      var harmonics = [1, 1.78, 2.63, 3.65];
+      notes.forEach(function(n, ni){
+        var t = now + n.time;
+        var isLast = (ni === notes.length - 1);
+        harmonics.forEach(function(mult, hi){
+          var osc = ctx.createOscillator();
+          var g = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(n.freq * mult, t);
+          osc.detune.setValueAtTime((Math.random()-0.5)*5, t);
+          var a = n.amp * [1.0, 0.45, 0.2, 0.08][hi];
+          var d = n.decay * [1.0, 0.65, 0.4, 0.25][hi];
+          g.gain.setValueAtTime(0, t);
+          g.gain.linearRampToValueAtTime(a, t + 0.003);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+          osc.connect(g); g.connect(bus);
+          if(isLast) g.connect(rvb);
+          osc.start(t); osc.stop(t + d + 0.02);
+        });
+        /* Per-note transient click */
+        var cBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.008), ctx.sampleRate);
+        var cd = cBuf.getChannelData(0);
+        for(var ci2=0;ci2<cd.length;ci2++) cd[ci2]=(Math.random()*2-1)*Math.pow(1-ci2/cd.length,4)*0.2;
+        var cSrc = ctx.createBufferSource(); cSrc.buffer = cBuf;
+        var cHP = ctx.createBiquadFilter(); cHP.type='highpass'; cHP.frequency.value=4500;
+        cSrc.connect(cHP); cHP.connect(bus); cSrc.start(t);
+      });
+
+      /* 3. Sub bloom under final note — chest satisfaction */
+      var subT = now + 0.22;
+      var subO = ctx.createOscillator();
+      var subG = ctx.createGain();
+      subO.type = 'sine';
+      subO.frequency.setValueAtTime(80, subT);
+      subG.gain.setValueAtTime(0.15, subT);
+      subG.gain.exponentialRampToValueAtTime(0.0001, subT + 0.35);
+      subO.connect(subG); subG.connect(bus);
+      subO.start(subT); subO.stop(subT + 0.4);
     });
   }catch(e){}
 
@@ -10774,22 +10949,62 @@ function tcShatterAnimation(){
   var cab = document.getElementById('tc-cabinet');
   if(!inner || !cab) return;
 
-  /* Play glass break sound */
+  /* Play glass break sound — layered: crack + shatter body + tinkle fragments + sub thump */
   try{
     var ctx = window._getSharedAudioCtx ? window._getSharedAudioCtx() : (window._getAudioCtx ? window._getAudioCtx() : null);
     if(ctx && ctx.state !== 'closed'){
       if(ctx.state === 'suspended') ctx.resume();
       var now = ctx.currentTime;
-      /* Noise burst for glass crack */
-      var bufSz = ctx.sampleRate * 0.15;
+      var bus = (window._getMasterBus && window._getMasterBus()) || ctx.destination;
+
+      /* Layer 1: Initial crack — very short full-spectrum spike */
+      var crackLen = Math.floor(ctx.sampleRate * 0.005);
+      var crackBuf = ctx.createBuffer(1, crackLen, ctx.sampleRate);
+      var crackD = crackBuf.getChannelData(0);
+      for(var ci=0;ci<crackLen;ci++) crackD[ci]=(Math.random()*2-1)*0.9;
+      var crackSrc = ctx.createBufferSource(); crackSrc.buffer = crackBuf;
+      var crackG = ctx.createGain();
+      crackG.gain.setValueAtTime(0.7, now); crackG.gain.exponentialRampToValueAtTime(0.001, now+0.008);
+      crackSrc.connect(crackG); crackG.connect(bus); crackSrc.start(now);
+
+      /* Layer 2: Shatter body — wider bandpass noise burst */
+      var bufSz = Math.floor(ctx.sampleRate * 0.15);
       var buf = ctx.createBuffer(1, bufSz, ctx.sampleRate);
       var data = buf.getChannelData(0);
       for(var i=0;i<bufSz;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/bufSz,1.5);
-      var src = ctx.createBufferSource();
-      src.buffer = buf;
-      var hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=3000;
-      var gn = ctx.createGain(); gn.gain.setValueAtTime(0.6, now); gn.gain.exponentialRampToValueAtTime(0.001, now+0.18);
-      src.connect(hp); hp.connect(gn); gn.connect(ctx.destination); src.start(now);
+      var src = ctx.createBufferSource(); src.buffer = buf;
+      var bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2500; bp.Q.value=0.8;
+      var gn = ctx.createGain(); gn.gain.setValueAtTime(0.5, now+0.003); gn.gain.exponentialRampToValueAtTime(0.001, now+0.18);
+      src.connect(bp); bp.connect(gn); gn.connect(bus); src.start(now+0.003);
+
+      /* Layer 3: Tinkle fragments — high-frequency pings for glass shards settling */
+      var tinkleFreqs = [4200, 5500, 6300, 7100];
+      for(var ti=0;ti<tinkleFreqs.length;ti++){
+        (function(freq, idx){
+          var delay = 0.08 + idx * 0.045 + Math.random()*0.03;
+          var osc = ctx.createOscillator();
+          var og = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now+delay);
+          osc.frequency.exponentialRampToValueAtTime(freq*0.97, now+delay+0.15);
+          var tAmp = 0.06 - idx*0.012;
+          og.gain.setValueAtTime(tAmp, now+delay);
+          og.gain.exponentialRampToValueAtTime(0.0001, now+delay+0.12+idx*0.02);
+          osc.connect(og); og.connect(bus);
+          osc.start(now+delay); osc.stop(now+delay+0.2);
+        })(tinkleFreqs[ti], ti);
+      }
+
+      /* Layer 4: Sub thump — structural break */
+      var subO = ctx.createOscillator();
+      var subG = ctx.createGain();
+      subO.type = 'triangle';
+      subO.frequency.setValueAtTime(60, now);
+      subO.frequency.exponentialRampToValueAtTime(30, now+0.04);
+      subG.gain.setValueAtTime(0.20, now);
+      subG.gain.exponentialRampToValueAtTime(0.001, now+0.06);
+      subO.connect(subG); subG.connect(bus);
+      subO.start(now); subO.stop(now+0.08);
     }
   }catch(e){}
 
@@ -11766,15 +11981,15 @@ var _chipSnd = {
       var dest = self._dest();
       brightness = brightness || 1;
 
-      /* 1. Noise transient — the initial "thunk" of metal contact */
+      /* 1. Noise transient — the initial "clack" of chip/metal contact */
       if(self._noiseBuf){
         var src = ac.createBufferSource();
         src.buffer = self._noiseBuf;
-        /* Wider bandpass — let some low-end through for weight */
+        /* Tighter bandpass — focused clack, less mid-range mush */
         var bp = ac.createBiquadFilter();
         bp.type = 'bandpass';
-        bp.frequency.value = 2800 + Math.random()*1500;
-        bp.Q.value = 1.2;
+        bp.frequency.value = 2200 + Math.random()*1200;
+        bp.Q.value = 2.0;
         var gn = ac.createGain();
         gn.gain.setValueAtTime(vol * 0.8, now);
         gn.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
@@ -11808,33 +12023,33 @@ var _chipSnd = {
         osc.start(now); osc.stop(now + dur + 0.01);
       }
 
-      /* 3. Sub impact — the weight/thud of the coin hitting */
+      /* 3. Sub impact — the weight of the chip hitting */
       var sub = ac.createOscillator();
       sub.type = 'triangle';
       sub.frequency.setValueAtTime(baseFreq * 0.35, now);
       sub.frequency.exponentialRampToValueAtTime(baseFreq * 0.12, now + 0.05);
       var sg = ac.createGain();
-      sg.gain.setValueAtTime(vol * 0.45, now);
+      sg.gain.setValueAtTime(vol * 0.25, now);
       sg.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
       sub.connect(sg); sg.connect(dest);
       sub.start(now); sub.stop(now + 0.08);
     });
   },
 
-  /* ── Public: Silver coin clink (coin dropping onto stack) ── */
+  /* ── Public: Poker chip clink (chip dropping onto stack) ── */
   playClink: function(intensity, pitchMod){
     intensity = Math.min(1, Math.max(0.15, intensity || 0.5));
     pitchMod = pitchMod || 1;
-    /* Heavy silver coins: fundamental ~2200-2800 Hz, solid ring */
-    var baseFreq = (2200 + Math.random()*600) * pitchMod;
-    this._playMetal(baseFreq, intensity, 0.22, 1.0);
+    /* Poker chips (clay/ceramic): fundamental ~1400-1800 Hz, shorter ring than coins */
+    var baseFreq = (1400 + Math.random()*400) * pitchMod;
+    this._playMetal(baseFreq, intensity, 0.12, 1.0);
   },
 
   /* ── Public: Stack tap (finger touching the stack — duller, muted) ── */
   playStackTap: function(){
     /* Lower pitch, shorter decay, less brightness — muted by finger contact */
-    var baseFreq = 1400 + Math.random()*400;
-    this._playMetal(baseFreq, 0.40, 0.10, 0.55);
+    var baseFreq = 1000 + Math.random()*300;
+    this._playMetal(baseFreq, 0.40, 0.08, 0.55);
   },
 
   /* ── Public: Scrape-lift (dragging coin off stack) ── */
@@ -11876,16 +12091,18 @@ var _chipSnd = {
     });
   },
 
-  /* ── Public: Cascade (coins settling back — rapid diminishing clinks) ── */
+  /* ── Public: Cascade (chips settling back — rapid diminishing clinks) ── */
   playCascade: function(count){
     count = count || 3;
     var self = this;
     for(var i=0; i<count; i++){
       (function(idx){
+        /* Geometric timing — accelerating then slowing, like real bounces */
+        var delay = idx * 45 * Math.pow(0.75, idx) + Math.random()*12;
         setTimeout(function(){
-          /* Each successive clink: quieter, slightly higher pitch */
-          self.playClink(0.45 - idx*0.10, 1.0 + idx*0.06);
-        }, idx * 50 + Math.random()*15);
+          /* Exponential intensity — each bounce loses way more energy */
+          self.playClink(0.50 * Math.pow(0.55, idx), 1.0 + idx*0.06);
+        }, delay);
       })(i);
     }
   },
@@ -12699,7 +12916,7 @@ function _chipDropSoundCheck(){
     for(var i=0;i<count;i++){
       (function(idx){
         setTimeout(function(){
-          _chipSnd.playClink(0.55 + idx*0.1, 1 - idx*0.05);
+          _chipSnd.playClink(0.65 - idx*0.08, 1 - idx*0.05);
         }, idx*70);
       })(i);
     }
@@ -13840,7 +14057,7 @@ window.finMonthNav = function(delta){
         _compressor.threshold.value = -18;
         _compressor.knee.value = 12;
         _compressor.ratio.value = 8;
-        _compressor.attack.value = 0.002;
+        _compressor.attack.value = 0.005; /* eased: let initial transient punch through */
         _compressor.release.value = 0.08;
         _compressor.connect(_ac.destination);
       }catch(e){ _compressor = null; }
@@ -13869,14 +14086,14 @@ window.finMonthNav = function(delta){
       var dest = _dest();
 
       if(_isMobile){
-        /* ── MOBILE FAST: 3 nodes total (source → filter → gain) ── */
+        /* ── MOBILE ENHANCED: noise + 2 ring partials ── */
         if(_noiseBuf){
           var src = ac.createBufferSource();
           src.buffer = _noiseBuf;
           var bp = ac.createBiquadFilter();
           bp.type = 'bandpass';
           bp.frequency.value = 3500 + Math.random()*2000;
-          bp.Q.value = 8;
+          bp.Q.value = 5; /* wider Q — less synthetic, more natural spread */
           var gn = ac.createGain();
           gn.gain.setValueAtTime(intensity * 0.55, now);
           gn.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
@@ -13886,15 +14103,24 @@ window.finMonthNav = function(delta){
         } else {
           _activeClanks = Math.max(0, _activeClanks - 1);
         }
-        /* Single ring tone */
+        /* Primary ring tone — boosted for mobile speaker audibility */
         var osc = ac.createOscillator();
         osc.type = 'sine';
         osc.frequency.value = 680 + Math.random()*300;
         var og = ac.createGain();
-        og.gain.setValueAtTime(intensity * 0.18, now);
+        og.gain.setValueAtTime(intensity * 0.22, now);
         og.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
         osc.connect(og); og.connect(dest);
         osc.start(now); osc.stop(now + 0.07);
+        /* Second ring partial — mid-high for presence on small speakers */
+        var osc2 = ac.createOscillator();
+        osc2.type = 'sine';
+        osc2.frequency.value = 1400 + Math.random()*200;
+        var og2 = ac.createGain();
+        og2.gain.setValueAtTime(intensity * 0.10, now);
+        og2.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        osc2.connect(og2); og2.connect(dest);
+        osc2.start(now); osc2.stop(now + 0.05);
       } else {
         /* ── DESKTOP: full layered sound ── */
         var bufLen = Math.floor(ac.sampleRate * 0.045);
@@ -13937,9 +14163,12 @@ window.finMonthNav = function(delta){
     });
   }
 
-  /* Rolling rumble: low continuous friction noise during excited mode */
+  /* Rolling rumble: low continuous friction noise during excited mode
+     Enhanced with LFO amplitude modulation for "tumbling" texture */
   var _rollNode = null;
   var _rollGain = null;
+  var _rollLFO = null;
+  var _rollLFOGain = null;
   function _startRolling(){
     if(!window._isSoundEnabled() || _rollNode) return;
     var _acCheck = _getAC(); if(!_acCheck) return;
@@ -13969,6 +14198,16 @@ window.finMonthNav = function(delta){
         _rollGain.gain.setValueAtTime(0.001, t0);
         _rollGain.gain.linearRampToValueAtTime(0.28, t0 + 0.25);
 
+        /* LFO: 5-7 Hz amplitude modulation — balls bunching and spreading */
+        _rollLFO = ac.createOscillator();
+        _rollLFO.type = 'sine';
+        _rollLFO.frequency.setValueAtTime(5.5, t0);
+        _rollLFOGain = ac.createGain();
+        _rollLFOGain.gain.setValueAtTime(0.09, t0); /* modulation depth ~30% */
+        _rollLFO.connect(_rollLFOGain);
+        _rollLFOGain.connect(_rollGain.gain);
+        _rollLFO.start(t0);
+
         _rollNode.connect(lp); lp.connect(hp2); hp2.connect(_rollGain); _rollGain.connect(_dest());
         _rollNode.start();
       }catch(e){ _rollNode = null; }
@@ -13977,10 +14216,15 @@ window.finMonthNav = function(delta){
   function _stopRolling(){
     if(!_rollGain || !_ac) return;
     try{
-      _rollGain.gain.linearRampToValueAtTime(0.001, _ac.currentTime + 0.3);
-      var node = _rollNode; var gain = _rollGain;
-      _rollNode = null; _rollGain = null;
-      setTimeout(function(){ try{ node.stop(); }catch(e){} }, 400);
+      /* Longer fade-out — balls decelerate, they don't stop instantly */
+      _rollGain.gain.linearRampToValueAtTime(0.001, _ac.currentTime + 0.7);
+      if(_rollLFOGain) _rollLFOGain.gain.linearRampToValueAtTime(0.001, _ac.currentTime + 0.5);
+      var node = _rollNode; var gain = _rollGain; var lfo = _rollLFO;
+      _rollNode = null; _rollGain = null; _rollLFO = null; _rollLFOGain = null;
+      setTimeout(function(){
+        try{ node.stop(); }catch(e){}
+        try{ if(lfo) lfo.stop(); }catch(e){}
+      }, 800);
     }catch(e){}
   }
 
@@ -14769,6 +15013,8 @@ window.finMonthNav = function(delta){
     _gbPaused = false;
     _raf = requestAnimationFrame(loop);
   };
+  /* Expose clank for shared use by _playBallsShaking (unifies both ball sound systems) */
+  window._gbPlayClank = _playClank;
 
   /* ── Touch / click ripple on globe ── */
   function _playGlassPing(){
@@ -14777,22 +15023,39 @@ window.finMonthNav = function(delta){
     window._ensureAudioReady(function(ac){
       var now = ac.currentTime + 0.01;
       var dest = _dest();
-    /* Crystal glass ping — fewer tones on mobile */
-    var freqs = _isMobile ? [1520, 2180] : [1520, 1840, 2180];
+    /* Crystal glass ping — enhanced with attack transient + shimmer */
+    var freqs = _isMobile ? [1520, 2180, 3200] : [1520, 1840, 2180, 3200];
     var master = ac.createGain();
-    master.gain.setValueAtTime(0.18, now);
-    master.gain.exponentialRampToValueAtTime(0.001, now + (_isMobile ? 0.35 : 0.6));
+    master.gain.setValueAtTime(0.28, now);
+    master.gain.exponentialRampToValueAtTime(0.001, now + (_isMobile ? 0.40 : 0.65));
     master.connect(dest);
+
+    /* Finger-on-glass transient — 3ms noise burst */
+    try{
+      var tLen = Math.floor(ac.sampleRate * 0.003);
+      var tBuf = ac.createBuffer(1, tLen, ac.sampleRate);
+      var td = tBuf.getChannelData(0);
+      for(var ti=0;ti<tLen;ti++) td[ti]=(Math.random()*2-1)*Math.pow(1-ti/tLen,2);
+      var tSrc = ac.createBufferSource(); tSrc.buffer = tBuf;
+      var tHP = ac.createBiquadFilter(); tHP.type='highpass'; tHP.frequency.value=5000;
+      var tG = ac.createGain(); tG.gain.setValueAtTime(0.15, now); tG.gain.exponentialRampToValueAtTime(0.001, now+0.006);
+      tSrc.connect(tHP); tHP.connect(tG); tG.connect(dest);
+      tSrc.start(now);
+    }catch(e){}
+
     for(var fi = 0; fi < freqs.length; fi++){
       var osc = ac.createOscillator();
       var g = ac.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freqs[fi], now);
       osc.frequency.exponentialRampToValueAtTime(freqs[fi] * 0.995, now + 0.6);
-      g.gain.setValueAtTime(fi === 0 ? 0.6 : 0.3, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.5 + fi * 0.05);
+      /* Upper partials quieter but with longer tail for glass shimmer */
+      var ampVal = fi === 0 ? 0.6 : fi === 1 ? 0.3 : fi === 2 ? 0.18 : 0.08;
+      var decVal = 0.5 + fi * 0.08;
+      g.gain.setValueAtTime(ampVal, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + decVal);
       osc.connect(g); g.connect(master);
-      osc.start(now); osc.stop(now + 0.65);
+      osc.start(now); osc.stop(now + decVal + 0.05);
     }
     }); /* end _ensureAudioReady */
   }

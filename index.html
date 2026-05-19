@@ -11924,39 +11924,54 @@ function _fxDrawVault(ctx, W, H, t, state) {
 
 
 /* ═══════════════════════════════════════════════
-   SILVER COIN SOUND ENGINE v2 — Real Metallic Coin Sounds
-   Inharmonic overtone model: coins ring at non-integer frequency
-   ratios (unlike musical instruments). Short filtered noise
-   transient + 5-partial inharmonic ring + sub impact.
+   SILVER SOUND ENGINE v3 — Heavy Precious Metal
+   Think silver bullion bars clapping together, thick heavy coins
+   with real weight and long sustain ring.
+   Inharmonic overtone model + layered noise transient + heavy sub.
 ═══════════════════════════════════════════════ */
 var _chipSnd = {
-  _ac: null, _comp: null, _noiseBuf: null, _active: 0, _MAX: 8,
+  _ac: null, _comp: null, _noiseBuf: null, _scratchBuf: null, _active: 0, _MAX: 8,
 
   _getAC: function(){
     if(!this._ac && window._getSharedAudioCtx) this._ac = window._getSharedAudioCtx();
     if(!this._ac){ try{ this._ac = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
     if(this._ac && this._ac.state==='suspended') this._ac.resume().catch(function(){});
-    /* Pre-bake noise buffer — metallic transient character */
+    /* Pre-bake noise buffer — sharp metallic transient */
     if(this._ac && !this._noiseBuf){
       try{
         var sr = this._ac.sampleRate;
-        var len = Math.floor(sr * 0.03); /* 30ms burst */
+        var len = Math.floor(sr * 0.035); /* 35ms — slightly longer for weight */
         this._noiseBuf = this._ac.createBuffer(1, len, sr);
         var d = this._noiseBuf.getChannelData(0);
         for(var i=0;i<len;i++){
-          var env = Math.exp(-i/(len*0.15)); /* very fast exponential decay */
+          var env = Math.exp(-i/(len*0.12)); /* very fast attack, smooth tail */
           d[i] = (Math.random()*2-1) * env;
+        }
+      }catch(e){}
+    }
+    /* Pre-bake scrape buffer — granular friction texture */
+    if(this._ac && !this._scratchBuf){
+      try{
+        var sr2 = this._ac.sampleRate;
+        var sLen = Math.floor(sr2 * 0.16);
+        this._scratchBuf = this._ac.createBuffer(1, sLen, sr2);
+        var sd = this._scratchBuf.getChannelData(0);
+        for(var si=0;si<sLen;si++){
+          /* Granular: multiply noise by low-freq modulation for ridged texture */
+          var env2 = 1.0 - (si / sLen) * 0.5;
+          var grain = 0.5 + 0.5 * Math.sin(si * 0.018);
+          sd[si] = (Math.random()*2-1) * env2 * grain;
         }
       }catch(e){}
     }
     if(this._ac && !this._comp){
       try{
         this._comp = this._ac.createDynamicsCompressor();
-        this._comp.threshold.value = -14;
-        this._comp.knee.value = 8;
-        this._comp.ratio.value = 10;
-        this._comp.attack.value = 0.001;
-        this._comp.release.value = 0.05;
+        this._comp.threshold.value = -12;
+        this._comp.knee.value = 6;
+        this._comp.ratio.value = 8;
+        this._comp.attack.value = 0.003; /* let the transient bite through */
+        this._comp.release.value = 0.06;
         this._comp.connect(this._ac.destination);
       }catch(e){ this._comp = null; }
     }
@@ -11964,11 +11979,11 @@ var _chipSnd = {
   },
   _dest: function(){ return this._comp || (this._ac ? this._ac.destination : null); },
 
-  /* ── Core: Metallic coin impact ──
-     Real coin sound = noise transient + inharmonic partials.
-     Heavy silver coins: lower fundamental, long ring, strong sub thud.
-     Partials at roughly: 1x, 2.32x, 3.86x, 5.59x, 7.51x
-     (not integer harmonics — that's what makes metal sound metallic, not musical) */
+  /* ── Core: Heavy silver metal impact ──
+     Two-layer noise transient (sharp crack + body thump)
+     + 6 inharmonic partials (silver's characteristic non-integer spectrum)
+     + heavy sub oscillator for physical weight
+     + optional reverb send for spatial depth */
   _playMetal: function(baseFreq, vol, decayTime, brightness){
     if(!window._isSoundEnabled || !window._isSoundEnabled()) return;
     var ac = this._getAC(); if(!ac) return;
@@ -11979,38 +11994,60 @@ var _chipSnd = {
       self._active++;
       var now = ac.currentTime + 0.003;
       var dest = self._dest();
+      var rvb = (window._getReverbSend && window._getReverbSend()) || dest;
       brightness = brightness || 1;
 
-      /* 1. Noise transient — the initial "clack" of chip/metal contact */
+      /* 1A. Sharp noise crack — the initial "TINK" of silver contact */
       if(self._noiseBuf){
         var src = ac.createBufferSource();
         src.buffer = self._noiseBuf;
-        /* Tighter bandpass — focused clack, less mid-range mush */
+        /* High-shelf emphasis — silver transients are bright and sharp */
+        var hp = ac.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.value = 1800;
+        hp.Q.value = 0.7;
         var bp = ac.createBiquadFilter();
-        bp.type = 'bandpass';
-        bp.frequency.value = 2200 + Math.random()*1200;
+        bp.type = 'peaking';
+        bp.frequency.value = 4000 + Math.random()*1500;
+        bp.gain.value = 6; /* boost the "silver bite" frequency */
         bp.Q.value = 2.0;
         var gn = ac.createGain();
-        gn.gain.setValueAtTime(vol * 0.8, now);
-        gn.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
-        src.connect(bp); bp.connect(gn); gn.connect(dest);
-        src.start(now); src.stop(now + 0.03);
+        gn.gain.setValueAtTime(vol * 0.9, now);
+        gn.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+        src.connect(hp); hp.connect(bp); bp.connect(gn); gn.connect(dest);
+        src.start(now); src.stop(now + 0.04);
         src.onended = function(){ self._active = Math.max(0, self._active - 1); };
       } else {
         self._active = Math.max(0, self._active - 1);
       }
 
-      /* 2. Inharmonic partials — the "ring" of silver */
+      /* 1B. Body thump noise — the mass behind the hit */
+      if(self._noiseBuf){
+        var src2 = ac.createBufferSource();
+        src2.buffer = self._noiseBuf;
+        var lp = ac.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.value = 800;
+        var gnBody = ac.createGain();
+        gnBody.gain.setValueAtTime(vol * 0.35, now);
+        gnBody.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        src2.connect(lp); lp.connect(gnBody); gnBody.connect(dest);
+        src2.start(now); src2.stop(now + 0.045);
+      }
+
+      /* 2. Inharmonic partials — the long silver "RIIING" */
       var partials = [
-        {ratio: 1.00, amp: 0.30, decay: 1.0},    /* fundamental — louder for body */
-        {ratio: 2.32, amp: 0.14, decay: 0.75},    /* 1st inharmonic */
-        {ratio: 3.86, amp: 0.06, decay: 0.45},    /* 2nd — the "silver" character */
-        {ratio: 5.59, amp: 0.025, decay: 0.3},    /* upper shimmer */
-        {ratio: 7.51, amp: 0.010, decay: 0.18}    /* air/sizzle — quieter */
+        {ratio: 1.00, amp: 0.32, decay: 1.0},    /* fundamental — strong for body */
+        {ratio: 2.32, amp: 0.16, decay: 0.80},    /* 1st inharmonic — silver character */
+        {ratio: 3.86, amp: 0.08, decay: 0.55},    /* 2nd — the "precious metal" shimmer */
+        {ratio: 5.59, amp: 0.04, decay: 0.35},    /* upper ring */
+        {ratio: 7.51, amp: 0.018, decay: 0.22},   /* air/sizzle */
+        {ratio: 10.3, amp: 0.006, decay: 0.14}    /* ultra-high sparkle — barely there */
       ];
       for(var pi=0; pi<partials.length; pi++){
         var p = partials[pi];
-        var freq = baseFreq * p.ratio * (0.98 + Math.random()*0.04); /* slight random detune */
+        var freq = baseFreq * p.ratio * (0.98 + Math.random()*0.04);
+        if(freq > 18000) continue; /* skip inaudible partials */
         var osc = ac.createOscillator();
         osc.type = 'sine';
         osc.frequency.value = freq;
@@ -12020,39 +12057,41 @@ var _chipSnd = {
         g.gain.setValueAtTime(peak, now);
         g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
         osc.connect(g); g.connect(dest);
+        /* Send first 2 partials to reverb for spatial ring */
+        if(pi < 2 && rvb !== dest){ g.connect(rvb); }
         osc.start(now); osc.stop(now + dur + 0.01);
       }
 
-      /* 3. Sub impact — the weight of the chip hitting */
+      /* 3. Heavy sub impact — feel the WEIGHT of silver */
       var sub = ac.createOscillator();
       sub.type = 'triangle';
-      sub.frequency.setValueAtTime(baseFreq * 0.35, now);
-      sub.frequency.exponentialRampToValueAtTime(baseFreq * 0.12, now + 0.05);
+      sub.frequency.setValueAtTime(baseFreq * 0.28, now);
+      sub.frequency.exponentialRampToValueAtTime(baseFreq * 0.08, now + 0.06);
       var sg = ac.createGain();
-      sg.gain.setValueAtTime(vol * 0.25, now);
-      sg.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+      sg.gain.setValueAtTime(vol * 0.50, now);
+      sg.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
       sub.connect(sg); sg.connect(dest);
-      sub.start(now); sub.stop(now + 0.08);
+      sub.start(now); sub.stop(now + 0.10);
     });
   },
 
-  /* ── Public: Poker chip clink (chip dropping onto stack) ── */
+  /* ── Public: Silver clink (heavy coin/bar landing on stack) ── */
   playClink: function(intensity, pitchMod){
     intensity = Math.min(1, Math.max(0.15, intensity || 0.5));
     pitchMod = pitchMod || 1;
-    /* Poker chips (clay/ceramic): fundamental ~1400-1800 Hz, shorter ring than coins */
-    var baseFreq = (1400 + Math.random()*400) * pitchMod;
-    this._playMetal(baseFreq, intensity, 0.12, 1.0);
+    /* Heavy silver: 2400-3000 Hz fundamental, long ring (0.40s) */
+    var baseFreq = (2400 + Math.random()*600) * pitchMod;
+    this._playMetal(baseFreq, intensity, 0.40, 1.0);
   },
 
-  /* ── Public: Stack tap (finger touching the stack — duller, muted) ── */
+  /* ── Public: Stack tap (finger tapping the stack — dampened, muted) ── */
   playStackTap: function(){
-    /* Lower pitch, shorter decay, less brightness — muted by finger contact */
-    var baseFreq = 1000 + Math.random()*300;
-    this._playMetal(baseFreq, 0.40, 0.08, 0.55);
+    /* Dampened by finger contact: lower freq, very short, less brightness */
+    var baseFreq = 1600 + Math.random()*400;
+    this._playMetal(baseFreq, 0.45, 0.12, 0.45);
   },
 
-  /* ── Public: Scrape-lift (dragging coin off stack) ── */
+  /* ── Public: Scrape-lift (dragging silver piece off stack) ── */
   playScrape: function(){
     if(!window._isSoundEnabled || !window._isSoundEnabled()) return;
     var ac = this._getAC(); if(!ac) return;
@@ -12061,53 +12100,72 @@ var _chipSnd = {
       var now = ac.currentTime + 0.003;
       var dest = self._dest();
 
-      /* Dedicated longer noise for scrape friction (~120ms at normal rate) */
-      var sr = ac.sampleRate;
-      var scrapeLen = Math.floor(sr * 0.12);
-      var scrapeBuf = ac.createBuffer(1, scrapeLen, sr);
-      var sd = scrapeBuf.getChannelData(0);
-      for(var si=0; si<scrapeLen; si++){
-        var env = 1.0 - (si / scrapeLen) * 0.6; /* slow taper, not instant decay */
-        sd[si] = (Math.random()*2-1) * env;
+      /* Use pre-baked granular scrape buffer for ridged metal friction */
+      var scrapeBuf;
+      if(self._scratchBuf){
+        scrapeBuf = self._scratchBuf;
+      } else {
+        var sr = ac.sampleRate;
+        var scrapeLen = Math.floor(sr * 0.14);
+        scrapeBuf = ac.createBuffer(1, scrapeLen, sr);
+        var sd = scrapeBuf.getChannelData(0);
+        for(var si=0; si<scrapeLen; si++){
+          var env = 1.0 - (si / scrapeLen) * 0.5;
+          var grain = 0.5 + 0.5 * Math.sin(si * 0.018);
+          sd[si] = (Math.random()*2-1) * env * grain;
+        }
       }
 
       var src = ac.createBufferSource();
       src.buffer = scrapeBuf;
+      /* Silver scrape sits in 2000-4000 Hz — the "zzzzz" of metal on metal */
       var bp = ac.createBiquadFilter();
       bp.type = 'bandpass';
-      bp.frequency.value = 3000;
-      bp.Q.value = 1.5;
+      bp.frequency.value = 2500;
+      bp.Q.value = 1.8;
       var gn = ac.createGain();
-      gn.gain.setValueAtTime(0.22, now);
-      gn.gain.linearRampToValueAtTime(0.16, now + 0.05);
-      gn.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      gn.gain.setValueAtTime(0.28, now);
+      gn.gain.linearRampToValueAtTime(0.20, now + 0.05);
+      gn.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
       src.connect(bp); bp.connect(gn); gn.connect(dest);
-      src.start(now); src.stop(now + 0.13);
+      src.start(now); src.stop(now + 0.16);
 
-      /* Release clink at the end — coin separates from stack */
-      setTimeout(function(){
-        self.playClink(0.4, 1.15);
-      }, 90);
+      /* Release ring — silver separating from stack, scheduled via AudioContext */
+      var releaseTime = now + 0.10;
+      var rFreq = 2600 + Math.random()*500;
+      var rPartials = [1, 2.32, 3.86];
+      for(var ri=0;ri<rPartials.length;ri++){
+        var ro = ac.createOscillator();
+        var rg = ac.createGain();
+        ro.type = 'sine';
+        ro.frequency.value = rFreq * rPartials[ri];
+        var rAmp = [0.14, 0.06, 0.025][ri];
+        var rDec = [0.25, 0.15, 0.08][ri];
+        rg.gain.setValueAtTime(rAmp, releaseTime);
+        rg.gain.exponentialRampToValueAtTime(0.0001, releaseTime + rDec);
+        ro.connect(rg); rg.connect(dest);
+        ro.start(releaseTime); ro.stop(releaseTime + rDec + 0.01);
+      }
     });
   },
 
-  /* ── Public: Cascade (chips settling back — rapid diminishing clinks) ── */
+  /* ── Public: Cascade (silver pieces settling — rapid diminishing clinks) ── */
   playCascade: function(count){
     count = count || 3;
     var self = this;
     for(var i=0; i<count; i++){
       (function(idx){
-        /* Geometric timing — accelerating then slowing, like real bounces */
-        var delay = idx * 45 * Math.pow(0.75, idx) + Math.random()*12;
+        /* Geometric timing — real bounces decelerate */
+        var delay = idx * 55 * Math.pow(0.72, idx) + Math.random()*15;
         setTimeout(function(){
-          /* Exponential intensity — each bounce loses way more energy */
-          self.playClink(0.50 * Math.pow(0.55, idx), 1.0 + idx*0.06);
+          /* Exponential falloff — each impact absorbs more energy */
+          self.playClink(0.55 * Math.pow(0.50, idx), 1.0 + idx*0.08);
         }, delay);
       })(i);
     }
   },
 
-  /* ── Public: Spinning coin settle (wobble → flat) ── */
+  /* ── Public: Spinning silver settle (wobble → flat → ring) ── */
   playSpinSettle: function(){
     if(!window._isSoundEnabled || !window._isSoundEnabled()) return;
     var ac = this._getAC(); if(!ac) return;
@@ -12116,20 +12174,28 @@ var _chipSnd = {
       var now = ac.currentTime + 0.003;
       var dest = self._dest();
 
-      /* Wobble tone — frequency rises as the coin wobble tightens */
-      var osc = ac.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(1200, now);
-      osc.frequency.exponentialRampToValueAtTime(5000, now + 0.45);
-      var gn = ac.createGain();
-      gn.gain.setValueAtTime(0.04, now);
-      gn.gain.linearRampToValueAtTime(0.10, now + 0.3);
-      gn.gain.exponentialRampToValueAtTime(0.001, now + 0.50);
-      osc.connect(gn); gn.connect(dest);
-      osc.start(now); osc.stop(now + 0.55);
+      /* Spinning wobble — accelerating contact taps as silver settles */
+      var taps = 6;
+      for(var ti=0; ti<taps; ti++){
+        (function(idx){
+          /* Accelerating: gaps shrink as wobble tightens */
+          var tapTime = now + idx * 0.065 * Math.pow(0.78, idx);
+          var tapFreq = 2800 + idx * 200; /* pitch rises as gap narrows */
+          var tapAmp = 0.03 + idx * 0.015; /* volume rises to final slap */
+          var osc = ac.createOscillator();
+          var g = ac.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(tapFreq, tapTime);
+          g.gain.setValueAtTime(tapAmp, tapTime);
+          g.gain.exponentialRampToValueAtTime(0.001, tapTime + 0.025);
+          osc.connect(g); g.connect(dest);
+          osc.start(tapTime); osc.stop(tapTime + 0.03);
+        })(ti);
+      }
 
-      /* Final landing clink */
-      setTimeout(function(){ self.playClink(0.55, 1.1); }, 480);
+      /* Final landing: full silver clink after wobble ends */
+      var landTime = now + 0.38;
+      self._playMetal(2600, 0.55, 0.35, 1.1);
     });
   }
 };
@@ -12916,8 +12982,9 @@ function _chipDropSoundCheck(){
     for(var i=0;i<count;i++){
       (function(idx){
         setTimeout(function(){
-          _chipSnd.playClink(0.65 - idx*0.08, 1 - idx*0.05);
-        }, idx*70);
+          /* Heavy silver drops: strong first impact, each successive slightly dampened by stack */
+          _chipSnd.playClink(0.70 - idx*0.06, 1 - idx*0.04);
+        }, idx*80);
       })(i);
     }
   }
@@ -13232,8 +13299,8 @@ function fxAdjustLeftover(dir){
     }
   }
   if(typeof _chipSnd !== 'undefined'){
-    if(dir === 1) _chipSnd.playClink(0.5, 0.9);
-    else _chipSnd.playCascade(2);
+    if(dir === 1) _chipSnd.playClink(0.65, 0.95);
+    else _chipSnd.playCascade(3);
   }
   if(navigator.vibrate) navigator.vibrate(dir === 1 ? [8, 4, 12] : [12, 6, 8]);
 }

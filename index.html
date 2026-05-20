@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-20-audit-fixes-v28'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-20-apple-review-v29'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -93,6 +93,17 @@ button:focus-visible,.tab:focus-visible,.bn-tab:focus-visible{border-radius:6px}
   --blur:blur(14px);--sh:0 8px 32px rgba(5,15,60,.28);--ssh:0 2px 16px rgba(5,15,60,.18);
   --font-ui:'Outfit',sans-serif;--font-body:'DM Sans',sans-serif
 }
+
+
+/* ═══ TIME-AWARE STYLING ═══ */
+body.time-night .nav{background:hsla(210,80%,10%,.95)}
+body.time-night::after{background:linear-gradient(150deg,hsl(210,80%,9%) 0%,hsl(210,75%,15%) 45%,hsl(210,70%,22%) 100%)}
+body.time-evening .nav{background:hsla(210,65%,12%,.92)}
+
+/* ═══ ACCESSIBILITY: Responsive font scaling ═══ */
+html{font-size:clamp(14px, 3.6vw, 17px)}
+@media(min-width:600px){html{font-size:16px}}
+
 html{scroll-behavior:smooth;overflow-x:hidden;width:100%;max-width:100%}
 body{font-family:var(--font-body);background:transparent;min-height:100vh;color:#fff;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;padding-bottom:80px;overscroll-behavior-y:none;overflow-x:hidden;width:100%;max-width:100%;position:relative}
 
@@ -102,11 +113,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 .nav{position:sticky;top:0;z-index:100;background:var(--nav-bg);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-bottom:1px solid var(--bdr);padding:env(safe-area-inset-top,0px) 14px 0;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:60px;height:calc(60px + env(safe-area-inset-top,0px));transition:background .4s,box-shadow .2s}
 .nav.scrolled{box-shadow:0 4px 24px rgba(5,15,60,.4)}
-.nav-brand{font-family:var(--font-ui);font-size:15px;font-weight:800;white-space:nowrap;color:#fff;letter-spacing:-.3px;flex-shrink:0}
+.nav-brand{font-family:var(--font-ui);font-size:0.9375rem;font-weight:800;white-space:nowrap;color:#fff;letter-spacing:-.3px;flex-shrink:0}
 .nav-brand span{color:var(--a2)}
 .nav-tabs{display:flex;gap:2px;background:rgba(255,255,255,.07);border-radius:6px;padding:3px;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none;flex:1}
 .nav-tabs::-webkit-scrollbar{display:none}
-.tab{min-height:44px;padding:6px 13px;border-radius:6px;font-family:var(--font-ui);font-size:11.5px;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;white-space:nowrap;transition:background .18s ease,color .18s ease,transform .12s ease,box-shadow .18s ease;display:flex;align-items:center;justify-content:center;gap:5px;letter-spacing:.1px;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.tab{min-height:44px;padding:6px 13px;border-radius:6px;font-family:var(--font-ui);font-size:0.72rem;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;white-space:nowrap;transition:background .18s ease,color .18s ease,transform .12s ease,box-shadow .18s ease;display:flex;align-items:center;justify-content:center;gap:5px;letter-spacing:.1px;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .tab.on{background:rgba(255,255,255,.17);color:#fff;box-shadow:0 1px 10px rgba(0,0,0,.22)}
 .tab:hover:not(.on){color:rgba(255,255,255,.8);background:rgba(255,255,255,.07)}
 .tab:active{transform:scale(.93)}
@@ -119,7 +130,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .prog-lbl{font-family:var(--font-ui);font-size:12px;font-weight:700;white-space:nowrap;letter-spacing:.3px;text-transform:uppercase;color:var(--sec)}
 .prog-track{flex:1;height:10px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden}
 .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--a1),var(--a2));transition:width .55s cubic-bezier(.4,0,.2,1);box-shadow:0 0 12px rgba(126,200,255,.35)}
-.prog-ct{font-family:var(--font-ui);font-size:15px;font-weight:800;color:var(--a2);white-space:nowrap;letter-spacing:-.3px}
+.prog-ct{font-family:var(--font-ui);font-size:0.9375rem;font-weight:800;color:var(--a2);white-space:nowrap;letter-spacing:-.3px}
 
 
 .ph{display:flex;align-items:center;gap:10px;margin:20px 0 8px}
@@ -139,7 +150,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 #pg-bowl .bowl-history,
 #pg-bowl .bowl-history{padding-left:14px;padding-right:14px}
 .bowl-header{text-align:center;margin-bottom:16px;padding:0 4px}
-.bowl-title{font-family:var(--font-ui);font-size:22px;font-weight:900;letter-spacing:-.5px;color:#fff;margin-bottom:4px;background:linear-gradient(135deg,#fff 40%,var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.bowl-title{font-family:var(--font-ui);font-size:1.375rem;font-weight:900;letter-spacing:-.5px;color:#fff;margin-bottom:4px;background:linear-gradient(135deg,#fff 40%,var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .bowl-sub{font-size:12px;color:var(--muted);line-height:1.5;letter-spacing:.1px;transition:opacity .3s}
 
 
@@ -394,8 +405,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 /* Each trophy ball slot */
 .tc-ball{
-  width:56px;
-  height:56px;
+  width:68px;
+  height:68px;
   border-radius:50%;
   position:relative;
   flex-shrink:0;
@@ -403,14 +414,36 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   transition:transform .25s cubic-bezier(.34,1.56,.64,1);
   filter:drop-shadow(0 5px 12px rgba(0,0,0,.60)) drop-shadow(0 2px 4px rgba(0,0,0,.4));
 }
-.tc-ball:hover{
-  transform:translateY(-5px) scale(1.1);
-  filter:drop-shadow(0 10px 22px rgba(60,120,255,.50)) drop-shadow(0 4px 10px rgba(0,0,0,.5));
+
+/* Trophy ball idle float — collectibles feel alive */
+@keyframes tc-float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-3px)}
+}
+.tc-ball:not(.entering):not(.shattering){
+  animation:tc-float 3s ease-in-out infinite;
+  animation-delay:calc(var(--tc-i, 0) * 0.4s);
+}
+
+/* Hover: desktop only — pause float, lift ball */
+@media(hover:hover){
+  .tc-ball:hover{
+    animation-play-state:paused;
+    transform:translateY(-5px) scale(1.1);
+    filter:drop-shadow(0 10px 22px rgba(60,120,255,.50)) drop-shadow(0 4px 10px rgba(0,0,0,.5));
+  }
+}
+/* Touch: no hover transform (prevents stutter on tap) */
+@media(hover:none){
+  .tc-ball:active{
+    transform:scale(1.08);
+    filter:drop-shadow(0 8px 18px rgba(60,120,255,.45)) drop-shadow(0 3px 8px rgba(0,0,0,.45));
+  }
 }
 
 /* Ball entry animation */
 @keyframes tc-ball-drop{
-  0%{opacity:0;transform:translateY(-40px) scale(.5)}
+  0%{opacity:0;transform:translateY(-50px) scale(.5)}
   55%{transform:translateY(5px) scale(1.07)}
   75%{transform:translateY(-3px) scale(.96)}
   100%{opacity:1;transform:translateY(0) scale(1)}
@@ -580,10 +613,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .hc-info{flex:1;min-width:0}
 .hc-top{display:flex;align-items:center;gap:8px;margin-bottom:0}
 .hc-badge{display:none}
-.hc-name{font-family:var(--font-ui);font-size:15px;font-weight:600;line-height:1.25;letter-spacing:-.2px;color:#fff;transition:opacity .3s ease}
+.hc-name{font-family:var(--font-ui);font-size:0.9375rem;font-weight:600;line-height:1.25;letter-spacing:-.2px;color:#fff;transition:opacity .3s ease}
 .hc.done .hc-name{opacity:.38;text-decoration:line-through;text-decoration-color:rgba(255,255,255,.25);text-decoration-thickness:1px}
 .hc-time{display:none}
-.hc-action{font-size:12px;color:rgba(184,207,245,.5);line-height:1.5;margin-top:3px}
+.hc-action{font-size:0.75rem;color:rgba(184,207,245,.5);line-height:1.5;margin-top:3px}
 
 .hc-exp{display:none}
 
@@ -1282,6 +1315,24 @@ textarea.big:focus{border-bottom-color:var(--a2)}
 }
 .pg.active{ display:block }
 
+/* ═══ SPATIAL PAGE TRANSITIONS ═══ */
+.pg.pg-enter-animate{
+  animation:pg-slide-in .32s cubic-bezier(.25,.46,.45,.94) both;
+}
+.pg.pg-enter-animate-back{
+  animation:pg-slide-in-back .32s cubic-bezier(.25,.46,.45,.94) both;
+}
+@keyframes pg-slide-in{
+  0%{opacity:0;transform:translateX(28px) scale(.985)}
+  100%{opacity:1;transform:translateX(0) scale(1)}
+}
+@keyframes pg-slide-in-back{
+  0%{opacity:0;transform:translateX(-28px) scale(.985)}
+  100%{opacity:1;transform:translateX(0) scale(1)}
+}
+
+
+
 @media(min-width:680px){.pg{padding:24px 24px 100px;}}
 @media(min-width:1024px){.pg{padding-left:max(24px,calc((100% - 760px) / 2));padding-right:max(24px,calc((100% - 760px) / 2));}}
 .pg-inner{width:100%;}
@@ -1312,7 +1363,7 @@ textarea.big:focus{border-bottom-color:var(--a2)}
 .bn-tab.active .bn-icon{filter:drop-shadow(0 0 6px var(--a2))}
 .bn-tab.active .bn-lbl{color:var(--a2)}
 .bn-icon{font-size:20px;line-height:1;transition:transform .22s cubic-bezier(.34,1.56,.64,1);width:24px;height:22px;display:flex;align-items:center;justify-content:center;text-align:center}
-.bn-lbl{font-family:var(--font-ui);font-size:8.5px;font-weight:700;color:var(--muted);letter-spacing:.3px;text-transform:uppercase;transition:color .18s;white-space:nowrap;width:100%;text-align:center}
+.bn-lbl{font-family:var(--font-ui);font-size:0.53rem;font-weight:700;color:var(--muted);letter-spacing:.3px;text-transform:uppercase;transition:color .18s;white-space:nowrap;width:100%;text-align:center}
 .bn-tab.active .bn-icon{transform:scale(1.15) translateY(-1px)}
 @media(max-width:360px){.bn-lbl{font-size:7.5px}.bn-icon{font-size:18px}}
 
@@ -2007,7 +2058,15 @@ textarea.auto-grow{overflow:hidden;resize:none}
 
 
 
-.fnx-hero{position:relative;background:linear-gradient(155deg,rgba(126,200,255,.18),rgba(77,141,255,.08) 60%,rgba(255,255,255,.04));backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(126,200,255,.32);border-radius:14px;padding:24px 22px 20px;margin-bottom:14px;box-shadow:0 12px 40px rgba(5,15,60,.32),inset 0 1px 0 rgba(255,255,255,.08);overflow:hidden;z-index:1}
+.fnx-hero{position:relative;background:linear-gradient(155deg,rgba(126,200,255,.18),rgba(77,141,255,.08) 60%,rgba(255,255,255,.04));
+
+/* Daily budget card entrance */
+@keyframes fx-daily-in{
+  0%{opacity:0;transform:translateY(8px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+
+backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(126,200,255,.32);border-radius:14px;padding:24px 22px 20px;margin-bottom:14px;box-shadow:0 12px 40px rgba(5,15,60,.32),inset 0 1px 0 rgba(255,255,255,.08);overflow:hidden;z-index:1}
 .fnx-hero::before{content:'';position:absolute;top:-50%;right:-20%;width:70%;height:200%;background:radial-gradient(ellipse,rgba(126,200,255,.18) 0%,transparent 60%);pointer-events:none}
 
 
@@ -2614,6 +2673,14 @@ textarea.auto-grow{overflow:hidden;resize:none}
         <span class="fx-hero-cur">﷼</span>
         <span class="fx-hero-num" id="fx-free-num">0</span>
       </div>
+      <div id="fx-daily-budget" style="display:none;margin:6px 0 12px;padding:10px 14px;background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.18);border-radius:8px;position:relative;animation:fx-daily-in .4s ease-out both">
+        <div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">You can spend today</div>
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <span style="font-family:var(--font-ui);font-size:11px;color:var(--muted)">﷼</span>
+          <span id="fx-daily-num" style="font-family:var(--font-ui);font-size:32px;font-weight:900;color:#4ade80;letter-spacing:-1px;line-height:1">0</span>
+        </div>
+        <div id="fx-daily-sub" style="font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--font-ui)">per day</div>
+      </div>
       <div class="fx-hero-row">
         <div class="fx-hero-stat">
           <div class="fx-hero-stat-label">Leftover</div>
@@ -2762,6 +2829,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div style="font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Today's 3 Tasks</div>
 <div id="np-tasks"></div>
 </div>
+<div id="time-greeting" style="font-family:var(--font-ui);font-size:0.875rem;font-weight:700;color:var(--muted);letter-spacing:.2px;margin-bottom:8px;padding:0 2px;transition:opacity .4s"></div>
 <div class="day-mode-banner" id="day-mode-banner"><div class="dmb-icon"></div><div><div class="dmb-text" id="dmb-text"></div><div class="dmb-sub" id="dmb-sub"></div></div></div>
 <div class="hc-list">
 <div class="hc" id="hB"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'B')}"><div class="hc-chk" onclick="tickDone(event,'B')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Morning Walk — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'B')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">B</span><span class="hc-name">Morning Walk</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">7:05 AM</span></div><div class="hc-action">30 min outside. No phone. Silence resets the mind.</div></div></div></div>
@@ -2864,7 +2932,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 
   <!-- The gumball machine + challenge area in ONE container so they share the same center -->
   <div class="bowl-machine-wrap" id="bowl-machine-wrap">
-    <canvas id="bowl-machine-canvas" width="340" height="390"></canvas>
+    <canvas id="bowl-machine-canvas" width="340" height="390" role="img" aria-label="Gumball machine with colorful challenge balls bouncing inside a glass globe"></canvas>
     <div id="bowl-challenge-area" style="width:100%;margin-top:0;margin-bottom:12px;padding:0;box-sizing:border-box;position:relative;z-index:2">
       <div style="text-align:center;padding:24px 16px;color:var(--muted);font-size:12px;font-style:italic">Pull the crank to draw today's challenge.</div>
     </div>
@@ -2956,6 +3024,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 </div>
 <div class="pg" id="pg-settings">
 <div class="pg-inner">
+<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding:0 2px">APPEARANCE</div>
 <div class="ss">
 <div class="ss-hdr">🎨 App Theme</div>
 <div style="padding:16px 18px">
@@ -2985,6 +3054,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 </div>
 </div>
 </div>
+<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:20px 0 8px;padding:0 2px">PREFERENCES</div>
 <div class="ss">
 <div class="ss-hdr">🔊 Sound &amp; Haptics</div>
 <div class="ss-row">
@@ -2999,6 +3069,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
   <div id="schedule-slider-wrap"></div>
 </div>
 </div>
+<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:20px 0 8px;padding:0 2px">DATA & BACKUP</div>
 <div class="ss">
 <div class="ss-hdr">💾 Your Data</div>
 <div id="storage-size-bar" style="padding:10px 18px 0;display:flex;align-items:center;gap:10px">
@@ -3026,7 +3097,8 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <button class="abtn" onclick="exportToExcel()" style="grid-column:span 2;background:linear-gradient(135deg,rgba(74,222,128,.18),rgba(77,141,255,.15));border-color:rgba(74,222,128,.4);color:#4ade80">📊 Export All Data to Excel (.xlsx)</button>
 </div>
 </div>
-<div class="ss">
+<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,139,139,.5);margin:24px 0 8px;padding:0 2px">⚠️ DANGER ZONE</div>
+<div class="ss" style="border-color:rgba(255,100,100,.15)">
 <div class="ss-hdr" style="color:#FF8B8B">⚠️ Danger Zone</div>
 <div class="btn-row">
 <button class="abtn d" onclick="clearAll()">🗑️ Clear All Data</button>
@@ -3036,6 +3108,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <button class="abtn" onclick="resetFinanceData()" style="grid-column:span 2;background:rgba(255,180,0,.15);border-color:rgba(255,180,0,.35);color:#FFD97D">💰 Reset Finance to My Saved Data</button>
 </div>
 </div>
+<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:20px 0 8px;padding:0 2px">BOWL</div>
 <div class="ss">
 <div class="ss-hdr">🎱 Bowl Challenges</div>
 <div style="padding:4px 0 8px">
@@ -3323,7 +3396,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <span>Swipe to navigate</span>
 <div class="swipe-dots" id="swipe-dots"></div>
 </div>
-<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true" role="status" aria-live="polite" aria-atomic="true"></div>
 <script>
 /* ── SCROLL RESTORATION FIX ──
    Browsers (Chrome/Safari) restore the last scroll position after the first
@@ -3722,6 +3795,7 @@ function _syncNavUI(idx){
     t.classList.toggle('active', i===idx);
     if(i===idx) t.setAttribute('aria-current','page');
     else t.removeAttribute('aria-current');
+    t.setAttribute('aria-label', PAGE_NAMES[i] + ' page');
   });
   // sync dots
   document.querySelectorAll('.swipe-dot').forEach(function(d,i){ d.classList.toggle('active', i===idx); });
@@ -3756,7 +3830,11 @@ function _onPageEnter(id){
     if(id==='gym')     renderGym();
     /* review merged into battlepass — renderWeeklyScore called there */
     if(id==='reward')  { rwCheckNewWeek(); renderReward(); }
-    if(id==='bowl')    { renderBowl(); if(typeof bowlRenderLibrary==='function') bowlRenderLibrary(); setTimeout(function(){ if(typeof window._gbResize==='function') window._gbResize(); }, 80); }
+    if(id==='bowl')    { renderBowl(); if(typeof bowlRenderLibrary==='function') bowlRenderLibrary(); setTimeout(function(){ if(typeof window._gbResize==='function') window._gbResize();
+/* Set --tc-i on trophy balls for staggered float */
+var _tcBalls = document.querySelectorAll('.tc-ball');
+_tcBalls.forEach(function(b, i){ b.style.setProperty('--tc-i', i); });
+}, 80); }
     /* battlepass page removed */
     if(id==='today')   {
       document.querySelectorAll('.hc.ex').forEach(function(c){ c.classList.remove('ex'); });
@@ -4014,11 +4092,15 @@ function _triggerHaptic(type){
   if(type==='error'){
     /* shake is already handled by shakeEl() CSS — nothing extra needed */
   }
-  /* Android only: */
+  /* Android + vibration-capable devices: */
   if(navigator.vibrate){
-    if(type==='light')  navigator.vibrate(8);
-    if(type==='medium') navigator.vibrate(18);
-    if(type==='error')  navigator.vibrate([15,10,15]);
+    if(type==='light')      navigator.vibrate(8);
+    if(type==='medium')     navigator.vibrate(18);
+    if(type==='heavy')      navigator.vibrate(35);
+    if(type==='success')    navigator.vibrate([12,40,12]);
+    if(type==='celebrate')  navigator.vibrate([15,30,15,30,25]);
+    if(type==='crank')      navigator.vibrate([8,20,10,20,12,20,15]);
+    if(type==='error')      navigator.vibrate([15,10,15]);
   }
 }
 
@@ -4126,8 +4208,33 @@ document.addEventListener('keydown',function(e){
   };
 })();
 
+
+/* ═══ TIME AWARENESS ═══ */
+function _getTimeGreeting(){
+  var h = new Date().getHours();
+  if(h < 5)  return {greet:'Night owl mode 🦉', phase:'night'};
+  if(h < 9)  return {greet:'Good morning ☀️', phase:'morning'};
+  if(h < 12) return {greet:'Late morning 🌤', phase:'morning'};
+  if(h < 14) return {greet:'Good afternoon', phase:'afternoon'};
+  if(h < 17) return {greet:'Afternoon push 💪', phase:'afternoon'};
+  if(h < 20) return {greet:'Evening wind-down 🌅', phase:'evening'};
+  if(h < 23) return {greet:'Night routine 🌙', phase:'night'};
+  return {greet:'Late night 🌙', phase:'night'};
+}
+
+function _applyTimeAwareness(){
+  var t = _getTimeGreeting();
+  var el = document.getElementById('time-greeting');
+  if(el) el.textContent = t.greet;
+  /* Night mode warm tint */
+  var body = document.body;
+  body.classList.remove('time-night','time-morning','time-afternoon','time-evening');
+  body.classList.add('time-' + t.phase);
+}
+
 /* ── Render coordinator: groups all Today page sub-renders into one call ── */
 function renderTodayPage(){
+  _applyTimeAwareness();
   checkComebackBanner();
   renderRewardStrip();
   renderNightPreviewBanner();
@@ -4320,7 +4427,7 @@ function tickDone(e,st){
     card.classList.remove('done');
     const chkEl=card.querySelector('.hc-chk');
     if(chkEl) chkEl.setAttribute('aria-checked','false');
-    _playTick(false);
+    _playTick(false); _triggerHaptic('light');
     updProg(s); updRwds(s); ss(s,true);
     clearTimeout(_streakTimer); _streakTimer=setTimeout(function(){ updStreaks(gs()); },300);
     clearTimeout(_hmTimer); _hmTimer=setTimeout(_hmUpdateToday,500);
@@ -4334,7 +4441,7 @@ function tickDone(e,st){
     card.classList.add('done');
     const chkEl2=card.querySelector('.hc-chk');
     if(chkEl2) chkEl2.setAttribute('aria-checked','true');
-    _playTick(true);
+    _playTick(true); _triggerHaptic('medium');
     updProg(s); updRwds(s); ss(s,true);
     clearTimeout(_streakTimer); _streakTimer=setTimeout(function(){ updStreaks(gs()); },300);
     clearTimeout(_hmTimer); _hmTimer=setTimeout(_hmUpdateToday,500);
@@ -4348,7 +4455,7 @@ function tickDone(e,st){
     }
     checkStreakAtRisk();
     const todayAllDone=STEPS.every(function(x){ return !!(s.days[todayKey]||{})[x]; });
-    if(todayAllDone){ clearTimeout(_rwSwTimer); _rwSwTimer=setTimeout(sendRewardToSW,800); }
+    if(todayAllDone){ clearTimeout(_rwSwTimer); _rwSwTimer=setTimeout(sendRewardToSW,800); _playAllHabitsDone(); _triggerHaptic('celebrate'); }
     if(todayAllDone){ setTimeout(function(){ _grantHabitBonus(todayKey); },500); }
     if(typeof showXPPopup==='function'&&typeof NH_MAP!=='undefined'){
       const _h=NH_MAP[st];
@@ -4406,7 +4513,7 @@ function pickRating(e,st,rating){
   if(rating && st==='P'){
     const msg=getCompletionMsg();
     toast(msg.icon+' '+msg.title+' '+msg.sub);
-    _playPerfectDay();
+    _playPerfectDay(); _triggerHaptic('celebrate');
   } else {
     /* Fix 7: offer undo for all non-final habits */
     _offerUndo(st);
@@ -4776,7 +4883,7 @@ function deleteTx(id){
   f.transactions=(f.transactions||[]).filter(function(t){ return t.id!==id; });
   setF(f);
   renderFinance();
-  toast('Deleted ✓');
+  _triggerHaptic('light'); toast('Deleted ✓');
 }
 function saveEditTx(){
   let id=parseInt(document.getElementById('edit-tx-id').value);
@@ -4803,6 +4910,7 @@ function saveEditTx(){
     return t;
   });
   setF(f); closeModal('edit-tx-modal'); renderFinance();
+  _playFinanceAdd(); _triggerHaptic('light');
   toast('Transaction updated ✓');
 }
 
@@ -5765,20 +5873,23 @@ function abLogActivity(rosterId, detail){
 function abDeleteActivity(actId){
   const g = getGym();
   if(!g.activities || !g.activities[todayKey]) return;
-  const row = document.querySelector('.ab-today-row[data-id="'+actId+'"]');
-  const commit = function(){
-    g.activities[todayKey] = g.activities[todayKey].filter(function(a){ return a.id !== actId; });
-    if(g.activities[todayKey].length === 0) delete g.activities[todayKey];
-    setGym(g);
-    abRenderKpi(g);
-    abRenderToday(g);
-    abRenderChips(g);
-    abRenderHistory(g);
-  };
-  if(row){
-    row.classList.add('removing');
-    setTimeout(commit, 200);
-  } else { commit(); }
+  _confirm('Remove this activity?', function(){
+    const row = document.querySelector('.ab-today-row[data-id="'+actId+'"]');
+    const commit = function(){
+      g.activities[todayKey] = g.activities[todayKey].filter(function(a){ return a.id !== actId; });
+      if(g.activities[todayKey].length === 0) delete g.activities[todayKey];
+      setGym(g);
+      abRenderKpi(g);
+      abRenderToday(g);
+      abRenderChips(g);
+      abRenderHistory(g);
+      toast('Activity removed ↩');
+    };
+    if(row){
+      row.classList.add('removing');
+      setTimeout(commit, 200);
+    } else { commit(); }
+  }, {danger:true, okLabel:'Remove'});
 }
 
 /* ─ History (last 7 days) ─ */
@@ -5941,11 +6052,14 @@ function abLogWithDetail(){
 }
 function abDeleteChip(){
   if(!_abManageRid) return;
-  const g = getGym();
-  g.activityRoster = (g.activityRoster || []).filter(function(c){ return c.id !== _abManageRid; });
-  setGym(g);
-  abCloseManage();
-  abRenderChips(g);
+  _confirm('Delete this activity type? Your logged history stays.', function(){
+    const g = getGym();
+    g.activityRoster = (g.activityRoster || []).filter(function(c){ return c.id !== _abManageRid; });
+    setGym(g);
+    abCloseManage();
+    abRenderChips(g);
+    toast('Activity type removed');
+  }, {danger:true, okLabel:'Delete'});
 }
 
 /* ─ legacy renderGymKpi kept as no-op for any callers ─ */
@@ -6581,6 +6695,7 @@ function logSession(){
   getAllExercises(getGym()).forEach(function(ex){ gymSets[ex.id]=[{reps:'',weight:''}]; });
   if($id('gym-notes-txt')) $id('gym-notes-txt').value='';
   renderGym();
+  if(gymSessionType!=='rest') _playGymLog(); _triggerHaptic('success');
   toast(gymSessionType==='rest'?'Rest day logged 😴':'Session logged ✓');
 }
 
@@ -6635,8 +6750,8 @@ function renderGymHistory(g){
         +'<div class="ghc-date">'+dlbl+'</div>'
         +'<div class="ghc-chips">'+chips+'</div>'
         +'<div class="ghc-actions">'
-          +'<button class="ghc-btn" onclick="editHistSession(event,'+s.id+')" title="Edit">✏️</button>'
-          +'<button class="ghc-btn" onclick="deleteHistSession(event,'+s.id+')" title="Delete">🗑️</button>'
+          +'<button class="ghc-btn" onclick="editHistSession(event,'+s.id+')" title="Edit" aria-label="Edit session">✏️</button>'
+          +'<button class="ghc-btn" onclick="deleteHistSession(event,'+s.id+')" title="Delete" aria-label="Delete session">🗑️</button>'
         +'</div>'
       +'</div>'
       +'<div class="ghc-body" id="ghcb-'+s.id+'"></div>';
@@ -7845,6 +7960,106 @@ function _playPerfectDay(){
       src.start(t);
     });
   }); /* end _ensureAudioReady */
+}
+
+
+
+/* ═══ EXTENDED SOUND DESIGN ═══ */
+
+/* Gym session logged — satisfying low thud + confirmation tone */
+function _playGymLog(){
+  if(!_soundEnabled) return;
+  window._ensureAudioReady(function(ctx){
+    var now = ctx.currentTime + 0.02;
+    /* Low resonant thud */
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(90, now + 0.25);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.18, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+    osc.start(now); osc.stop(now + 0.35);
+    /* Confirmation chime */
+    setTimeout(function(){
+      var now2 = ctx.currentTime + 0.01;
+      [784, 988].forEach(function(freq, i){
+        var o = ctx.createOscillator();
+        var g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'sine';
+        o.frequency.setValueAtTime(freq, now2 + i*0.08);
+        g.gain.setValueAtTime(0, now2 + i*0.08);
+        g.gain.linearRampToValueAtTime(0.12, now2 + i*0.08 + 0.003);
+        g.gain.exponentialRampToValueAtTime(0.0001, now2 + i*0.08 + 0.35);
+        o.start(now2 + i*0.08); o.stop(now2 + i*0.08 + 0.4);
+      });
+    }, 120);
+  });
+}
+
+/* Finance transaction added — soft cash register "ka-ching" */
+function _playFinanceAdd(){
+  if(!_soundEnabled) return;
+  window._ensureAudioReady(function(ctx){
+    var now = ctx.currentTime + 0.02;
+    /* Metallic drawer slide */
+    var buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.03), ctx.sampleRate);
+    var d = buf.getChannelData(0);
+    for(var i=0; i<d.length; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/d.length, 3) * 0.3;
+    var src = ctx.createBufferSource(); src.buffer = buf;
+    var bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2200; bp.Q.value=1.5;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.25, now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+    src.connect(bp); bp.connect(g); g.connect(ctx.destination); src.start(now);
+    /* Register bell — two harmonic partials */
+    [1568, 2350].forEach(function(freq, i){
+      var o = ctx.createOscillator();
+      var gn = ctx.createGain();
+      o.connect(gn); gn.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(freq, now + 0.04);
+      gn.gain.setValueAtTime(0, now + 0.04);
+      gn.gain.linearRampToValueAtTime(i===0?0.14:0.07, now + 0.043);
+      gn.gain.exponentialRampToValueAtTime(0.0001, now + 0.04 + 0.45);
+      o.start(now + 0.04); o.stop(now + 0.54);
+    });
+  });
+}
+
+/* All habits done — ascending sparkle cascade */
+function _playAllHabitsDone(){
+  if(!_soundEnabled) return;
+  window._ensureAudioReady(function(ctx){
+    var now = ctx.currentTime + 0.02;
+    var notes = [523, 659, 784, 988, 1175, 1318];
+    notes.forEach(function(freq, i){
+      var t = now + i * 0.065;
+      var o = ctx.createOscillator();
+      var g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(freq, t);
+      var amp = 0.15 - i * 0.015;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(amp, t + 0.003);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+      o.start(t); o.stop(t + 0.65);
+      /* Add shimmer partial */
+      var o2 = ctx.createOscillator();
+      var g2 = ctx.createGain();
+      o2.connect(g2); g2.connect(ctx.destination);
+      o2.type = 'sine';
+      o2.frequency.setValueAtTime(freq * 2.01, t);
+      g2.gain.setValueAtTime(0, t);
+      g2.gain.linearRampToValueAtTime(amp * 0.3, t + 0.003);
+      g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+      o2.start(t); o2.stop(t + 0.4);
+    });
+  });
 }
 
 /* ════════════════════════════════════════════
@@ -9350,26 +9565,31 @@ function bowlManualDraw(){
   var sp = btn && btn.querySelector('span');
   if(btn) btn.disabled = true;
   if(sp) sp.textContent = 'Drawing…';
+  /* Anticipation text sequence */
+  setTimeout(function(){ if(sp) sp.textContent = 'Shaking…'; }, 1200);
+  setTimeout(function(){ if(sp) sp.textContent = 'Almost…'; }, 2800);
   if(hint) hint.textContent = 'Rolling…';
 
-  /* Play crank sound if available */
+  /* Play crank sound + haptic */
+  _triggerHaptic('crank');
   try{ if(typeof _playGumballCrank==='function') _playGumballCrank(); }catch(e){}
 
   /* Resume canvas animation if available */
   try{ if(typeof window._gbResume==='function') window._gbResume(); }catch(e){}
-  try{ if(typeof window._gbSetExcited==='function') window._gbSetExcited(theme.id, 3000, function(){}); }catch(e){}
+  try{ if(typeof window._gbSetExcited==='function') window._gbSetExcited(theme.id, 4200, function(){}); }catch(e){}
 
-  /* Start shaking sound — matches the 3000ms excited duration */
+  /* Start shaking sound — extended anticipation before reveal */
   setTimeout(function(){
-    try{ if(typeof _playBallsShaking==='function') _playBallsShaking(2600); }catch(e){}
+    try{ if(typeof _playBallsShaking==='function') _playBallsShaking(3800); }catch(e){}
   }, 100);
 
-  /* Show challenge card near the end of the animation (excited runs 3000ms) */
+  /* Show challenge card AFTER full anticipation build (excited runs 4200ms) */
   setTimeout(function(){
     /* Force cache bust before render so iOS stale-read bug does not hide the card */
     _stateCache = null;
     renderBowl();
-  }, 2600);
+    _triggerHaptic('heavy');
+  }, 3800);
 }
 
 /* Animation: single ball through tube 0 (center) */
@@ -10995,6 +11215,27 @@ function fxRenderHero(f, mk, stats){
   const numEl = document.getElementById('fx-free-num');
   if(numEl) fxAnimNum(numEl, current);
 
+  /* ═══ DAILY BUDGET HERO — the one number that matters ═══ */
+  var dailyEl = document.getElementById('fx-daily-budget');
+  if(dailyEl && fnxIsCurMonth(mk)){
+    var now = new Date();
+    var daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+    var daysLeft = daysInMonth - now.getDate() + 1;
+    var remaining = Math.max(0, current);
+    var dailyBudget = daysLeft > 0 ? Math.round(remaining / daysLeft) : 0;
+    dailyEl.style.display = '';
+    var dailyNumEl = document.getElementById('fx-daily-num');
+    var dailySubEl = document.getElementById('fx-daily-sub');
+    if(dailyNumEl) fxAnimNum(dailyNumEl, dailyBudget);
+    if(dailySubEl) dailySubEl.textContent = 'per day · ' + daysLeft + ' days left';
+    /* Color coding */
+    if(dailyNumEl){
+      dailyNumEl.style.color = dailyBudget > 100 ? '#4ade80' : dailyBudget > 50 ? '#FFD97D' : '#FF8B8B';
+    }
+  } else if(dailyEl){
+    dailyEl.style.display = 'none';
+  }
+
   const incEl = document.getElementById('fx-income-val');
   const spentEl = document.getElementById('fx-spent-val');
   const savedEl = document.getElementById('fx-saved-val');
@@ -11390,6 +11631,7 @@ window.confirmCMUpdate = function(){
     var _noteEl=document.getElementById('cm-update-note'); if(_noteEl) _noteEl.value='';
     fnxRender();
     if(typeof toast==='function') toast(setVal!==null?'Leftover set to '+fnxFmt(f.leftover):'+'+fnxFmt(amt)+' added ✓');
+    _playFinanceAdd();
     return;
   }
 };
@@ -11424,6 +11666,7 @@ function fxAdjustLeftover(dir){
   /* Show percentage feedback */
   var pct = f.leftover > 0 ? Math.round((f.leftoverCurrent / f.leftover) * 100) : 0;
   toast((dir===1?'+ ':'− ') + fnxFmt(amt) + ' leftover · ' + pct + '%');
+  _playFinanceAdd();
   /* Trigger chip stack wobble + sound for tactile feedback */
   if(typeof _chipInteract !== 'undefined'){
     var state = _fxVialState.free;

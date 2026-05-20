@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-18-reward-v27'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-18-bowl-rebalance-v25'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -182,7 +182,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bowl-btn.complete{background:linear-gradient(135deg,#4ade80,#22c55e);box-shadow:0 4px 14px rgba(74,222,128,.3)}
 .bowl-btn.reroll{background:rgba(255,255,255,.07);border:1px solid rgba(255,217,125,.3);color:var(--gold);box-shadow:none;flex:0 0 auto;padding:12px 16px}
 .bowl-btn.reroll:active{background:rgba(255,217,125,.12)}
-/* .bowl-btn.skip removed — skip system eliminated */
+.bowl-btn.skip{background:rgba(255,100,100,.08);border:1px solid rgba(255,100,100,.25);color:rgba(255,130,120,.85);box-shadow:none;flex:0 0 auto;padding:12px 14px}
 .bowl-crank-row{display:flex;flex-direction:column;align-items:center;gap:10px;margin:4px auto 12px;padding:0;width:100%;max-width:100%;}
 .bowl-crank-btn{background:linear-gradient(135deg,rgba(255,217,125,.14),rgba(255,190,80,.08));border:1.5px solid rgba(255,217,125,.35);border-radius:50px;color:var(--gold);font-family:var(--font-ui);font-size:13.5px;font-weight:800;padding:15px 36px;cursor:pointer;letter-spacing:.5px;transition:transform .14s,box-shadow .22s,background .18s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;box-shadow:0 4px 20px rgba(255,217,125,.12),inset 0 1px 0 rgba(255,255,255,.06);min-height:50px;display:inline-flex;align-items:center;gap:9px}
 .bowl-crank-btn:hover{background:linear-gradient(135deg,rgba(255,217,125,.22),rgba(255,190,80,.14));box-shadow:0 6px 28px rgba(255,217,125,.18),inset 0 1px 0 rgba(255,255,255,.08)}
@@ -196,9 +196,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bowl-reroll-btn:hover{background:rgba(255,217,125,.18)}
 .bowl-reroll-btn:active{transform:scale(.96)}
 .bowl-reroll-btn:disabled{opacity:.4;cursor:not-allowed}
-.bowl-accept-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 20px;background:linear-gradient(135deg,rgba(77,141,255,.18),rgba(126,200,255,.10));border:1.5px solid rgba(107,182,255,.45);border-radius:12px;color:var(--a2);font-family:var(--font-ui);font-size:14px;font-weight:800;letter-spacing:.3px;cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:50px;margin-top:10px}
-.bowl-accept-btn:hover{background:linear-gradient(135deg,rgba(77,141,255,.28),rgba(126,200,255,.18));box-shadow:0 4px 20px rgba(77,141,255,.2)}
-.bowl-accept-btn:active{transform:scale(.97)}
 .bowl-progress{background:rgba(255,255,255,.04);border:1px solid rgba(127,178,255,.18);border-radius:8px;padding:12px 14px;margin-bottom:10px}
 .bowl-progress-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
 .bowl-progress-lbl{font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
@@ -2443,6 +2440,30 @@ textarea.auto-grow{overflow:hidden;resize:none}
   .fx-vial-label-amt{font-size:16px}
 }
 
+/* ═══════════════════════════════════════════════
+   VAULT STAGE — Savings page
+═══════════════════════════════════════════════ */
+.vault-stage{display:flex;flex-direction:column;align-items:center;gap:18px;margin-bottom:24px;padding:0 4px}
+.vault-frame{position:relative;width:100%;max-width:340px;aspect-ratio:0.82;display:flex;align-items:center;justify-content:center;margin:0 auto}
+.vault-canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 12px 36px rgba(5,15,60,.45)) drop-shadow(0 3px 8px rgba(0,0,0,.3))}
+.vault-pct{position:absolute;bottom:5%;left:50%;transform:translateX(-50%);font-family:var(--font-ui);font-size:20px;font-weight:900;color:rgba(255,255,255,.88);letter-spacing:-0.8px;text-shadow:0 2px 12px rgba(0,0,0,.7),0 0 22px rgba(120,180,255,.30);pointer-events:none;z-index:5;transition:opacity .4s}
+.vault-readout{text-align:center;display:flex;flex-direction:column;gap:6px;width:100%;max-width:360px}
+.vault-label{font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;color:var(--muted)}
+.vault-amount{font-family:var(--font-ui);font-size:34px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.05}
+.vault-sub{font-family:var(--font-ui);font-size:12px;font-weight:600;color:var(--muted)}
+.vault-progress-track{width:100%;max-width:300px;margin:8px auto 0;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;border:1px solid rgba(127,178,255,.18)}
+.vault-progress-fill{height:100%;background:linear-gradient(90deg,rgba(80,140,230,.85),rgba(150,210,255,.95));border-radius:3px;transition:width .4s cubic-bezier(.34,1.3,.64,1);box-shadow:0 0 12px rgba(120,180,255,.6)}
+.vault-add-btn{background:linear-gradient(180deg,rgba(127,178,255,.18),rgba(127,178,255,.08));border:1px solid rgba(127,178,255,.42);border-radius:12px;color:#fff;font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;padding:14px 28px;cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent;min-height:48px;width:100%;max-width:300px;box-shadow:0 4px 14px rgba(5,20,80,.35),inset 0 1px 0 rgba(255,255,255,.12)}
+.vault-add-btn:active{transform:scale(.97);background:linear-gradient(180deg,rgba(127,178,255,.28),rgba(127,178,255,.14))}
+.vault-goal-meta{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:360px;padding:14px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(127,178,255,.18);border-radius:12px;margin-top:6px}
+.vault-goal-meta-label{font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted)}
+.vault-goal-meta-val{font-family:var(--font-ui);font-size:14px;font-weight:800;color:#fff}
+@media(max-width:360px){
+  .vault-frame{max-width:280px}
+  .vault-pct{font-size:18px}
+  .vault-amount{font-size:28px}
+}
+
 .fx-tx-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
 .fx-tx-hdr-label{font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
 .fx-tx-count{font-family:var(--font-ui);font-size:10px;font-weight:700;color:rgba(255,255,255,.3)}
@@ -2573,6 +2594,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <div class="nav-tabs-wrap">
 <div class="nav-tabs">
 <button class="tab on" onclick="showPg('finance',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-finance"/></svg> Finance</button>
+<button class="tab" onclick="showPg('savings',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-vault"/></svg> Savings</button>
 <button class="tab" onclick="showPg('today',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-home"/></svg> Today</button>
 <button class="tab" onclick="showPg('bowl',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-bowl"/></svg> Bowl</button>
 <button class="tab" onclick="showPg('reward',this)"><svg class="svg-icon" style="font-size:16px"><use href="#icon-gift"/></svg> Reward</button>
@@ -2585,10 +2607,11 @@ textarea.auto-grow{overflow:hidden;resize:none}
 <nav class="bottom-nav" id="bottom-nav" aria-label="Main navigation">
 <div class="bottom-nav-inner">
 <button class="bn-tab active" id="bn-finance" onclick="navTo(0)" aria-current="page"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-finance"/></svg></div><div class="bn-lbl">Finance</div></button>
-<button class="bn-tab" id="bn-today" onclick="navTo(1)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-home"/></svg></div><div class="bn-lbl">Today</div></button>
-<button class="bn-tab" id="bn-bowl" onclick="navTo(2)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-bowl"/></svg></div><div class="bn-lbl">Bowl</div></button>
-<button class="bn-tab" id="bn-reward" onclick="navTo(3)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-gift"/></svg></div><div class="bn-lbl">Reward</div></button>
-<button class="bn-tab" id="bn-settings" onclick="navTo(4)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-settings"/></svg></div><div class="bn-lbl">Settings</div></button>
+<button class="bn-tab" id="bn-savings" onclick="navTo(1)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-vault"/></svg></div><div class="bn-lbl">Savings</div></button>
+<button class="bn-tab" id="bn-today" onclick="navTo(2)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-home"/></svg></div><div class="bn-lbl">Today</div></button>
+<button class="bn-tab" id="bn-bowl" onclick="navTo(3)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-bowl"/></svg></div><div class="bn-lbl">Bowl</div></button>
+<button class="bn-tab" id="bn-reward" onclick="navTo(4)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-gift"/></svg></div><div class="bn-lbl">Reward</div></button>
+<button class="bn-tab" id="bn-settings" onclick="navTo(5)"><div class="bn-icon"><svg class="svg-icon" style="font-size:20px"><use href="#icon-settings"/></svg></div><div class="bn-lbl">Settings</div></button>
 </div>
 </nav>
 <div class="ptr-indicator" id="ptr-indicator">
@@ -2635,7 +2658,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
     </div>
   </div>
 
-  <!-- ═══ LEFTOVER: bill stack — Finance only ═══ -->
+  <!-- ═══ LEFTOVER: bill stack — moved to Finance only; Savings lives on its own page ═══ -->
   <div class="fx-vials-stage fx-vials-single">
     <div class="fx-vial-col" id="fx-vial-free">
       <div class="fx-vial-tube-wrap">
@@ -2669,6 +2692,43 @@ textarea.auto-grow{overflow:hidden;resize:none}
   <div class="fx-tx-log" id="fnx-tx-log" style="display:none"></div>
 
   <!-- ═══ Hidden inputs preserved for old code ═══ -->
+
+</div>
+<div class="pg" id="pg-savings">
+
+  <!-- ═══ VAULT HERO ═══ -->
+  <div class="vault-stage">
+    <div class="vault-frame" onclick="fxOpenSavings()" style="cursor:pointer" aria-label="Add savings">
+      <canvas class="vault-canvas" id="fx-canvas-savings" width="340" height="415"></canvas>
+      <div class="vault-pct" id="fx-vial-pct-savings">0%</div>
+    </div>
+
+    <div class="vault-readout">
+      <div class="vault-label">Saved</div>
+      <div class="vault-amount" id="fx-vial-amt-savings">﷼ 0</div>
+      <div class="vault-sub" id="fx-vial-sub-savings">of ﷼ 0 target</div>
+      <div class="vault-progress-track">
+        <div class="vault-progress-fill" id="fx-vault-progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <button class="vault-add-btn" onclick="fxOpenSavings()" aria-label="Add to savings">+ Add to Savings</button>
+
+    <div class="vault-goal-meta">
+      <div>
+        <div class="vault-goal-meta-label">Goal</div>
+        <div class="vault-goal-meta-val" id="vault-goal-name">—</div>
+      </div>
+      <div style="text-align:right">
+        <div class="vault-goal-meta-label">To go</div>
+        <div class="vault-goal-meta-val" id="vault-goal-togo">﷼ 0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Savings History ═══ -->
+  <div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Savings History</div>
+  <div id="vault-savings-log" style="display:flex;flex-direction:column;gap:6px;margin-bottom:90px"></div>
 
 </div>
 <div class="pg" id="pg-today">
@@ -3095,6 +3155,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 </div>
 </div>
 
+<!-- savings gate removed -->
 
 <div class="modal-row">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
@@ -3641,8 +3702,8 @@ function parseAmt(str){ return parseFloat(String(str).replace(/[^0-9.]/g,''))||0
 /* ════════════════════════════════════════════
    GESTURE NAVIGATION ENGINE
 ════════════════════════════════════════════ */
-const PAGE_IDS  = ['finance','today','bowl','reward','settings'];
-const PAGE_NAMES= ['Finance','Today','Bowl','Reward','Settings'];
+const PAGE_IDS  = ['finance','savings','today','bowl','reward','settings'];
+const PAGE_NAMES= ['Finance','Savings','Today','Bowl','Reward','Settings'];
 let curPage   = 0;
 let isAnimating = false;
 let _navDir = 1; /* +1 = forward, -1 = backward */
@@ -3754,6 +3815,7 @@ function _onPageEnter(id){
   if(id==='reward'){ rwCheckNewWeek(); renderReward(); }
   setTimeout(function(){
     if(id==='finance'){ _txShowAll=30; if(typeof _txSearchQuery!=='undefined') _txSearchQuery=''; if(typeof _txFilterType!=='undefined') _txFilterType=''; renderFinance(); }
+    if(id==='savings') { if(typeof renderSavingsPage==='function') renderSavingsPage(); if(typeof _fxVialBootCanvas==='function') _fxVialBootCanvas(); }
     if(id==='gym')     renderGym();
     /* review merged into battlepass — renderWeeklyScore called there */
     if(id==='reward')  { rwCheckNewWeek(); renderReward(); }
@@ -5059,7 +5121,7 @@ function importData(e){
          4. Always remove today's draw so the crank works fresh after import. */
       if(!d.bowl){
         /* Backup had no bowl — inject a clean stub so the block below always runs */
-        d.bowl = { dailyDraws: [], draws: [], tripleDraws: [], weeklyRerolls: { weekKey:'', used:0 } };
+        d.bowl = { dailyDraws: [], draws: [], tripleDraws: [], rerollsByCycle: {} };
       }
       /* Wipe library — getBowl() will repopulate from BOWL_DEFAULT_LIBRARY */
       delete d.bowl.library;
@@ -5264,6 +5326,7 @@ function confirmResetFinance(){
     leftover:0,
     leftoverCurrent:0,
     bottleLog:[],
+    savingsLog:[],
     _bucketMap:{},
     expenses:[
       {id:1,icon:'🏠',name:'Rent',amount:0},
@@ -6917,7 +6980,7 @@ const BOWL_SYSTEM_START = '2026-04-18'; /* Bowl tier scoring applies to cycles s
 const BOWL_XP_EASY = 15;
 const BOWL_XP_MEDIUM = 30;
 const BOWL_XP_HARD = 50;
-/* reroll cost removed — weekly budget system replaces it */
+const BOWL_REROLL_COST = 30; /* XP cost for 4th+ reroll per day */
 const BOWL_PTS_EASY = 10;
 const BOWL_PTS_MEDIUM = 30;
 const BOWL_PTS_HARD = 60;
@@ -7269,7 +7332,7 @@ function rwWipeLevel(){
   setReward(rw);
 }
 
-/* ── Habit Perfect Day Bonus — 1.15× multiplier on that day's Bowl pts ──
+/* ── Habit Perfect Day Bonus — +5 pts toward reward level ──
    Rules:
    - Challenge must be completed that day (real tier, not skipped/bonus)
    - All scheduled habits must be done that day
@@ -7302,16 +7365,13 @@ function _grantHabitBonus(dateKey){
   if(!stepsForDay.length) return;
   var allDone=stepsForDay.every(function(st){ return !!dayData[st]; });
   if(!allDone) return;
-  /* Grant it — 1.15× multiplier on that day's Bowl pts */
+  /* Grant it */
   b.habitBonus[dateKey]=true;
-  var basePts=dd.pts||0;
-  var bonusPts=Math.round(basePts*0.15);
-  if(bonusPts<1) bonusPts=1; /* minimum 1pt so Easy days still feel it */
-  dd.pts=basePts+bonusPts;
+  dd.pts=(dd.pts||0)+5;
   setBowl(b);
   if(typeof renderRewardStrip==='function') setTimeout(renderRewardStrip,200);
   if(typeof renderBowl==='function') setTimeout(renderBowl,200);
-  toast('⭐ Perfect Day — 1.15× bonus (+'+bonusPts+' pts)');
+  toast('⭐ Perfect Day bonus — +5 pts!');
 }
 
 function rwHandleTierUpload(inp, tier){
@@ -7401,20 +7461,6 @@ function rwClaimReward(){
   var score=getRwLevelScore();
   if(score.pts<REWARD_LEVEL_TARGET){ toast('Not there yet — '+score.pts+'/'+REWARD_LEVEL_TARGET+' pts.'); return; }
   var todayKey2=localKey(today);
-  /* Compute stats for history */
-  var b=getBowl();
-  var levelStart=rw.active.levelStartDate||rw.active.setDate||todayKey2;
-  var _eC=0,_mC=0,_hC=0,_totalDays=0;
-  b.dailyDraws.forEach(function(dd){
-    if(dd.date<levelStart||dd.date>todayKey2) return;
-    if(!dd.chosenTier||dd.chosenTier==='skipped') return;
-    if(dd.chosenTier==='easy') _eC++;
-    else if(dd.chosenTier==='medium') _mC++;
-    else if(dd.chosenTier==='hard') _hC++;
-  });
-  _totalDays=_eC+_mC+_hC;
-  var _startD=new Date(levelStart+'T12:00:00');
-  var _calDays=Math.max(1,Math.round((today.getTime()-_startD.getTime())/86400000)+1);
   /* Archive */
   if(!rw.history) rw.history=[];
   rw.history.unshift({
@@ -7425,13 +7471,7 @@ function rwClaimReward(){
     levelNum:rw.active.levelNum||1,
     setDate:rw.active.setDate||todayKey2,
     claimedAt:Date.now(),
-    pts:score.pts,
-    calendarDays:_calDays,
-    activeDays:_totalDays,
-    easyCount:_eC,
-    mediumCount:_mC,
-    hardCount:_hC,
-    avgPtsPerDay:_totalDays>0?Math.round(score.pts/_totalDays):0
+    pts:score.pts
   });
   /* Celebration */
   rwShowCelebration(rw.active);
@@ -7456,36 +7496,16 @@ function rwArchiveAndReset(){
     if(!rw.active) return;
     if(!rw.history) rw.history=[];
     var score=getRwLevelScore();
-    var todayKey2=localKey(today);
-    var b=getBowl();
-    var levelStart=rw.active.levelStartDate||rw.active.setDate||todayKey2;
-    var _eC=0,_mC=0,_hC=0;
-    b.dailyDraws.forEach(function(dd){
-      if(dd.date<levelStart||dd.date>todayKey2) return;
-      if(!dd.chosenTier||dd.chosenTier==='skipped') return;
-      if(dd.chosenTier==='easy') _eC++;
-      else if(dd.chosenTier==='medium') _mC++;
-      else if(dd.chosenTier==='hard') _hC++;
-    });
-    var _totalDays=_eC+_mC+_hC;
-    var _startD=new Date(levelStart+'T12:00:00');
-    var _calDays=Math.max(1,Math.round((today.getTime()-_startD.getTime())/86400000)+1);
     rw.history.unshift({
       name:rw.active.name,
       price:rw.active.price||null,
       imageData:rw.active.imageData||null,
       imageUrl:rw.active.imageUrl||null,
       levelNum:rw.active.levelNum||1,
-      setDate:rw.active.setDate||todayKey2,
+      setDate:rw.active.setDate||localKey(today),
       archivedAt:Date.now(),
       pts:score.pts,
-      abandoned:true,
-      calendarDays:_calDays,
-      activeDays:_totalDays,
-      easyCount:_eC,
-      mediumCount:_mC,
-      hardCount:_hC,
-      avgPtsPerDay:_totalDays>0?Math.round(score.pts/_totalDays):0
+      abandoned:true
     });
     rw.active=null;
     setReward(rw);
@@ -7606,37 +7626,6 @@ function renderReward(){
       +'<span>🔥 '+streak+' day streak</span>'
       +'<span>'+pct+'% complete</span>'
       +'</div>';
-    /* ETA + Hard streak row */
-    var _hardStrk2=0; try{ _hardStrk2=getRwHardStreak()||0; }catch(e){}
-    var _etaHtml='';
-    if(!isUnlocked && pts>0 && streak>0){
-      var _levelStart=a.levelStartDate||null;
-      var _daysActive=0;
-      if(_levelStart){
-        var _lsd=new Date(_levelStart+'T12:00:00');
-        _daysActive=Math.max(1,Math.round((today.getTime()-_lsd.getTime())/86400000));
-      }
-      if(_daysActive>0){
-        var _avgPts=Math.round(pts/_daysActive);
-        var _remaining=REWARD_LEVEL_TARGET-pts;
-        var _etaDays=_avgPts>0?Math.ceil(_remaining/_avgPts):0;
-        if(_etaDays>0 && _etaDays<999){
-          _etaHtml+='<span style="color:var(--sec)">📅 ~'+_etaDays+' day'+(_etaDays===1?'':'s')+' left at '+_avgPts+' pts/day</span>';
-        }
-      }
-    }
-    var _hardHtml='';
-    if(_hardStrk2>=2){
-      _hardHtml+='<span style="color:#fff">⚡ '+_hardStrk2+' Hards in a row';
-      if(_hardStrk2>=3) _hardHtml+=' <span style="color:var(--gold);font-size:10px">+10 bonus</span>';
-      _hardHtml+='</span>';
-    }
-    if(_etaHtml||_hardHtml){
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-top:8px;flex-wrap:wrap;gap:4px">';
-      html+=_etaHtml||'<span></span>';
-      html+=_hardHtml||'';
-      html+='</div>';
-    }
     html+='</div>';
 
     /* Action buttons */
@@ -7648,46 +7637,16 @@ function renderReward(){
       +'<button class="rw-btn red" onclick="rwArchiveAndReset()">Archive</button>'
       +'</div>';
 
-    /* How scoring works — collapsible */
-    html+='<div style="margin-top:14px">';
-    html+='<button onclick="rwToggleDetails(this)" style="background:none;border:none;cursor:pointer;font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.3px;padding:6px 0;-webkit-tap-highlight-color:transparent"><span>▸ How scoring works</span></button>';
-    html+='<div id="rw-details-body" style="display:none;margin-top:8px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(127,178,255,.12);border-radius:8px;font-size:11.5px;color:var(--sec);line-height:1.7">';
-    html+='<div style="margin-bottom:8px;font-weight:700;color:var(--a2)">Points per challenge</div>';
-    html+='Easy = 10 · Medium = 30 · Hard = 60<br>';
-    html+='<div style="margin:8px 0 8px;font-weight:700;color:var(--a2)">Bonuses</div>';
-    html+='<b style="color:#fff">Hard streak:</b> 3+ consecutive Hards → +10 per Hard<br>';
-    html+='<b style="color:#fff">Perfect Day:</b> All habits done + challenge completed → 1.15× that day\'s pts<br>';
-    html+='<div style="margin:8px 0 8px;font-weight:700;color:var(--red)">Streak wipe</div>';
-    html+='Miss any day without completing a challenge → all level pts reset to zero. No exceptions.<br>';
-    html+='<div style="margin-top:8px;color:var(--muted);font-size:10.5px">Target: '+REWARD_LEVEL_TARGET+' pts to unlock your reward.</div>';
-    html+='</div></div>';
-
     /* History */
     var history=rw.history||[];
     if(history.length>0){
       html+='<div style="margin-top:16px">';
-      html+='<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Past Rewards</div>';
+      html+='<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Past Rewards</div>';
       history.slice(0,5).forEach(function(h){
-        var _stColor=h.abandoned?'var(--muted)':'var(--green)';
-        var _stText=h.abandoned?'Archived':'✓ Claimed';
-        html+='<div style="padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(127,178,255,.1);border-radius:8px;margin-bottom:8px">';
-        html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">';
-        html+='<span style="font-family:var(--font-ui);font-size:13px;font-weight:700;color:var(--sec)">'+h.name+'</span>';
-        html+='<span style="font-size:11px;font-weight:700;color:'+_stColor+'">'+_stText+'</span>';
-        html+='</div>';
-        var _hS=(h.calendarDays||h.activeDays||h.hardCount!==undefined);
-        if(_hS){
-          var _sa=[];
-          if(h.calendarDays) _sa.push(h.calendarDays+' days');
-          if(h.hardCount) _sa.push(h.hardCount+'H');
-          if(h.mediumCount) _sa.push(h.mediumCount+'M');
-          if(h.easyCount) _sa.push(h.easyCount+'E');
-          if(h.avgPtsPerDay) _sa.push('~'+h.avgPtsPerDay+' pts/day');
-          html+='<div style="font-size:10.5px;color:var(--muted);line-height:1.4">'+(h.pts||0)+' pts · '+_sa.join(' · ')+'</div>';
-        } else if(h.pts){
-          html+='<div style="font-size:10.5px;color:var(--muted)">'+(h.pts||0)+' pts</div>';
-        }
-        html+='</div>';
+        html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(127,178,255,.1);font-size:12px">'
+          +'<span style="color:var(--sec)">'+h.name+'</span>'
+          +'<span style="color:'+(h.abandoned?'var(--muted)':'var(--green)')+';">'+(h.abandoned?'Archived':'✓ Claimed')+'</span>'
+          +'</div>';
       });
       html+='</div>';
     }
@@ -7775,73 +7734,6 @@ function _getAudioCtx(){
 /* Expose so canvas engines share one AudioContext — guaranteed singleton */
 window._getSharedAudioCtx = _getAudioCtx;
 
-/* ── Shared Master Bus + Micro-Reverb ──
-   All page-level sounds route here instead of raw ctx.destination.
-   Adds a subtle algorithmic reverb (feedback delay network) for spatial depth,
-   plus a limiter to prevent clipping on rapid multi-fires. */
-var _masterBus = null;
-var _masterComp = null;
-var _reverbSend = null;
-var _reverbReturn = null;
-window._getMasterBus = function(){
-  var ctx = _getAudioCtx();
-  if(!ctx) return null;
-  if(_masterBus) return _masterBus;
-  try{
-    /* Master compressor/limiter */
-    _masterComp = ctx.createDynamicsCompressor();
-    _masterComp.threshold.value = -12;
-    _masterComp.knee.value = 6;
-    _masterComp.ratio.value = 6;
-    _masterComp.attack.value = 0.004;
-    _masterComp.release.value = 0.08;
-    _masterComp.connect(ctx.destination);
-
-    /* Dry path — master gain into compressor */
-    _masterBus = ctx.createGain();
-    _masterBus.gain.value = 0.85;
-    _masterBus.connect(_masterComp);
-
-    /* Micro-reverb: short feedback delay network (simulates small room) */
-    var dryGain = ctx.createGain(); dryGain.gain.value = 1.0;
-    var wetGain = ctx.createGain(); wetGain.gain.value = 0.08; /* very subtle */
-
-    /* Two tap delays at prime-number ms for diffusion */
-    var d1 = ctx.createDelay(0.1); d1.delayTime.value = 0.021; /* 21ms */
-    var d2 = ctx.createDelay(0.1); d2.delayTime.value = 0.037; /* 37ms */
-    var fb1 = ctx.createGain(); fb1.gain.value = 0.25;
-    var fb2 = ctx.createGain(); fb2.gain.value = 0.18;
-    /* Tone shaping — cut lows and extreme highs from reverb tail */
-    var rvLP = ctx.createBiquadFilter(); rvLP.type = 'lowpass'; rvLP.frequency.value = 5000;
-    var rvHP = ctx.createBiquadFilter(); rvHP.type = 'highpass'; rvHP.frequency.value = 300;
-
-    /* Reverb send bus */
-    _reverbSend = ctx.createGain(); _reverbSend.gain.value = 1.0;
-    _reverbSend.connect(d1); _reverbSend.connect(d2);
-    d1.connect(fb1); fb1.connect(d1); /* feedback loop 1 */
-    d2.connect(fb2); fb2.connect(d2); /* feedback loop 2 */
-    d1.connect(rvHP); d2.connect(rvHP);
-    rvHP.connect(rvLP); rvLP.connect(wetGain);
-    wetGain.connect(_masterComp);
-
-    /* Return node for convenience — sounds connect to _masterBus for dry, _reverbSend for wet */
-    _reverbReturn = _reverbSend;
-  }catch(e){
-    /* Fallback: if reverb creation fails, just use a plain gain */
-    if(!_masterBus){
-      _masterBus = ctx.createGain();
-      _masterBus.gain.value = 0.85;
-      _masterBus.connect(ctx.destination);
-    }
-  }
-  return _masterBus;
-};
-/* Get reverb send — sounds that want spatial depth connect here too */
-window._getReverbSend = function(){
-  if(!_masterBus) window._getMasterBus();
-  return _reverbReturn || _masterBus;
-};
-
 /* _ensureAudioReady(cb): resumes the AudioContext then calls cb.
    On iOS, resume() is async — sounds scheduled before the promise resolves
    get dropped. This wrapper guarantees the context is running first. */
@@ -7874,65 +7766,59 @@ function _playTick(done){
   if(!_soundEnabled) return;
   window._ensureAudioReady(function(ctx){
     var now = ctx.currentTime + 0.02;
-    var bus = window._getMasterBus() || ctx.destination;
-    var rvb = window._getReverbSend() || bus;
 
   if(done){
-    /* ── Premium bell tone on check ── 
-       Lower fundamental (~820Hz, G5) for warmth/body.
-       Inharmonic partials with micro-detune for stereo depth.
-       Routed through master bus + reverb send. */
-    var partials = [
-      { freq: 820,  amp: 0.22, decay: 0.60 }, /* fundamental — warm bell zone */
-      { freq: 1460, amp: 0.14, decay: 0.42 }, /* 1.78× — inharmonic */
-      { freq: 2156, amp: 0.10, decay: 0.32 }, /* 2.63× — extended shimmer */
-      { freq: 2993, amp: 0.05, decay: 0.22 }, /* 3.65× */
-      { freq: 4003, amp: 0.03, decay: 0.18 }  /* high shimmer — longer tail */
+    /* ── Metal "ding" on check ── 
+       Inharmonic partials like a struck metal bar/coin.
+       Real metal has frequencies that are NOT integer multiples. */
+    const partials = [
+      { freq: 1046, amp: 0.22, decay: 0.55 }, /* fundamental */
+      { freq: 1865, amp: 0.14, decay: 0.38 }, /* 1.78× — inharmonic */
+      { freq: 2756, amp: 0.09, decay: 0.25 }, /* 2.63× */
+      { freq: 3820, amp: 0.05, decay: 0.18 }, /* 3.65× */
+      { freq: 5110, amp: 0.03, decay: 0.12 }  /* high shimmer */
     ];
     partials.forEach(function(p){
-      /* Micro-detune: ±3 cents random for depth */
-      var detune = (Math.random() - 0.5) * 6;
-      var osc  = ctx.createOscillator();
-      var gain = ctx.createGain();
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.connect(gain);
-      gain.connect(bus);
-      gain.connect(rvb); /* send to reverb too */
+      gain.connect(ctx.destination);
       osc.type = 'sine';
       osc.frequency.setValueAtTime(p.freq, now);
-      osc.detune.setValueAtTime(detune, now);
+      /* Sharp attack, metallic exponential decay */
       gain.gain.setValueAtTime(0, now);
       gain.gain.linearRampToValueAtTime(p.amp, now + 0.003);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + p.decay);
       osc.start(now);
       osc.stop(now + p.decay + 0.02);
     });
-    /* Metallic transient "click" at impact — slightly longer for presence */
-    var buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.018), ctx.sampleRate);
-    var data = buf.getChannelData(0);
-    for(var i = 0; i < data.length; i++){
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 3.5) * 0.30;
+    /* Add a short metallic transient "click" at impact */
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.015, ctx.sampleRate);
+    let data = buf.getChannelData(0);
+    for(let i = 0; i < data.length; i++){
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 4) * 0.35;
     }
-    var src  = ctx.createBufferSource();
-    var hpf  = ctx.createBiquadFilter();
+    let src  = ctx.createBufferSource();
+    const hpf  = ctx.createBiquadFilter();
     hpf.type = 'highpass';
-    hpf.frequency.value = 3500;
+    hpf.frequency.value = 4000;
     src.buffer = buf;
     src.connect(hpf);
-    hpf.connect(bus);
+    hpf.connect(ctx.destination);
     src.start(now);
 
   } else {
-    /* ── Muted metal thud on uncheck ── dull, lower resonance + sub weight */
-    var partials2 = [
-      { freq: 380, amp: 0.14, decay: 0.18 },
-      { freq: 620, amp: 0.08, decay: 0.12 },
-      { freq: 900, amp: 0.04, decay: 0.08 }
+    /* ── Muted metal thud on uncheck ── dull, lower resonance */
+    const partials2 = [
+      { freq: 420, amp: 0.15, decay: 0.18 },
+      { freq: 680, amp: 0.08, decay: 0.12 },
+      { freq: 980, amp: 0.04, decay: 0.08 }
     ];
     partials2.forEach(function(p){
-      var osc  = ctx.createOscillator();
-      var gain = ctx.createGain();
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.connect(gain);
-      gain.connect(bus);
+      gain.connect(ctx.destination);
       osc.type = 'sine';
       osc.frequency.setValueAtTime(p.freq, now);
       osc.frequency.exponentialRampToValueAtTime(p.freq * 0.88, now + p.decay);
@@ -7942,16 +7828,6 @@ function _playTick(done){
       osc.start(now);
       osc.stop(now + p.decay + 0.02);
     });
-    /* Sub thud for physical weight */
-    var sub = ctx.createOscillator();
-    var sg = ctx.createGain();
-    sub.type = 'triangle';
-    sub.frequency.setValueAtTime(120, now);
-    sub.frequency.exponentialRampToValueAtTime(60, now + 0.05);
-    sg.gain.setValueAtTime(0.12, now);
-    sg.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
-    sub.connect(sg); sg.connect(bus);
-    sub.start(now); sub.stop(now + 0.08);
   }
   }); /* end _ensureAudioReady */
 }
@@ -7960,62 +7836,45 @@ function _playPerfectDay(){
   if(!_soundEnabled) return;
   window._ensureAudioReady(function(ctx){
     var now = ctx.currentTime + 0.02;
-    var bus = window._getMasterBus() || ctx.destination;
-    var rvb = window._getReverbSend() || bus;
-    var chimes = [
+    const chimes = [
       { time: 0,    fund: 523  },
       { time: 0.10, fund: 659  },
       { time: 0.20, fund: 784  },
       { time: 0.30, fund: 1047 },
       { time: 0.48, fund: 1319 }
     ];
-    chimes.forEach(function(ch, ci){
-      var t = now + ch.time;
-      var isLast = (ci === chimes.length - 1);
-      var harmonics = [1, 1.78, 2.63, 3.65];
+    chimes.forEach(function(ch){
+      const t = now + ch.time;
+      const harmonics = [1, 1.78, 2.63, 3.65];
       harmonics.forEach(function(mult, hi){
-        var osc  = ctx.createOscillator();
-        var gain = ctx.createGain();
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
         osc.connect(gain);
-        gain.connect(bus);
-        if(isLast) gain.connect(rvb); /* extra reverb on final note */
+        gain.connect(ctx.destination);
         osc.type = 'sine';
         osc.frequency.setValueAtTime(ch.fund * mult, t);
-        osc.detune.setValueAtTime((Math.random()-0.5)*4, t); /* micro-detune */
-        var amp   = [0.20, 0.10, 0.06, 0.03][hi];
-        var decay = [1.2,  0.7,  0.45, 0.28][hi];
-        /* Final note: 1.5× longer decay for "finishing" feel */
-        if(isLast){ decay *= 1.5; amp *= 1.1; }
+        const amp   = [0.20, 0.10, 0.06, 0.03][hi];
+        const decay = [1.2,  0.7,  0.45, 0.28][hi];
         gain.gain.setValueAtTime(0, t);
         gain.gain.linearRampToValueAtTime(amp, t + 0.003);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + decay);
         osc.start(t);
         osc.stop(t + decay + 0.05);
       });
-      var buf  = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.012), ctx.sampleRate);
-      var data = buf.getChannelData(0);
-      for(var i = 0; i < data.length; i++){
+      const buf  = ctx.createBuffer(1, ctx.sampleRate * 0.012, ctx.sampleRate);
+      let data = buf.getChannelData(0);
+      for(let i = 0; i < data.length; i++){
         data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 5) * 0.25;
       }
-      var src = ctx.createBufferSource();
-      var hpf = ctx.createBiquadFilter();
+      let src = ctx.createBufferSource();
+      const hpf = ctx.createBiquadFilter();
       hpf.type = 'highpass';
       hpf.frequency.value = 5000;
       src.buffer = buf;
       src.connect(hpf);
-      hpf.connect(bus);
+      hpf.connect(ctx.destination);
       src.start(t);
     });
-    /* Sub bloom under final note for warmth */
-    var subT = now + 0.48;
-    var subO = ctx.createOscillator();
-    var subG = ctx.createGain();
-    subO.type = 'sine';
-    subO.frequency.setValueAtTime(200, subT);
-    subG.gain.setValueAtTime(0.04, subT);
-    subG.gain.exponentialRampToValueAtTime(0.0001, subT + 0.8);
-    subO.connect(subG); subG.connect(bus);
-    subO.start(subT); subO.stop(subT + 0.85);
   }); /* end _ensureAudioReady */
 }
 
@@ -8023,43 +7882,33 @@ function _playPerfectDay(){
    GUMBALL MACHINE SOUNDS
 ════════════════════════════════════════════ */
 
-/* ── Crank click: 3 mechanical ratchet snaps — 3rd click heavier (final engagement) ── */
+/* ── Crank click: 3 mechanical ratchet snaps ── */
 function _playGumballCrank(){
   if(!_soundEnabled) return;
   window._ensureAudioReady(function(actx){
     var now = actx.currentTime + 0.02;
-    var bus = window._getMasterBus() || actx.destination;
     [0, 0.09, 0.175].forEach(function(offset, ci){
       var t = now + offset;
-      var isLast = (ci === 2);
-      var noiseLen = Math.floor(actx.sampleRate * (isLast ? 0.028 : 0.022)); /* longer 3rd click */
-      var buf = actx.createBuffer(1, noiseLen, actx.sampleRate);
+      var len = Math.floor(actx.sampleRate * 0.018);
+      var buf = actx.createBuffer(1, len, actx.sampleRate);
       var d = buf.getChannelData(0);
-      for(var i=0; i<noiseLen; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/noiseLen, 2.8) * 0.7;
+      for(var i=0; i<len; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/len, 2.8) * 0.7;
       var src = actx.createBufferSource(); src.buffer = buf;
       var bp = actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=700+ci*80; bp.Q.value=1.2;
       var g = actx.createGain();
-      var clickVol = isLast ? 0.70 : 0.55; /* 3rd click louder */
-      g.gain.setValueAtTime(clickVol, t);
-      g.gain.exponentialRampToValueAtTime(0.0001, t+0.022);
-      src.connect(bp); bp.connect(g); g.connect(bus); src.start(t);
+      g.gain.setValueAtTime(0.55, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.018);
+      src.connect(bp); bp.connect(g); g.connect(actx.destination); src.start(t);
       var o = actx.createOscillator(); var og = actx.createGain();
       o.type='sine'; o.frequency.setValueAtTime(140-ci*15, t); o.frequency.exponentialRampToValueAtTime(70, t+0.06);
-      og.gain.setValueAtTime(isLast ? 0.22 : 0.18, t); og.gain.exponentialRampToValueAtTime(0.0001, t+0.07);
-      o.connect(og); og.connect(bus); o.start(t); o.stop(t+0.08);
-      /* Housing resonance on final click — sells "locked in" */
-      if(isLast){
-        var hr = actx.createOscillator(); var hg = actx.createGain();
-        hr.type='sine'; hr.frequency.setValueAtTime(500, t);
-        hg.gain.setValueAtTime(0.04, t); hg.gain.exponentialRampToValueAtTime(0.0001, t+0.04);
-        hr.connect(hg); hg.connect(bus); hr.start(t); hr.stop(t+0.05);
-      }
+      og.gain.setValueAtTime(0.18, t); og.gain.exponentialRampToValueAtTime(0.0001, t+0.07);
+      o.connect(og); og.connect(actx.destination); o.start(t); o.stop(t+0.08);
     });
     var sp = actx.createOscillator(); var sg = actx.createGain();
     sp.type='sine'; sp.frequency.setValueAtTime(380, now+0.22); sp.frequency.exponentialRampToValueAtTime(210, now+0.48);
     sg.gain.setValueAtTime(0.0001, now+0.22); sg.gain.linearRampToValueAtTime(0.12, now+0.224);
     sg.gain.exponentialRampToValueAtTime(0.0001, now+0.48);
-    sp.connect(sg); sg.connect(bus); sp.start(now+0.22); sp.stop(now+0.5);
+    sp.connect(sg); sg.connect(actx.destination); sp.start(now+0.22); sp.stop(now+0.5);
   });
 }
 
@@ -8147,12 +7996,7 @@ function _playBallsShaking(durationMs){
       intensity = 0.15 + Math.random() * 0.08;
     }
 
-    /* Use unified clank from canvas engine when available; fallback to local */
-    if(typeof window._gbPlayClank === 'function'){
-      window._gbPlayClank(Math.max(0.08, intensity));
-    } else {
-      _playOneBallClank(actx, Math.max(0.08, intensity));
-    }
+    _playOneBallClank(actx, Math.max(0.08, intensity));
 
     /* Faster clanks during peak, slower at edges.
        Mobile: ~2× wider intervals to stay under iOS audio node budget. */
@@ -8200,7 +8044,7 @@ function _applyToneCSS(hue){
   /* 2. hue-rotate on self-contained blue containers (no semantic color children) */
   css += '#bowl-machine-canvas{filter:hue-rotate(var(--hue-shift,0deg)) drop-shadow(0 8px 24px rgba(8,24,80,.45))!important}'
        + '.tc-cabinet{filter:hue-rotate(var(--hue-shift,0deg))!important}'
-       + '.fx-vial-canvas{filter:hue-rotate(var(--hue-shift,0deg))!important}'
+       + '.fx-vial-canvas, .vault-canvas{filter:hue-rotate(var(--hue-shift,0deg))!important}'
        + '.fx-hero-mesh{filter:hue-rotate(var(--hue-shift,0deg))!important}'
        + '.rest-timer-bar{filter:hue-rotate(var(--hue-shift,0deg))!important}'
        + '#bowl-challenge-area{filter:hue-rotate(var(--hue-shift,0deg))!important}';
@@ -9398,7 +9242,7 @@ function getBowl(){
      reward functions — but guards against future file reorganisation. */
   if(typeof BOWL_DEFAULT_LIBRARY === 'undefined' || !BOWL_DEFAULT_LIBRARY){
     console.error('getBowl() called before BOWL_DEFAULT_LIBRARY was initialized.');
-    return { library:[], draws:[], tripleDraws:[], dailyDraws:[], weeklyRerolls:{ weekKey:'', used:0 }, systemStart:'2026-04-18' };
+    return { library:[], draws:[], tripleDraws:[], dailyDraws:[], rerollsByCycle:{}, systemStart:'2026-04-18' };
   }
   let s=gs();
   var _BSS = BOWL_SYSTEM_START || '2026-04-18';
@@ -9408,8 +9252,8 @@ function getBowl(){
       library: JSON.parse(JSON.stringify(BOWL_DEFAULT_LIBRARY)),
       draws: [],      /* legacy single draws */
       tripleDraws: [], /* legacy triple draws — kept for history */
-      dailyDraws: [],  /* {date, themeId, chosenTier, pts, xp, doneAt, rerolls, accepted} */
-      weeklyRerolls: { weekKey:'', used:0 }
+      dailyDraws: [],  /* NEW: {date, themeId, chosenTier, pts, xp, doneAt, rerolls} */
+      rerollsByCycle: {}
     };
     ss(s,true);
   }
@@ -9417,7 +9261,7 @@ function getBowl(){
   if(!s.bowl.draws) s.bowl.draws=[];
   if(!s.bowl.tripleDraws) s.bowl.tripleDraws=[];
   if(!s.bowl.dailyDraws) s.bowl.dailyDraws=[];
-  if(!s.bowl.weeklyRerolls) s.bowl.weeklyRerolls={ weekKey:'', used:0 };
+  if(!s.bowl.rerollsByCycle) s.bowl.rerollsByCycle={};
   if(!s.bowl.systemStart) s.bowl.systemStart=_BSS;
   /* Migration: upgrade library to theme format if needed */
   if(!s.bowl._themeLibMigrated){
@@ -9488,7 +9332,7 @@ function bowlDrawTheme(source){
     xp: 0,
     doneAt: null,
     rerolls: 0,
-    accepted: false,
+    options: [theme.id],
     drawnAt: Date.now(),
     drawnFrom: source||'manual'
   });
@@ -9641,70 +9485,10 @@ function bowlChooseTier(tier){
     if(typeof window._gbSetExcited==='function') window._gbSetExcited(null,1800,function(){});
     window._ensureAudioReady(function(ctx){
       var now=ctx.currentTime+0.02;
-      var bus = window._getMasterBus() || ctx.destination;
-      var rvb = window._getReverbSend() || bus;
-
-      /* ── Bowl Completion Fanfare ──
-         3-note ascending metallic chime + "pop" transient + sub bloom.
-         This is THE dopamine hit of the Bowl — make it count. */
-
-      /* 1. Initial "pop/capsule" transient — burst of energy */
-      var popLen = Math.floor(ctx.sampleRate * 0.02);
-      var popBuf = ctx.createBuffer(1, popLen, ctx.sampleRate);
-      var pd = popBuf.getChannelData(0);
-      for(var pi=0;pi<popLen;pi++){
-        pd[pi] = (Math.random()*2-1) * Math.pow(1-pi/popLen, 2) * 0.5;
-      }
-      var popSrc = ctx.createBufferSource(); popSrc.buffer = popBuf;
-      var popBP = ctx.createBiquadFilter(); popBP.type='bandpass'; popBP.frequency.value=2500; popBP.Q.value=1.5;
-      var popG = ctx.createGain(); popG.gain.setValueAtTime(0.5, now); popG.gain.exponentialRampToValueAtTime(0.001, now+0.04);
-      popSrc.connect(popBP); popBP.connect(popG); popG.connect(bus);
-      popSrc.start(now);
-
-      /* 2. Three-note ascending chime: E5 → G#5 → C#6 (bright major feel) */
-      var notes = [
-        { time: 0.03,  freq: 659,  amp: 0.18, decay: 0.50 },
-        { time: 0.12,  freq: 831,  amp: 0.20, decay: 0.45 },
-        { time: 0.22,  freq: 1109, amp: 0.22, decay: 0.65 }  /* final note rings longest */
-      ];
-      var harmonics = [1, 1.78, 2.63, 3.65];
-      notes.forEach(function(n, ni){
-        var t = now + n.time;
-        var isLast = (ni === notes.length - 1);
-        harmonics.forEach(function(mult, hi){
-          var osc = ctx.createOscillator();
-          var g = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(n.freq * mult, t);
-          osc.detune.setValueAtTime((Math.random()-0.5)*5, t);
-          var a = n.amp * [1.0, 0.45, 0.2, 0.08][hi];
-          var d = n.decay * [1.0, 0.65, 0.4, 0.25][hi];
-          g.gain.setValueAtTime(0, t);
-          g.gain.linearRampToValueAtTime(a, t + 0.003);
-          g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-          osc.connect(g); g.connect(bus);
-          if(isLast) g.connect(rvb);
-          osc.start(t); osc.stop(t + d + 0.02);
-        });
-        /* Per-note transient click */
-        var cBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.008), ctx.sampleRate);
-        var cd = cBuf.getChannelData(0);
-        for(var ci2=0;ci2<cd.length;ci2++) cd[ci2]=(Math.random()*2-1)*Math.pow(1-ci2/cd.length,4)*0.2;
-        var cSrc = ctx.createBufferSource(); cSrc.buffer = cBuf;
-        var cHP = ctx.createBiquadFilter(); cHP.type='highpass'; cHP.frequency.value=4500;
-        cSrc.connect(cHP); cHP.connect(bus); cSrc.start(t);
-      });
-
-      /* 3. Sub bloom under final note — chest satisfaction */
-      var subT = now + 0.22;
-      var subO = ctx.createOscillator();
-      var subG = ctx.createGain();
-      subO.type = 'sine';
-      subO.frequency.setValueAtTime(80, subT);
-      subG.gain.setValueAtTime(0.15, subT);
-      subG.gain.exponentialRampToValueAtTime(0.0001, subT + 0.35);
-      subO.connect(subG); subG.connect(bus);
-      subO.start(subT); subO.stop(subT + 0.4);
+      var o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sine';o.frequency.setValueAtTime(880,now);o.frequency.exponentialRampToValueAtTime(1200,now+0.12);
+      g.gain.setValueAtTime(0.25,now);g.gain.exponentialRampToValueAtTime(0.0001,now+0.4);
+      o.connect(g);g.connect(ctx.destination);o.start(now);o.stop(now+0.42);
     });
   }catch(e){}
 
@@ -9762,52 +9546,27 @@ function bowlUndoTier(dateKey){
   setTimeout(function(){ renderBowl(); },120);
 }
 
-/* ── Weekly reroll helper ── */
-function bowlGetWeekKey(){
-  /* Monday-based ISO week key: YYYY-WNN */
-  var d=new Date(today);
-  var day=d.getDay()||7; /* Mon=1..Sun=7 */
-  d.setDate(d.getDate()+4-day); /* Thursday of this week */
-  var yearStart=new Date(d.getFullYear(),0,1);
-  var weekNum=Math.ceil(((d-yearStart)/86400000+1)/7);
-  return d.getFullYear()+'-W'+String(weekNum).padStart(2,'0');
-}
-function bowlGetWeeklyRerolls(){
-  var b=getBowl();
-  var wk=bowlGetWeekKey();
-  if(!b.weeklyRerolls||b.weeklyRerolls.weekKey!==wk){
-    b.weeklyRerolls={ weekKey:wk, used:0 };
-    setBowl(b);
-  }
-  return b.weeklyRerolls;
-}
-function bowlWeeklyRerollsLeft(){
-  var wr=bowlGetWeeklyRerolls();
-  return Math.max(0, 2 - wr.used);
-}
-
-/* Reroll — 2 per week, simple swap, no multi-option */
+/* Reroll — 3 free per day, then costs XP */
 function bowlRerollTheme(){
   var todayKey2=localKey(today);
   var b=getBowl();
   var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
   if(!dd){ toast('Draw a challenge first.'); return; }
   if(dd.chosenTier){ toast('Already completed — can\'t reroll.'); return; }
-  if(dd.accepted){ toast('Already accepted — commit to it!'); return; }
-  /* Check weekly budget */
-  var wr=bowlGetWeeklyRerolls();
-  var left=2-wr.used;
-  if(left<=0){ toast('No rerolls left this week. You\'re locked in.'); return; }
-  /* Pick a new theme excluding current */
-  var newTheme=bowlPickThemeExcluding([dd.themeId]);
+  /* Init options array on first reroll — includes original draw */
+  if(!dd.options) dd.options=[dd.themeId];
+  var rerollCount=(dd.rerolls||0)+1;
+  /* Hard cap: 2 rerolls max (3 options total) */
+  if(rerollCount>2){ toast('Max 2 rerolls reached — pick from your 3 options below.'); setBowl(b); renderBowl(); return; }
+  /* Pick a new theme not already in options */
+  var excludeIds=dd.options.concat([]);
+  var newTheme=bowlPickThemeExcluding(excludeIds);
   if(!newTheme){ toast('No other themes available.'); setBowl(b); return; }
-  /* Swap */
+  dd.options.push(newTheme.id);
+  dd.rerolls=rerollCount;
+  dd.showingOptions=true;
+  /* Current displayed theme stays as last option for now — selection happens via UI */
   dd.themeId=newTheme.id;
-  dd.rerolls=(dd.rerolls||0)+1;
-  dd.accepted=false;
-  /* Debit weekly budget */
-  wr.used++;
-  b.weeklyRerolls=wr;
   setBowl(b);
   /* Animate */
   _bowlAnimResume();
@@ -9815,9 +9574,8 @@ function bowlRerollTheme(){
   if(typeof _playGumballCrank==='function') _playGumballCrank();
   if(window._gbSetExcited){ window._gbSetExcited(null,2500,function(){}); }
   else { if(typeof _playBallsShaking==='function') _playBallsShaking(2500); }
-  var newLeft=2-wr.used;
-  if(newLeft>0) toast('Rerolled! '+newLeft+' reroll'+(newLeft===1?'':'s')+' left this week.');
-  else toast('Last reroll used. You\'re locked in for the week.');
+  var rerollsLeft=2-rerollCount;
+  toast(rerollsLeft>0?('Rerolled! '+rerollsLeft+' reroll'+(rerollsLeft===1?'':'s')+' left.'):'Last reroll used — pick your challenge below.');
   setTimeout(function(){ _stateCache=null; renderBowl(); },700);
 }
 
@@ -9842,21 +9600,73 @@ function bowlPickThemeExcluding(excludeIds){
   return lib[lib.length-1];
 }
 
-/* Accept challenge — micro-commitment before tier picker appears */
-function bowlAcceptChallenge(){
+/* User selects which of the 3 options to pursue — sets themeId to chosen one */
+function bowlSelectOption(themeId){
   var todayKey2=localKey(today);
   var b=getBowl();
   var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
-  if(!dd){ return; }
-  dd.accepted=true;
+  if(!dd||dd.chosenTier){ return; }
+  dd.themeId=themeId;
+  /* Keep dd.options alive so user can go back to selection view */
+  dd.showingOptions=false;
   setBowl(b);
-  toast('Challenge accepted. Pick your tier.');
   renderBowl();
 }
 
-/* bowlSkipToday, bowlUndoReroll, bowlSelectOption, bowlBackToOptions — REMOVED */
-/* Skip eliminated: Easy tier is the pressure release valve */
-/* Multi-option picker eliminated: reroll is a simple swap */
+function bowlBackToOptions(){
+  var todayKey2=localKey(today);
+  var b=getBowl();
+  var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
+  if(!dd||dd.chosenTier) return;
+  dd.showingOptions=true;
+  setBowl(b);
+  renderBowl();
+}
+
+/* Undo last reroll — restore previous challenge */
+function bowlUndoReroll(){
+  var todayKey2=localKey(today);
+  var b=getBowl();
+  var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
+  if(!dd||!dd.prevThemeId){ toast('Nothing to undo.'); return; }
+  if(dd.chosenTier){ toast('Already completed — can\'t undo reroll.'); return; }
+  var prevTheme=bowlGetLibBall(dd.prevThemeId);
+  if(!prevTheme||prevTheme.deleted){ toast('Previous challenge no longer exists.'); return; }
+  dd.themeId=dd.prevThemeId;
+  delete dd.prevThemeId;
+  dd.rerolls=Math.max(0,(dd.rerolls||1)-1);
+  setBowl(b);
+  toast('↩ Restored: '+prevTheme.name);
+  renderBowl();
+}
+
+/* Skip today's challenge — marks as intentionally passed (0 pts, no streak break) */
+function bowlSkipToday(){
+  var todayKey2=localKey(today);
+  var b=getBowl();
+  var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
+  if(!dd){ toast('No challenge drawn.'); return; }
+  if(dd.chosenTier){ toast('Already completed.'); return; }
+  _confirm('Skip today\'s challenge? It will be marked as skipped (0 pts, no streak break).', function(){
+    dd.chosenTier='skipped';
+    dd.pts=0;
+    dd.xp=0;
+    dd.doneAt=Date.now();
+    setBowl(b);
+    toast('Skipped — no penalty. Come back tomorrow.');
+    renderBowl();
+  }, {okLabel:'Skip'});
+}
+
+/* Cycle key — tied to reward cycleStartDate, falls back to weekStart-style key */
+function bowlCurrentCycleKey(){
+  const rw=(gs().reward)||{};
+  if(rw.active&&rw.active.cycleStartDate) return rw.active.cycleStartDate;
+  /* No active cycle: use a floor key so rerolls track per ~14 day window */
+  const dayNum=Math.floor(today.getTime()/86400000);
+  const cycleStart=dayNum-(dayNum%14);
+  return 'nocycle-'+cycleStart;
+}
 
 /* Count completed draws within current reward cycle */
 function bowlCloseCelebrate(){
@@ -9965,9 +9775,9 @@ function renderBowl(){
   /* ── Dynamic subtitle ── */
   var bowlSubEl=document.querySelector('.bowl-sub');
   if(bowlSubEl){
-    if(dd&&dd.chosenTier) bowlSubEl.textContent='Challenge complete! You chose '+dd.chosenTier+' for +'+dd.pts+' pts.';
-    else if(dd&&dd.accepted) bowlSubEl.textContent='Challenge accepted — pick your difficulty below.';
-    else if(dd) bowlSubEl.textContent='Challenge drawn — accept it or reroll.';
+    if(dd&&dd.chosenTier&&dd.chosenTier!=='skipped') bowlSubEl.textContent='Challenge complete! You chose '+dd.chosenTier+' for +'+dd.pts+' pts.';
+    else if(dd&&dd.chosenTier==='skipped') bowlSubEl.textContent='Challenge skipped today. Come back tomorrow.';
+    else if(dd) bowlSubEl.textContent='Challenge drawn — pick your difficulty below.';
     else bowlSubEl.textContent='Pull the crank — one challenge, three difficulty tiers. You choose.';
   }
 
@@ -9983,16 +9793,15 @@ function renderBowl(){
     if(crankHint){
       if(dd.chosenTier){
         crankHint.textContent='Done for today. Come back tomorrow for a new challenge.';
-      } else if(dd.accepted){
-        crankHint.innerHTML='<span style="font-family:var(--font-ui);font-size:11px;color:var(--a2);font-weight:700">✓ Accepted — pick your tier below</span>';
       } else {
-        var rerollsLeft2=bowlWeeklyRerollsLeft();
+        var rerollsLeft2=2-(dd.rerolls||0);
         var _hintH='<div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap">';
         if(rerollsLeft2>0){
-          _hintH+='<button class="bowl-reroll-btn" onclick="bowlRerollTheme()">↺ Reroll <span style="opacity:.7;font-size:10px">('+rerollsLeft2+'/week left)</span></button>';
+          _hintH+='<button class="bowl-reroll-btn" onclick="bowlRerollTheme()">↺ Reroll <span style="opacity:.7;font-size:10px">('+rerollsLeft2+' left)</span></button>';
         } else {
-          _hintH+='<span style="font-family:var(--font-ui);font-size:11px;color:var(--muted);padding:4px 8px">No rerolls left this week</span>';
+          _hintH+='<span style="font-family:var(--font-ui);font-size:11px;color:var(--muted);padding:4px 8px">No rerolls left — pick below</span>';
         }
+        _hintH+='<button class="bowl-reroll-btn" style="background:rgba(255,100,100,.08);border-color:rgba(255,100,100,.25);color:rgba(255,130,120,.85)" onclick="bowlSkipToday()">Skip today</button>';
         _hintH+='</div>';
         crankHint.innerHTML=_hintH;
       }
@@ -10011,6 +9820,26 @@ function renderBowl(){
   if(challengeArea){
     if(!dd){
       challengeArea.innerHTML='<div style="text-align:center;padding:24px 16px;color:var(--muted);font-size:12px;font-style:italic">Pull the crank to draw today\'s challenge.</div>';
+    } else if(dd.options && dd.options.length>1 && !dd.chosenTier && dd.showingOptions!==false){
+      /* ── Multi-option selection view (after rerolls) ── */
+      var _optH='<div style="margin-bottom:8px;text-align:center;font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase">Choose your challenge</div>';
+      _optH+='<div style="display:flex;flex-direction:column;gap:8px">';
+      dd.options.forEach(function(tid, idx){
+        var ot=bowlGetLibBall(tid);
+        if(!ot) return;
+        var oc=TONE_COLORS[ot.tone]||'#6B9FFF';
+        var isActive=tid===dd.themeId;
+        _optH+='<button onclick="bowlSelectOption(\'' +tid+ '\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;background:'+(isActive?'rgba(77,141,255,.18)':'rgba(255,255,255,.05)')+';border:1.5px solid '+(isActive?'rgba(107,182,255,.6)':'rgba(127,178,255,.15)')+';border-radius:10px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all .18s">';
+        _optH+='<div style="width:36px;height:36px;border-radius:50%;background:'+oc+';display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative">'+bowlBallSvg(ot.icon,18)+'<div style="position:absolute;top:8%;left:18%;width:42%;height:28%;border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.8) 0%,rgba(255,255,255,.2) 55%,transparent 80%);pointer-events:none"></div></div>';
+        _optH+='<div style="flex:1;min-width:0">';
+        _optH+='<div style="font-family:var(--font-ui);font-size:13px;font-weight:800;color:#fff;margin-bottom:2px">'+ot.name+'</div>';
+        _optH+='<div style="font-family:var(--font-ui);font-size:10px;color:var(--muted)">Easy +10 · Medium +30 · Hard +60</div>';
+        _optH+='</div>';
+        if(isActive) _optH+='<div style="font-family:var(--font-ui);font-size:9px;font-weight:800;color:var(--a2);letter-spacing:.5px;flex-shrink:0">CURRENT</div>';
+        _optH+='</button>';
+      });
+      _optH+='</div>';
+      challengeArea.innerHTML=_optH;
     } else {
       var theme=bowlGetLibBall(dd.themeId);
       /* Safety net: if themeId not found, library may be stale — force reload from defaults */
@@ -10033,8 +9862,12 @@ function renderBowl(){
         h+='<div style="width:56px;height:56px;border-radius:50%;background:'+color+';display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-bottom:8px;filter:drop-shadow(0 4px 16px rgba(0,0,0,.5));position:relative">'+bowlBallSvg(theme.icon,26)+'<div style="content:\'\';position:absolute;top:8%;left:18%;width:42%;height:28%;border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.8) 0%,rgba(255,255,255,.2) 55%,transparent 80%);pointer-events:none"></div></div>';
         h+='<div style="font-family:var(--font-ui);font-size:18px;font-weight:900;color:#fff;letter-spacing:-.3px">'+theme.name+'</div>';
         h+='</div>';
+        /* Back to options button — only if options exist and tier not chosen */
+        if(dd.options && dd.options.length>1 && !dd.chosenTier){
+          h+='<button onclick="bowlBackToOptions()" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.06);border:1px solid rgba(127,178,255,.2);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:700;padding:7px 14px;cursor:pointer;margin-bottom:12px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:36px">← Back to all options</button>';
+        }
 
-        if(dd.chosenTier){
+        if(dd.chosenTier&&dd.chosenTier!=='skipped'){
           /* Already completed — show result */
           var tierColors={easy:'#4ade80',medium:'#fb923c',hard:'#ff6b8a'};
           var tierLabels={easy:'Easy',medium:'Medium',hard:'Hard'};
@@ -10045,11 +9878,14 @@ function renderBowl(){
           h+='<div style="font-size:22px;font-weight:900;color:'+tc+'">+'+dd.pts+' pts</div>';
           h+='</div>';
           h+='<button onclick="bowlUndoTier()" style="display:block;width:100%;margin-top:8px;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:10px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;letter-spacing:.3px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:background .15s">↩ Undo — picked by mistake</button>';
-        } else if(!dd.accepted){
-          /* ── Accept gate — must commit before seeing tier picker ── */
-          h+='<button class="bowl-accept-btn" onclick="bowlAcceptChallenge()">✓ Accept Challenge</button>';
+        } else if(dd.chosenTier==='skipped'){
+          h+='<div style="background:rgba(255,100,100,.06);border:1px solid rgba(255,100,100,.2);border-radius:12px;padding:16px;text-align:center">';
+          h+='<div style="font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,180,120,.7);margin-bottom:4px">Skipped</div>';
+          h+='<div style="font-size:11px;color:var(--muted)">No points earned</div>';
+          h+='</div>';
+          h+='<button onclick="bowlUndoTier()" style="display:block;width:100%;margin-top:8px;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:10px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;letter-spacing:.3px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:background .15s">↩ Undo skip — do it after all</button>';
         } else {
-          /* Tier picker — 3 cards (only shown after accepting) */
+          /* Tier picker — 3 cards */
           var tiers=['easy','medium','hard'];
           var _hardStrk=typeof getRwHardStreak==='function'?getRwHardStreak():0;
           var tierMeta={
@@ -10076,13 +9912,11 @@ function renderBowl(){
         }
         challengeArea.innerHTML=h;
       }
-    }
+    } /* end else (options or single view) */
   }
 
   /* ── Progress card — point-based ── */
   var cs=getBowlTierScore();
-  var hardStreakVal=typeof getRwHardStreak==='function'?getRwHardStreak():0;
-  var dailyStreakVal=typeof getRwDailyStreak==='function'?getRwDailyStreak():0;
   var pStat=document.getElementById('bowl-progress-stat');
   var pFill=document.getElementById('bowl-progress-fill');
   var pSub=document.getElementById('bowl-progress-sub');
@@ -10093,30 +9927,6 @@ function renderBowl(){
     else if(cs.pts>=1500) pSub.textContent='⚡ '+(REWARD_LEVEL_TARGET-cs.pts)+' pts to go — almost there!';
     else if(cs.pts>=800) pSub.textContent='🔥 '+cs.pts+' / '+REWARD_LEVEL_TARGET+' pts · keep the streak alive.';
     else pSub.textContent=cs.pts+' / '+REWARD_LEVEL_TARGET+' pts · every Hard counts.';
-  }
-  /* Hard streak + daily streak badges */
-  var _bpStreakRow=document.getElementById('bowl-streak-badges');
-  if(!_bpStreakRow){
-    var _progCard=document.getElementById('bowl-progress-card');
-    if(_progCard){
-      var _sr=document.createElement('div');
-      _sr.id='bowl-streak-badges';
-      _sr.style.cssText='display:flex;gap:8px;margin-top:10px;flex-wrap:wrap';
-      _progCard.appendChild(_sr);
-      _bpStreakRow=_sr;
-    }
-  }
-  if(_bpStreakRow){
-    var _bsh='';
-    _bsh+='<div style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:6px;font-family:var(--font-ui);font-size:11px;font-weight:700">';
-    _bsh+='<span style="color:var(--a2)">🔥 '+dailyStreakVal+'</span><span style="color:var(--muted)">day streak</span></div>';
-    if(hardStreakVal>=2){
-      _bsh+='<div style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(200,225,255,.06);border:1px solid rgba(200,225,255,.22);border-radius:6px;font-family:var(--font-ui);font-size:11px;font-weight:700">';
-      _bsh+='<span style="color:#fff">⚡ '+hardStreakVal+'</span><span style="color:var(--muted)">Hards in a row</span>';
-      if(hardStreakVal>=3) _bsh+='<span style="color:var(--gold);font-size:9px;margin-left:2px">+10 bonus active</span>';
-      _bsh+='</div>';
-    }
-    _bpStreakRow.innerHTML=_bsh;
   }
 
   /* ── History — last 14 or 30 calendar days ── */
@@ -10130,10 +9940,11 @@ function renderBowl(){
       var _dk=localKey(_dd);
       var draw=b.dailyDraws.find(function(x){ return x.date===_dk; });
       var done=draw&&draw.chosenTier&&draw.chosenTier!=='skipped';
+      var skipped=draw&&draw.chosenTier==='skipped';
       var isPast=_dk<todayKey2;
       var isToday=_dk===todayKey2;
       /* no-draw past days = 'miss' (missed entirely) */
-      var cls=done?'done':(draw&&draw.chosenTier==='skipped')?'miss':(draw&&!draw.chosenTier&&isToday)?'pending':(draw&&!draw.chosenTier&&isPast)?'miss':(!draw&&isPast)?'miss':(!draw&&isToday)?'pending':'pending';
+      var cls=done?'done':skipped?'miss':(draw&&!draw.chosenTier&&isToday)?'pending':(draw&&!draw.chosenTier&&isPast)?'miss':(!draw&&isPast)?'miss':(!draw&&isToday)?'pending':'pending';
       if(!draw&&isToday) cls='pending';
       var theme=draw?bowlGetLibBall(draw.themeId):null;
       var icon=theme?bowlBallSvg(theme.icon,13):'';
@@ -10196,9 +10007,9 @@ function bowlShowDayDetail(dateKey){
     /* Allow undo for any past or present day */
     h+='<button onclick="bowlUndoTier(\''+dateKey+'\');bowlCloseDayDetail()" style="width:100%;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;cursor:pointer;min-height:40px">↩ Undo — pick a different tier</button>';
   } else if(dd.chosenTier==='skipped'){
-    /* Legacy skipped entries — treat as miss, allow retroactive completion */
-    h+='<div style="text-align:center;padding:12px;color:rgba(255,180,120,.7);font-size:12px;font-weight:700">Skipped (legacy)</div>';
-    h+='<button onclick="bowlUndoTier(\''+dateKey+'\');bowlCloseDayDetail()" style="width:100%;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;cursor:pointer;min-height:40px">↩ Undo — mark complete instead</button>';
+    h+='<div style="text-align:center;padding:12px;color:rgba(255,180,120,.7);font-size:12px;font-weight:700">Skipped</div>';
+    /* Allow undo skip for any day */
+    h+='<button onclick="bowlUndoTier(\''+dateKey+'\');bowlCloseDayDetail()" style="width:100%;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;cursor:pointer;min-height:40px">↩ Undo skip — mark complete instead</button>';
   } else if(isPast){
     /* Missed / uncompleted past day — offer retroactive completion */
     h+='<div style="text-align:center;padding:8px;color:rgba(255,130,120,.7);font-size:11px;margin-bottom:10px">Not completed</div>';
@@ -10883,62 +10694,22 @@ function tcShatterAnimation(){
   var cab = document.getElementById('tc-cabinet');
   if(!inner || !cab) return;
 
-  /* Play glass break sound — layered: crack + shatter body + tinkle fragments + sub thump */
+  /* Play glass break sound */
   try{
     var ctx = window._getSharedAudioCtx ? window._getSharedAudioCtx() : (window._getAudioCtx ? window._getAudioCtx() : null);
     if(ctx && ctx.state !== 'closed'){
       if(ctx.state === 'suspended') ctx.resume();
       var now = ctx.currentTime;
-      var bus = (window._getMasterBus && window._getMasterBus()) || ctx.destination;
-
-      /* Layer 1: Initial crack — very short full-spectrum spike */
-      var crackLen = Math.floor(ctx.sampleRate * 0.005);
-      var crackBuf = ctx.createBuffer(1, crackLen, ctx.sampleRate);
-      var crackD = crackBuf.getChannelData(0);
-      for(var ci=0;ci<crackLen;ci++) crackD[ci]=(Math.random()*2-1)*0.9;
-      var crackSrc = ctx.createBufferSource(); crackSrc.buffer = crackBuf;
-      var crackG = ctx.createGain();
-      crackG.gain.setValueAtTime(0.7, now); crackG.gain.exponentialRampToValueAtTime(0.001, now+0.008);
-      crackSrc.connect(crackG); crackG.connect(bus); crackSrc.start(now);
-
-      /* Layer 2: Shatter body — wider bandpass noise burst */
-      var bufSz = Math.floor(ctx.sampleRate * 0.15);
+      /* Noise burst for glass crack */
+      var bufSz = ctx.sampleRate * 0.15;
       var buf = ctx.createBuffer(1, bufSz, ctx.sampleRate);
       var data = buf.getChannelData(0);
       for(var i=0;i<bufSz;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/bufSz,1.5);
-      var src = ctx.createBufferSource(); src.buffer = buf;
-      var bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2500; bp.Q.value=0.8;
-      var gn = ctx.createGain(); gn.gain.setValueAtTime(0.5, now+0.003); gn.gain.exponentialRampToValueAtTime(0.001, now+0.18);
-      src.connect(bp); bp.connect(gn); gn.connect(bus); src.start(now+0.003);
-
-      /* Layer 3: Tinkle fragments — high-frequency pings for glass shards settling */
-      var tinkleFreqs = [4200, 5500, 6300, 7100];
-      for(var ti=0;ti<tinkleFreqs.length;ti++){
-        (function(freq, idx){
-          var delay = 0.08 + idx * 0.045 + Math.random()*0.03;
-          var osc = ctx.createOscillator();
-          var og = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, now+delay);
-          osc.frequency.exponentialRampToValueAtTime(freq*0.97, now+delay+0.15);
-          var tAmp = 0.06 - idx*0.012;
-          og.gain.setValueAtTime(tAmp, now+delay);
-          og.gain.exponentialRampToValueAtTime(0.0001, now+delay+0.12+idx*0.02);
-          osc.connect(og); og.connect(bus);
-          osc.start(now+delay); osc.stop(now+delay+0.2);
-        })(tinkleFreqs[ti], ti);
-      }
-
-      /* Layer 4: Sub thump — structural break */
-      var subO = ctx.createOscillator();
-      var subG = ctx.createGain();
-      subO.type = 'triangle';
-      subO.frequency.setValueAtTime(60, now);
-      subO.frequency.exponentialRampToValueAtTime(30, now+0.04);
-      subG.gain.setValueAtTime(0.20, now);
-      subG.gain.exponentialRampToValueAtTime(0.001, now+0.06);
-      subO.connect(subG); subG.connect(bus);
-      subO.start(now); subO.stop(now+0.08);
+      var src = ctx.createBufferSource();
+      src.buffer = buf;
+      var hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=3000;
+      var gn = ctx.createGain(); gn.gain.setValueAtTime(0.6, now); gn.gain.exponentialRampToValueAtTime(0.001, now+0.18);
+      src.connect(hp); hp.connect(gn); gn.connect(ctx.destination); src.start(now);
     }
   }catch(e){}
 
@@ -11273,7 +11044,7 @@ function fnxAnimateNumber(el, target){ fxAnimNum(el, target); }
 /* ══════════════════════════════════════════════════
    TWO VIALS — Canvas-rendered glass with animated liquid
 ══════════════════════════════════════════════════ */
-var _fxVialState = {free:{level:0,target:0}};
+var _fxVialState = {savings:{level:0,target:0}, free:{level:0,target:0}};
 var _fxVialAnimId = null;
 var _fxVialTime = 0;
 
@@ -11281,12 +11052,25 @@ function fxRenderVials(f, mk, stats){
   const leftover = f.leftover || 0;
   /* leftoverCurrent = manual running balance set via +/− adjust; falls back to leftover */
   const current = (f.leftoverCurrent !== undefined) ? f.leftoverCurrent : leftover;
+  const eg = (f.goals||[]).find(function(g){return (g.name||'').toLowerCase().indexOf('emergency')>-1});
+  const savingsTarget = eg ? (eg.target||0) : 0;
+  const savedAmt = eg ? (eg.saved||0) : 0;
 
   /* Spending vial: fills based on current / leftover (total set amount) */
   var _newFreeTarget = leftover > 0 ? Math.min(1, current / leftover) : 0;
+  /* If no target set, fill vault proportionally: SAR 100 saved = ~1 chip out of 60 (max fill at SAR 6000) */
+  var _savFillFallback = Math.min(1, savedAmt / 6000);
+  /* If target changed, nudge eased value toward new target immediately (don't reset _init — that rebuilds bills) */
   _fxVialState.free.target = _newFreeTarget;
   if(_fxVialState.free._init && Math.abs(_newFreeTarget - (_fxVialState.free.level||0)) > 0.005){
     _fxVialState.free._eased = _fxVialState.free.level || _newFreeTarget;
+  }
+  /* Always update target — the threshold skip was blocking initial chip display */
+  /* Apply sqrt curve: visually amplifies small amounts so even 5% saved looks like ~22% full */
+  var _newSavTargetLinear = savingsTarget > 0 ? Math.min(1, savedAmt / savingsTarget) : _savFillFallback;
+  _fxVialState.savings.target = Math.min(1, Math.pow(_newSavTargetLinear, 0.55));
+  if(_fxVialState.savings._init && Math.abs(_fxVialState.savings.target - (_fxVialState.savings.level||0)) > 0.005){
+    _fxVialState.savings._eased = _fxVialState.savings.level || _fxVialState.savings.target;
   }
 
   var freeAmt = document.getElementById('fx-vial-amt-free');
@@ -11295,6 +11079,28 @@ function fxRenderVials(f, mk, stats){
   if(freeAmt) freeAmt.textContent = fnxFmt(current);
   if(freeSub) freeSub.textContent = leftover > 0 ? fnxFmt(current)+' of '+fnxFmt(leftover) : 'tap to set leftover';
   if(freePct) freePct.textContent = leftover > 0 ? Math.round((current/leftover)*100)+'%' : '—';
+
+  var savAmt = document.getElementById('fx-vial-amt-savings');
+  var savSub = document.getElementById('fx-vial-sub-savings');
+  var savPct = document.getElementById('fx-vial-pct-savings');
+  if(savAmt) savAmt.textContent = fnxFmt(savedAmt);
+  if(savSub) savSub.textContent = savingsTarget > 0 ? 'of '+fnxFmt(savingsTarget)+' target' : 'set target in ⚙';
+  if(savPct) savPct.textContent = savingsTarget > 0 ? Math.round((savedAmt/savingsTarget)*100)+'%' : '—';
+
+  /* Vault page extras */
+  var vaultProg = document.getElementById('fx-vault-progress-fill');
+  if(vaultProg){
+    var pct = savingsTarget > 0 ? Math.min(100, (savedAmt/savingsTarget)*100) : 0;
+    vaultProg.style.width = pct + '%';
+  }
+  var goalName = document.getElementById('vault-goal-name');
+  if(goalName) goalName.textContent = eg ? (eg.name || 'Emergency Fund') : 'Set goal in ⚙';
+  var goalTogo = document.getElementById('vault-goal-togo');
+  if(goalTogo){
+    var togo = Math.max(0, savingsTarget - savedAmt);
+    goalTogo.textContent = savingsTarget > 0 ? fnxFmt(togo) : '—';
+  }
+  if(typeof fxRenderSavingsLog === 'function') fxRenderSavingsLog();
 
   /* Boot canvas animation if not running */
   if(!_fxVialAnimId) _fxVialBootCanvas();
@@ -11322,13 +11128,23 @@ function _fxVialBootCanvas(){
     c._cssW = w;
     c._cssH = h;
     /* mark for redraw — force state re-init so anything sized to W gets rebuilt */
+    if(c.id === 'fx-canvas-savings') _fxVialState.savings._init = false;
     if(c.id === 'fx-canvas-free')    _fxVialState.free._init    = false;
     return true;
   }
+  var c1 = document.getElementById('fx-canvas-savings'); /* now on pg-savings (vault) */
   var c2 = document.getElementById('fx-canvas-free');    /* on pg-finance (cash stack) */
+  sizeCanvas(c1, 1.0);   /* vault: square */
   sizeCanvas(c2, 0.38);  /* cash stack: tall */
 
-  /* Cash stack state — only init once */
+  /* Vault + cash stack state — only init once */
+  if(!_fxVialState.savings._initOnce){
+    _fxVialState.savings._initOnce = true;
+    _fxVialState.savings._init = false;
+    _fxVialState.savings._particles = [];
+    _fxVialState.savings._bundles = [];
+    _fxVialState.savings._ambient = [];
+  }
   if(!_fxVialState.free._initOnce){
     _fxVialState.free._initOnce = true;
     _fxVialState.free._init = false;
@@ -11362,9 +11178,19 @@ function _fxVialDraw(ts){
     ctx.scale(dpr, dpr);
     c._cssW = w;
     c._cssH = h;
+    if(c.id === 'fx-canvas-savings') _fxVialState.savings._init = false;
     if(c.id === 'fx-canvas-free')    _fxVialState.free._init    = false;
   }
 
+  /* Savings = glass vault with cash bundles */
+  var c1 = document.getElementById('fx-canvas-savings');
+  _trySize(c1, 1.0);
+  if(c1 && c1._cssW){
+    var ctx1 = c1.getContext('2d');
+    var W1 = c1._cssW, H1 = c1._cssH;
+    ctx1.clearRect(0, 0, W1, H1);
+    _fxDrawVault(ctx1, W1, H1, _fxVialTime, _fxVialState.savings);
+  }
   /* Leftover = cash bill stack */
   var c2 = document.getElementById('fx-canvas-free');
   _trySize(c2, 0.38);
@@ -11379,6 +11205,1446 @@ function _fxVialDraw(ts){
   _fxVialAnimId = requestAnimationFrame(_fxVialDraw);
 }
 
+/* ═══════════════════════════════════════════════
+   GLASS VAULT — Savings page
+   Tinted glass cabinet with chrome bezel,
+   stacks of banded cash bundles on shelves,
+   interior LED glow, ambient bokeh, glass sweep
+═══════════════════════════════════════════════ */
+function _fxDrawVault(ctx, W, H, t, state) {
+  /* ═══════════════════════════════════════════════
+     GLASS DISPLAY CASE WITH POKER CHIP STACKS
+     Sleek mono-blue glass aesthetic matching app theme.
+     Chips stack progressively — saving 2k fills visible stacks.
+  ═══════════════════════════════════════════════ */
+  var CHIP_MAX = 60;        /* max total chips — 60 for denser visual density */
+  var STACK_COLS = 3;       /* 3 stacks side by side */
+  var CHIPS_PER_STACK = 20; /* max chips per stack */
+  function clamp(v,lo,hi){return v<lo?lo:v>hi?hi:v}
+  function hash(n){var x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)}
+
+  /* ── State init ─────────────────────────────── */
+  if(!state._init){
+    state._init=true; state._lastT=t; state._eased=state.level||0;
+    state._bundles=state._bundles||[];
+    state._ambient=state._ambient||[];
+    state._particles=state._particles||[];
+    for(var i=state._bundles.length;i<CHIP_MAX;i++){
+      state._bundles.push({rot:(hash(i*5.27+3)-0.5)*0.03,dropT:1,landed:true,hue:hash(i*13.7+2)});
+    }
+    if(!state._ambient.length){
+      for(var i=0;i<20;i++){
+        state._ambient.push({x:Math.random(),y:Math.random(),vx:(Math.random()-0.5)*0.014,vy:-0.010-Math.random()*0.022,size:0.4+Math.random()*1.2,phase:Math.random()*Math.PI*2,alpha:0.04+Math.random()*0.18,bright:Math.random()<0.18});
+      }
+    }
+  }
+
+  var dt=t-state._lastT;
+  if(!isFinite(dt)||dt<0)dt=0.016;
+  if(dt>0.08)dt=0.05;
+  state._lastT=t;
+
+  /* ═══════════════════════════════════════
+     GEOMETRY — sleek glass display case
+     (computed BEFORE visN so CHIP_MAX is screen-accurate)
+  ═══════════════════════════════════════ */
+  var pad=Math.min(W,H)*0.06;
+  var caseW=W-pad*2;
+  var caseH=H-pad*2;
+  var caseX=pad;
+  var caseY=pad;
+  var cR=Math.min(W,H)*0.05;
+
+  var chipAreaX=caseX+caseW*0.10;
+  var chipAreaW=caseW*0.80;
+  var chipAreaBottom=caseY+caseH*0.90;
+  var chipAreaTop=caseY+caseH*0.06;
+  var chipDiam=chipAreaW/STACK_COLS*0.62;
+  var chipH=Math.max(4,chipDiam*0.15);
+  var chipGap=chipH*0.10;
+  var colSpacing=chipAreaW/STACK_COLS;
+  /* Recompute CHIPS_PER_STACK based on actual available height */
+  var availH = chipAreaBottom - chipAreaTop;
+  CHIPS_PER_STACK = Math.min(20, Math.floor(availH / (chipH + chipGap)));
+  CHIP_MAX = CHIPS_PER_STACK * STACK_COLS;
+
+  /* Ensure bundles array has enough entries for recalculated max */
+  for(var i=state._bundles.length;i<CHIP_MAX;i++){
+    state._bundles.push({rot:(hash(i*5.27+3)-0.5)*0.03,dropT:1,landed:true,hue:hash(i*13.7+2)});
+  }
+  if(!state._lastFull) state._lastFull=0;
+
+  /* Animate level toward target */
+  var tgt=clamp(state.target!=null?state.target:(state.level||0),0,1);
+  var k=1-Math.exp(-dt*3.4);
+  state._eased+=(tgt-state._eased)*k;
+  if(Math.abs(tgt-state._eased)<1e-4)state._eased=tgt;
+  state.level=state._eased;
+
+  var exact=state._eased*CHIP_MAX;
+  var fullN=Math.floor(exact+1e-6);
+  var topFrac=clamp(exact-fullN,0,1);
+  var visN=Math.min(CHIP_MAX,fullN+(topFrac>0.02?1:0));
+
+  if(fullN>state._lastFull){
+    for(var i=state._lastFull;i<fullN;i++){var b=state._bundles[i];if(b){b.dropT=0;b.landed=false;}}
+  }
+  state._lastFull=fullN;
+
+  function rrPath(x,y,w,h,r){
+    r=Math.min(r,w/2,h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath();
+  }
+
+  /* ── 1. Overall drop shadow ── */
+  ctx.save();
+  ctx.shadowColor='rgba(0,5,20,0.55)';
+  ctx.shadowBlur=Math.min(W,H)*0.07;
+  ctx.shadowOffsetY=Math.min(W,H)*0.02;
+  ctx.fillStyle='rgba(4,10,28,1)';
+  rrPath(caseX,caseY,caseW,caseH,cR);
+  ctx.fill();
+  ctx.restore();
+
+  /* ── 2. Case body — dark glass panel ── */
+  ctx.save();
+  rrPath(caseX,caseY,caseW,caseH,cR);
+  ctx.clip();
+
+  /* Back wall gradient — deep dark blue glass */
+  var bgG=ctx.createLinearGradient(0,caseY,0,caseY+caseH);
+  bgG.addColorStop(0,'rgba(6,14,38,1)');
+  bgG.addColorStop(0.35,'rgba(10,22,55,1)');
+  bgG.addColorStop(0.7,'rgba(14,30,68,1)');
+  bgG.addColorStop(1,'rgba(8,18,46,1)');
+  ctx.fillStyle=bgG;
+  ctx.fillRect(caseX,caseY,caseW,caseH);
+
+  /* Subtle radial center glow */
+  var centerGlow=ctx.createRadialGradient(caseX+caseW/2,caseY+caseH*0.55,0,caseX+caseW/2,caseY+caseH*0.55,caseW*0.7);
+  centerGlow.addColorStop(0,'rgba(40,80,160,0.12)');
+  centerGlow.addColorStop(0.5,'rgba(20,50,120,0.04)');
+  centerGlow.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=centerGlow;ctx.fillRect(caseX,caseY,caseW,caseH);
+
+  /* Vignette corners */
+  var vig=ctx.createRadialGradient(caseX+caseW/2,caseY+caseH*0.45,0,caseX+caseW/2,caseY+caseH*0.45,Math.max(caseW,caseH)*0.72);
+  vig.addColorStop(0,'rgba(0,0,0,0)');
+  vig.addColorStop(0.65,'rgba(0,0,0,0)');
+  vig.addColorStop(1,'rgba(0,2,8,0.55)');
+  ctx.fillStyle=vig;ctx.fillRect(caseX,caseY,caseW,caseH);
+
+  /* ── LED floor strip glow ── */
+  var ledY=caseY+caseH*0.88;
+  var ledPulse=0.85+Math.sin(t*1.4)*0.10;
+  var ledGrad=ctx.createRadialGradient(caseX+caseW/2,ledY,0,caseX+caseW/2,ledY,caseW*0.6);
+  ledGrad.addColorStop(0,'rgba(100,170,255,'+(0.28*ledPulse)+')');
+  ledGrad.addColorStop(0.4,'rgba(70,130,220,'+(0.12*ledPulse)+')');
+  ledGrad.addColorStop(1,'rgba(50,100,200,0)');
+  ctx.fillStyle=ledGrad;ctx.fillRect(caseX,caseY+caseH*0.55,caseW,caseH*0.5);
+
+  /* LED strip line */
+  var stripG=ctx.createLinearGradient(caseX,0,caseX+caseW,0);
+  stripG.addColorStop(0,'rgba(100,160,255,0)');
+  stripG.addColorStop(0.15,'rgba(140,195,255,'+(0.50*ledPulse)+')');
+  stripG.addColorStop(0.5,'rgba(200,230,255,'+(0.75*ledPulse)+')');
+  stripG.addColorStop(0.85,'rgba(140,195,255,'+(0.50*ledPulse)+')');
+  stripG.addColorStop(1,'rgba(100,160,255,0)');
+  ctx.fillStyle=stripG;
+  ctx.fillRect(caseX+caseW*0.05,ledY-0.8,caseW*0.90,1.6);
+
+  /* Ambient bokeh particles */
+  for(var pi=0;pi<state._ambient.length;pi++){
+    var p=state._ambient[pi];
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.phase+=dt*1.3;
+    if(p.y<-0.05){p.y=1.05;p.x=Math.random();}
+    if(p.x<-0.05)p.x=1.05;else if(p.x>1.05)p.x=-0.05;
+    var bpx=caseX+p.x*caseW,bpy=caseY+p.y*caseH;
+    var bpa=p.alpha*(0.4+0.6*Math.sin(p.phase));
+    var bpr=p.size*2.8;
+    var bpg=ctx.createRadialGradient(bpx,bpy,0,bpx,bpy,bpr);
+    if(p.bright){bpg.addColorStop(0,'rgba(210,235,255,'+bpa+')');bpg.addColorStop(1,'rgba(210,235,255,0)');}
+    else{bpg.addColorStop(0,'rgba(90,150,230,'+bpa+')');bpg.addColorStop(1,'rgba(90,150,230,0)');}
+    ctx.fillStyle=bpg;ctx.fillRect(bpx-bpr,bpy-bpr,bpr*2,bpr*2);
+  }
+
+  /* ═══════════════════════════════════════
+     POKER CHIP STACKS
+     3 columns, chips stack bottom-up.
+     Fill order: left→mid→right, row by row.
+  ═══════════════════════════════════════ */
+
+  /* Chip color palette — monochrome blue tiers */
+  var chipColors=[
+    /* tier 1: dark blue (first 10) */
+    {face:'rgba(25,55,120,1)',edge:'rgba(18,40,90,1)',rim:'rgba(60,110,200,0.6)',stripe:'rgba(100,170,255,0.45)',sheen:'rgba(180,220,255,0.25)'},
+    /* tier 2: medium blue (next 10) */
+    {face:'rgba(35,75,155,1)',edge:'rgba(25,55,120,1)',rim:'rgba(80,140,230,0.65)',stripe:'rgba(130,195,255,0.50)',sheen:'rgba(200,230,255,0.30)'},
+    /* tier 3: bright blue (last 10) */
+    {face:'rgba(50,100,190,1)',edge:'rgba(35,72,148,1)',rim:'rgba(100,170,255,0.70)',stripe:'rgba(160,215,255,0.55)',sheen:'rgba(220,240,255,0.35)'}
+  ];
+
+  function getChipColor(idx){
+    var third = Math.floor(CHIP_MAX / 3);
+    if(idx < third) return chipColors[0];
+    if(idx < third * 2) return chipColors[1];
+    return chipColors[2];
+  }
+
+  function drawChip(cx,cy,diam,h,color,opacity,shimmer){
+    var r=diam/2;
+    ctx.save();
+    ctx.globalAlpha=opacity;
+
+    /* Edge (cylinder side) */
+    var edgeG=ctx.createLinearGradient(cx-r,0,cx+r,0);
+    edgeG.addColorStop(0,color.edge);
+    edgeG.addColorStop(0.15,'rgba(80,130,210,0.35)');
+    edgeG.addColorStop(0.5,color.face);
+    edgeG.addColorStop(0.85,'rgba(80,130,210,0.35)');
+    edgeG.addColorStop(1,color.edge);
+    ctx.fillStyle=edgeG;
+    ctx.beginPath();
+    ctx.ellipse(cx,cy+h*0.5,r,r*0.28,0,0,Math.PI);
+    ctx.lineTo(cx-r,cy-h*0.5);
+    ctx.ellipse(cx,cy-h*0.5,r,r*0.28,0,Math.PI,0,true);
+    ctx.lineTo(cx+r,cy+h*0.5);
+    ctx.closePath();
+    ctx.fill();
+
+    /* Edge stripe bands (3 lines around cylinder) */
+    for(var si=0;si<3;si++){
+      var sy=cy-h*0.25+si*(h*0.25);
+      ctx.beginPath();
+      ctx.ellipse(cx,sy,r*1.01,r*0.29,0,0,Math.PI);
+      ctx.strokeStyle=color.stripe;
+      ctx.lineWidth=Math.max(0.8,h*0.08);
+      ctx.stroke();
+    }
+
+    /* Top face ellipse */
+    var topY=cy-h*0.5;
+    ctx.beginPath();
+    ctx.ellipse(cx,topY,r,r*0.28,0,0,Math.PI*2);
+    var faceG=ctx.createRadialGradient(cx-r*0.2,topY-r*0.06,0,cx,topY,r);
+    faceG.addColorStop(0,color.sheen);
+    faceG.addColorStop(0.35,color.face);
+    faceG.addColorStop(0.75,color.face);
+    faceG.addColorStop(1,color.edge);
+    ctx.fillStyle=faceG;
+    ctx.fill();
+
+    /* Top face rim */
+    ctx.beginPath();
+    ctx.ellipse(cx,topY,r,r*0.28,0,0,Math.PI*2);
+    ctx.strokeStyle=color.rim;
+    ctx.lineWidth=Math.max(0.6,r*0.035);
+    ctx.stroke();
+
+    /* Inner rim circle on top */
+    ctx.beginPath();
+    ctx.ellipse(cx,topY,r*0.72,r*0.72*0.28,0,0,Math.PI*2);
+    ctx.strokeStyle=color.stripe;
+    ctx.lineWidth=Math.max(0.5,r*0.025);
+    ctx.stroke();
+
+    /* Center dot on top */
+    ctx.beginPath();
+    ctx.ellipse(cx,topY,r*0.18,r*0.18*0.28,0,0,Math.PI*2);
+    ctx.fillStyle=color.rim;
+    ctx.fill();
+
+    /* Dashed stripe marks on top face (4 pairs) */
+    for(var di=0;di<4;di++){
+      var ang=(di/4)*Math.PI*2+t*0.15;
+      var dx=Math.cos(ang)*r*0.45;
+      var dy=Math.sin(ang)*r*0.45*0.28;
+      var dx2=Math.cos(ang)*r*0.85;
+      var dy2=Math.sin(ang)*r*0.85*0.28;
+      ctx.beginPath();
+      ctx.moveTo(cx+dx,topY+dy);
+      ctx.lineTo(cx+dx2,topY+dy2);
+      ctx.strokeStyle=color.stripe;
+      ctx.lineWidth=Math.max(1.2,r*0.045);
+      ctx.stroke();
+    }
+
+    /* Specular sweep on top */
+    var specG=ctx.createLinearGradient(cx-r,topY,cx+r*0.3,topY);
+    specG.addColorStop(0,'rgba(255,255,255,0)');
+    specG.addColorStop(0.3,'rgba(255,255,255,'+(0.08+shimmer*0.06)+')');
+    specG.addColorStop(0.48,'rgba(255,255,255,'+(0.18+shimmer*0.12)+')');
+    specG.addColorStop(0.6,'rgba(255,255,255,'+(0.06+shimmer*0.04)+')');
+    specG.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.beginPath();
+    ctx.ellipse(cx,topY,r,r*0.28,0,0,Math.PI*2);
+    ctx.fillStyle=specG;
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  /* Contact shadows under each stack */
+  for(var col=0;col<STACK_COLS;col++){
+    var stackCX=chipAreaX+col*colSpacing+colSpacing/2;
+    var chipsInStack=0;
+    for(var ci=0;ci<CHIPS_PER_STACK;ci++){
+      var idx=ci*STACK_COLS+col;
+      if(idx<visN)chipsInStack++;
+    }
+    if(chipsInStack>0){
+      var shI=0.20+0.25*(chipsInStack/CHIPS_PER_STACK);
+      ctx.save();
+      ctx.translate(stackCX,chipAreaBottom+3);
+      ctx.scale(1,0.22);
+      var sg=ctx.createRadialGradient(0,0,0,0,0,chipDiam*0.65);
+      sg.addColorStop(0,'rgba(0,0,0,'+shI+')');
+      sg.addColorStop(0.5,'rgba(0,0,0,'+(shI*0.4)+')');
+      sg.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=sg;
+      ctx.beginPath();ctx.arc(0,0,chipDiam*0.65,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  /* Reflection (faint, below base line) */
+  if(visN>0){
+    ctx.save();
+    ctx.translate(0,chipAreaBottom);
+    ctx.scale(1,-0.35);
+    ctx.translate(0,-chipAreaBottom);
+    ctx.globalAlpha=0.18;
+    for(var col=0;col<STACK_COLS;col++){
+      var stackCX=chipAreaX+col*colSpacing+colSpacing/2;
+      for(var ci=0;ci<CHIPS_PER_STACK;ci++){
+        /* Fill order: row-first across columns — chip 0→col0, 1→col1, 2→col2, 3→col0, ... */
+        var idx=ci*STACK_COLS+col;
+        if(idx>=visN)continue;
+        var chipY=chipAreaBottom-ci*(chipH+chipGap)-chipH*0.5;
+        var cc=getChipColor(idx);
+        drawChip(stackCX,chipY,chipDiam,chipH,cc,0.5,0);
+      }
+    }
+    ctx.restore();
+    var reflFade=ctx.createLinearGradient(0,chipAreaBottom,0,chipAreaBottom+chipH*6);
+    reflFade.addColorStop(0,'rgba(6,14,38,0)');
+    reflFade.addColorStop(1,'rgba(6,14,38,1)');
+    ctx.fillStyle=reflFade;ctx.fillRect(caseX,chipAreaBottom,caseW,caseH-(chipAreaBottom-caseY));
+  }
+
+  /* Draw chip stacks */
+  for(var col=0;col<STACK_COLS;col++){
+    var stackCX=chipAreaX+col*colSpacing+colSpacing/2;
+    for(var ci=0;ci<CHIPS_PER_STACK;ci++){
+      var idx=ci*STACK_COLS+col;
+      if(idx>=visN)continue;
+      var b=state._bundles[idx];
+      if(b.dropT<1)b.dropT=Math.min(1,b.dropT+dt*2.6);
+
+      var isTopChip=(idx===fullN)&&topFrac<0.98;
+      var frac=isTopChip?topFrac:1;
+      var dE=1-Math.pow(1-b.dropT,3);
+      var descend=(1-dE)*-chipH*8;
+      var bounce=0;
+      if(b.dropT>0.78&&b.dropT<1){var bb=(b.dropT-0.78)/0.22;bounce=Math.sin(bb*Math.PI)*(1-bb)*chipH*0.4;}
+      var chipY=chipAreaBottom-ci*(chipH+chipGap)-chipH*0.5+descend-bounce;
+      var wobbleX = (typeof _chipInteract !== 'undefined') ? _chipInteract.getWobble(idx) : 0;
+      var cc=getChipColor(idx);
+      var shimmer=0.5+0.5*Math.sin(t*1.2+idx*0.7);
+      drawChip(stackCX+wobbleX,chipY,chipDiam*(0.92+0.08*frac),chipH*frac,cc,frac>0.05?1:0,shimmer);
+    }
+  }
+
+  /* Glass tint overlay */
+  ctx.fillStyle='rgba(25,60,130,0.04)';
+  ctx.fillRect(caseX,caseY,caseW,caseH);
+
+  /* Glass sweep reflection */
+  var sweepT=(t*0.028)%1.6-0.3;
+  ctx.save();
+  ctx.globalCompositeOperation='lighter';
+  var sweepX=caseX+caseW*sweepT;
+  var grad=ctx.createLinearGradient(sweepX,caseY,sweepX+caseW*0.25,caseY+caseH);
+  grad.addColorStop(0,'rgba(255,255,255,0)');grad.addColorStop(0.35,'rgba(200,230,255,0.03)');
+  grad.addColorStop(0.50,'rgba(220,240,255,0.08)');grad.addColorStop(0.65,'rgba(200,230,255,0.03)');
+  grad.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=grad;ctx.fillRect(caseX,caseY,caseW,caseH);
+  ctx.restore();
+
+  /* Corner highlight */
+  var cG=ctx.createRadialGradient(caseX+caseW*0.12,caseY+caseH*0.06,0,caseX+caseW*0.12,caseY+caseH*0.06,Math.min(caseW,caseH)*0.45);
+  cG.addColorStop(0,'rgba(255,255,255,0.12)');cG.addColorStop(0.3,'rgba(200,230,255,0.05)');cG.addColorStop(1,'rgba(200,230,255,0)');
+  ctx.fillStyle=cG;ctx.fillRect(caseX,caseY,caseW,caseH);
+
+  /* Top shine */
+  var tsh=ctx.createLinearGradient(0,caseY,0,caseY+caseH*0.15);
+  tsh.addColorStop(0,'rgba(255,255,255,0.18)');tsh.addColorStop(0.5,'rgba(255,255,255,0.05)');tsh.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=tsh;ctx.fillRect(caseX,caseY,caseW,caseH*0.15);
+
+  ctx.restore(); /* end case clip */
+
+  /* ── 3. Glass bezel frame ── */
+  var bz=Math.min(caseW,caseH)*0.012;
+
+  /* Outer rim — chrome blue edge */
+  var rimG=ctx.createLinearGradient(caseX,caseY,caseX+caseW,caseY+caseH);
+  rimG.addColorStop(0,'rgba(180,215,255,0.55)');
+  rimG.addColorStop(0.3,'rgba(120,170,240,0.35)');
+  rimG.addColorStop(0.6,'rgba(70,120,200,0.30)');
+  rimG.addColorStop(1,'rgba(40,70,150,0.45)');
+  ctx.strokeStyle=rimG;ctx.lineWidth=Math.max(1.2,caseW*0.006);
+  rrPath(caseX,caseY,caseW,caseH,cR);ctx.stroke();
+
+  /* Top bezel highlight */
+  var tBzH=Math.min(caseH,caseW)*0.016;
+  var tBzG=ctx.createLinearGradient(0,caseY,0,caseY+tBzH);
+  tBzG.addColorStop(0,'rgba(220,240,255,0.65)');tBzG.addColorStop(1,'rgba(100,160,230,0.15)');
+  ctx.save();
+  rrPath(caseX,caseY,caseW,caseH,cR);ctx.clip();
+  ctx.fillStyle=tBzG;ctx.fillRect(caseX,caseY,caseW,tBzH);
+  ctx.restore();
+
+  /* Bottom shadow rim */
+  ctx.save();
+  rrPath(caseX,caseY,caseW,caseH,cR);ctx.clip();
+  var botRimG=ctx.createLinearGradient(0,caseY+caseH-caseH*0.015,0,caseY+caseH);
+  botRimG.addColorStop(0,'rgba(0,4,18,0)');botRimG.addColorStop(1,'rgba(0,4,18,0.45)');
+  ctx.fillStyle=botRimG;ctx.fillRect(caseX,caseY+caseH-caseH*0.03,caseW,caseH*0.04);
+  ctx.restore();
+
+  /* Inner seam glow */
+  ctx.save();
+  ctx.shadowColor='rgba(60,120,220,0.12)';ctx.shadowBlur=bz*6;
+  ctx.strokeStyle='rgba(60,120,220,0.001)';ctx.lineWidth=0.5;
+  rrPath(caseX+1,caseY+1,caseW-2,caseH-2,cR-1);ctx.stroke();
+  ctx.restore();
+}
+
+
+
+
+/* ═══════════════════════════════════════════════
+   SILVER COIN SOUND ENGINE v2 — Real Metallic Coin Sounds
+   Inharmonic overtone model: coins ring at non-integer frequency
+   ratios (unlike musical instruments). Short filtered noise
+   transient + 5-partial inharmonic ring + sub impact.
+═══════════════════════════════════════════════ */
+var _chipSnd = {
+  _ac: null, _comp: null, _noiseBuf: null, _active: 0, _MAX: 8,
+
+  _getAC: function(){
+    if(!this._ac && window._getSharedAudioCtx) this._ac = window._getSharedAudioCtx();
+    if(!this._ac){ try{ this._ac = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+    if(this._ac && this._ac.state==='suspended') this._ac.resume().catch(function(){});
+    /* Pre-bake noise buffer — metallic transient character */
+    if(this._ac && !this._noiseBuf){
+      try{
+        var sr = this._ac.sampleRate;
+        var len = Math.floor(sr * 0.03); /* 30ms burst */
+        this._noiseBuf = this._ac.createBuffer(1, len, sr);
+        var d = this._noiseBuf.getChannelData(0);
+        for(var i=0;i<len;i++){
+          var env = Math.exp(-i/(len*0.15)); /* very fast exponential decay */
+          d[i] = (Math.random()*2-1) * env;
+        }
+      }catch(e){}
+    }
+    if(this._ac && !this._comp){
+      try{
+        this._comp = this._ac.createDynamicsCompressor();
+        this._comp.threshold.value = -14;
+        this._comp.knee.value = 8;
+        this._comp.ratio.value = 10;
+        this._comp.attack.value = 0.001;
+        this._comp.release.value = 0.05;
+        this._comp.connect(this._ac.destination);
+      }catch(e){ this._comp = null; }
+    }
+    return this._ac;
+  },
+  _dest: function(){ return this._comp || (this._ac ? this._ac.destination : null); },
+
+  /* ── Core: Metallic coin impact ──
+     Real coin sound = noise transient + inharmonic partials.
+     Heavy silver coins: lower fundamental, long ring, strong sub thud.
+     Partials at roughly: 1x, 2.32x, 3.86x, 5.59x, 7.51x
+     (not integer harmonics — that's what makes metal sound metallic, not musical) */
+  _playMetal: function(baseFreq, vol, decayTime, brightness){
+    if(!window._isSoundEnabled || !window._isSoundEnabled()) return;
+    var ac = this._getAC(); if(!ac) return;
+    if(this._active >= this._MAX) return;
+    var self = this;
+    window._ensureAudioReady(function(ac){
+      if(self._active >= self._MAX) return;
+      self._active++;
+      var now = ac.currentTime + 0.003;
+      var dest = self._dest();
+      brightness = brightness || 1;
+
+      /* 1. Noise transient — the initial "thunk" of metal contact */
+      if(self._noiseBuf){
+        var src = ac.createBufferSource();
+        src.buffer = self._noiseBuf;
+        /* Wider bandpass — let some low-end through for weight */
+        var bp = ac.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.value = 2800 + Math.random()*1500;
+        bp.Q.value = 1.2;
+        var gn = ac.createGain();
+        gn.gain.setValueAtTime(vol * 0.8, now);
+        gn.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+        src.connect(bp); bp.connect(gn); gn.connect(dest);
+        src.start(now); src.stop(now + 0.03);
+        src.onended = function(){ self._active = Math.max(0, self._active - 1); };
+      } else {
+        self._active = Math.max(0, self._active - 1);
+      }
+
+      /* 2. Inharmonic partials — the "ring" of silver */
+      var partials = [
+        {ratio: 1.00, amp: 0.30, decay: 1.0},    /* fundamental — louder for body */
+        {ratio: 2.32, amp: 0.14, decay: 0.75},    /* 1st inharmonic */
+        {ratio: 3.86, amp: 0.06, decay: 0.45},    /* 2nd — the "silver" character */
+        {ratio: 5.59, amp: 0.025, decay: 0.3},    /* upper shimmer */
+        {ratio: 7.51, amp: 0.010, decay: 0.18}    /* air/sizzle — quieter */
+      ];
+      for(var pi=0; pi<partials.length; pi++){
+        var p = partials[pi];
+        var freq = baseFreq * p.ratio * (0.98 + Math.random()*0.04); /* slight random detune */
+        var osc = ac.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        var g = ac.createGain();
+        var peak = vol * p.amp * brightness;
+        var dur = decayTime * p.decay;
+        g.gain.setValueAtTime(peak, now);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+        osc.connect(g); g.connect(dest);
+        osc.start(now); osc.stop(now + dur + 0.01);
+      }
+
+      /* 3. Sub impact — the weight/thud of the coin hitting */
+      var sub = ac.createOscillator();
+      sub.type = 'triangle';
+      sub.frequency.setValueAtTime(baseFreq * 0.35, now);
+      sub.frequency.exponentialRampToValueAtTime(baseFreq * 0.12, now + 0.05);
+      var sg = ac.createGain();
+      sg.gain.setValueAtTime(vol * 0.45, now);
+      sg.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+      sub.connect(sg); sg.connect(dest);
+      sub.start(now); sub.stop(now + 0.08);
+    });
+  },
+
+  /* ── Public: Silver coin clink (coin dropping onto stack) ── */
+  playClink: function(intensity, pitchMod){
+    intensity = Math.min(1, Math.max(0.15, intensity || 0.5));
+    pitchMod = pitchMod || 1;
+    /* Heavy silver coins: fundamental ~2200-2800 Hz, solid ring */
+    var baseFreq = (2200 + Math.random()*600) * pitchMod;
+    this._playMetal(baseFreq, intensity, 0.22, 1.0);
+  },
+
+  /* ── Public: Stack tap (finger touching the stack — duller, muted) ── */
+  playStackTap: function(){
+    /* Lower pitch, shorter decay, less brightness — muted by finger contact */
+    var baseFreq = 1400 + Math.random()*400;
+    this._playMetal(baseFreq, 0.40, 0.10, 0.55);
+  },
+
+  /* ── Public: Scrape-lift (dragging coin off stack) ── */
+  playScrape: function(){
+    if(!window._isSoundEnabled || !window._isSoundEnabled()) return;
+    var ac = this._getAC(); if(!ac) return;
+    var self = this;
+    window._ensureAudioReady(function(ac){
+      var now = ac.currentTime + 0.003;
+      var dest = self._dest();
+
+      /* Dedicated longer noise for scrape friction (~120ms at normal rate) */
+      var sr = ac.sampleRate;
+      var scrapeLen = Math.floor(sr * 0.12);
+      var scrapeBuf = ac.createBuffer(1, scrapeLen, sr);
+      var sd = scrapeBuf.getChannelData(0);
+      for(var si=0; si<scrapeLen; si++){
+        var env = 1.0 - (si / scrapeLen) * 0.6; /* slow taper, not instant decay */
+        sd[si] = (Math.random()*2-1) * env;
+      }
+
+      var src = ac.createBufferSource();
+      src.buffer = scrapeBuf;
+      var bp = ac.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 3000;
+      bp.Q.value = 1.5;
+      var gn = ac.createGain();
+      gn.gain.setValueAtTime(0.22, now);
+      gn.gain.linearRampToValueAtTime(0.16, now + 0.05);
+      gn.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      src.connect(bp); bp.connect(gn); gn.connect(dest);
+      src.start(now); src.stop(now + 0.13);
+
+      /* Release clink at the end — coin separates from stack */
+      setTimeout(function(){
+        self.playClink(0.4, 1.15);
+      }, 90);
+    });
+  },
+
+  /* ── Public: Cascade (coins settling back — rapid diminishing clinks) ── */
+  playCascade: function(count){
+    count = count || 3;
+    var self = this;
+    for(var i=0; i<count; i++){
+      (function(idx){
+        setTimeout(function(){
+          /* Each successive clink: quieter, slightly higher pitch */
+          self.playClink(0.45 - idx*0.10, 1.0 + idx*0.06);
+        }, idx * 50 + Math.random()*15);
+      })(i);
+    }
+  },
+
+  /* ── Public: Spinning coin settle (wobble → flat) ── */
+  playSpinSettle: function(){
+    if(!window._isSoundEnabled || !window._isSoundEnabled()) return;
+    var ac = this._getAC(); if(!ac) return;
+    var self = this;
+    window._ensureAudioReady(function(ac){
+      var now = ac.currentTime + 0.003;
+      var dest = self._dest();
+
+      /* Wobble tone — frequency rises as the coin wobble tightens */
+      var osc = ac.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1200, now);
+      osc.frequency.exponentialRampToValueAtTime(5000, now + 0.45);
+      var gn = ac.createGain();
+      gn.gain.setValueAtTime(0.04, now);
+      gn.gain.linearRampToValueAtTime(0.10, now + 0.3);
+      gn.gain.exponentialRampToValueAtTime(0.001, now + 0.50);
+      osc.connect(gn); gn.connect(dest);
+      osc.start(now); osc.stop(now + 0.55);
+
+      /* Final landing clink */
+      setTimeout(function(){ self.playClink(0.55, 1.1); }, 480);
+    });
+  }
+};
+
+
+/* ═══════════════════════════════════════════════
+   CHIP INTERACTION SYSTEM — Touch on Finance Canvas
+   Tap = clink + wobble, Long-press = pick up + follow finger,
+   Release = drop-back with cascade, Double-tap = inspector
+═══════════════════════════════════════════════ */
+var _chipInteract = {
+  _bound: false,
+  _longPressTimer: null,
+  _touchStartTime: 0,
+  _touchStartPos: {x:0,y:0},
+  _touchStartClient: {x:0,y:0},
+  _lifted: false,
+  _liftedEl: null,
+  _inspecting: false,
+  _wobbleChips: [],
+  _wobbleStart: 0,
+  _lastTapTime: 0,
+  _DEAD_ZONE: 10,
+
+  bind: function(){
+    if(this._bound) return;
+    this._bound = true;
+    var self = this;
+
+    var canvas = document.getElementById('fx-canvas-free');
+    if(!canvas){ return; }
+
+    canvas.addEventListener('touchstart', function(e){
+      self._onDown(e, canvas);
+    }, {passive:false});
+    canvas.addEventListener('touchend', function(e){
+      self._onUp(e, canvas);
+    }, {passive:false});
+    canvas.addEventListener('touchmove', function(e){
+      self._onMove(e, canvas);
+    }, {passive:false});
+    canvas.addEventListener('mousedown', function(e){ self._onDown(e, canvas); });
+    canvas.addEventListener('mouseup', function(e){ self._onUp(e, canvas); });
+    canvas.addEventListener('mousemove', function(e){ self._onMove(e, canvas); });
+  },
+
+  _getXY: function(e, canvas){
+    var rect = canvas.getBoundingClientRect();
+    var tx = (e.touches && e.touches.length) ? e.touches[0] : (e.changedTouches && e.changedTouches.length ? e.changedTouches[0] : e);
+    return {x: tx.clientX - rect.left, y: tx.clientY - rect.top, w: rect.width, h: rect.height, cx: tx.clientX, cy: tx.clientY};
+  },
+
+  _hitTestStack: function(pos){
+    /* Use actual stack geometry stored by _fxDrawCashStack */
+    var state = _fxVialState.free;
+    var geo = state && state._stackGeo;
+    if(!geo || geo.visN <= 0) return false;
+
+    /* Convert canvas-relative pos to content coords (geo uses CSS px) */
+    var scaleX = geo.W / pos.w;
+    var scaleY = geo.H / pos.h;
+    var px = pos.x * scaleX;
+    var py = pos.y * scaleY;
+
+    /* Stack bounds: horizontal = bill width centered, vertical = top bill to base */
+    var halfW = geo.billW * 0.52; /* slight padding */
+    var stackTop = geo.baseY - geo.visN * geo.step - geo.billH;
+    var stackBot = geo.baseY + geo.billH * 0.5;
+    return px > (geo.cx - halfW) && px < (geo.cx + halfW) &&
+           py > stackTop && py < stackBot;
+  },
+
+  _onDown: function(e, canvas){
+    var pos = this._getXY(e, canvas);
+    this._touchStartTime = Date.now();
+    this._touchStartPos = pos;
+    this._touchStartClient = {x: pos.cx, y: pos.cy};
+    this._lifted = false;
+    var self = this;
+    clearTimeout(this._longPressTimer);
+    if(this._hitTestStack(pos)){
+      this._longPressTimer = setTimeout(function(){
+        self._onLongPress(canvas, pos);
+      }, 350);
+    }
+  },
+
+  _onMove: function(e, canvas){
+    /* If lifted, follow finger and prevent scroll */
+    if(this._lifted && this._liftedEl){
+      e.preventDefault();
+      var pt = (e.touches && e.touches.length) ? e.touches[0] : e;
+      this._liftedEl.style.left = (pt.clientX - this._liftedEl._offX) + 'px';
+      this._liftedEl.style.top = (pt.clientY - this._liftedEl._offY) + 'px';
+      return;
+    }
+    /* Dead-zone check — only cancel long-press if moved > threshold */
+    if(this._longPressTimer){
+      var pt = (e.touches && e.touches.length) ? e.touches[0] : e;
+      var dx = pt.clientX - this._touchStartClient.x;
+      var dy = pt.clientY - this._touchStartClient.y;
+      if(Math.abs(dx) > this._DEAD_ZONE || Math.abs(dy) > this._DEAD_ZONE){
+        clearTimeout(this._longPressTimer);
+        this._longPressTimer = null;
+      }
+    }
+  },
+
+  _onUp: function(e, canvas){
+    clearTimeout(this._longPressTimer);
+    this._longPressTimer = null;
+    var elapsed = Date.now() - this._touchStartTime;
+
+    /* Race condition cleanup: if liftedEl exists but _lifted is false, orphaned element */
+    if(!this._lifted && this._liftedEl){
+      if(this._liftedEl.parentElement) this._liftedEl.remove();
+      this._liftedEl = null;
+    }
+
+    /* If we're holding a lifted chip → drop it back */
+    if(this._lifted && this._liftedEl){
+      this._dropBack(canvas);
+      return;
+    }
+
+    if(elapsed < 300){
+      var pos = this._getXY(e, canvas);
+      if(this._hitTestStack(pos)){
+        /* Only prevent default when we actually handle the tap */
+        e.preventDefault();
+        e.stopPropagation();
+
+        /* Double-tap → inspector */
+        var now = Date.now();
+        if(now - this._lastTapTime < 350){
+          this._lastTapTime = 0;
+          this._openInspector();
+          return;
+        }
+        this._lastTapTime = now;
+
+        /* Single tap → stack tap sound + wobble */
+        _chipSnd.playStackTap();
+
+        var state = _fxVialState.free;
+        if(state && state._bills){
+          var visN = Math.floor((state._eased||0) * 14 + 1e-6);
+          this._wobbleChips = [];
+          this._wobbleStart = performance.now();
+          /* Always wobble at least the top bill, up to 3 */
+          var wobbleCount = Math.min(3, Math.max(1, visN));
+          for(var wi = Math.max(0, visN - wobbleCount); wi < visN; wi++){
+            this._wobbleChips.push(wi);
+          }
+        }
+      }
+    }
+  },
+
+  _onLongPress: function(canvas, pos){
+    if(navigator.vibrate) navigator.vibrate(25);
+    _chipSnd.playScrape();
+    this._lifted = true;
+
+    /* Create a floating coin-edge element that follows the finger */
+    var state = _fxVialState.free;
+    var geo = state && state._stackGeo;
+    var chipW = geo ? Math.round(geo.billW * 0.65) : 90;
+    var chipH = 22; /* thick coin edge */
+
+    var el = document.createElement('div');
+    el.style.cssText = 'position:fixed;z-index:10000;pointer-events:none;' +
+      'width:'+chipW+'px;height:'+chipH+'px;' +
+      'border-radius:4px;overflow:hidden;' +
+      'box-shadow:0 8px 28px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.3),0 0 16px rgba(77,160,255,.25),inset 0 1px 0 rgba(255,255,255,.18);' +
+      'transform:scale(1.12);transition:transform .15s,opacity .25s;opacity:0.95';
+
+    /* Build inner HTML for layered chrome coin-edge */
+    var inner = document.createElement('div');
+    inner.style.cssText = 'width:100%;height:100%;position:relative;' +
+      'background:linear-gradient(180deg,' +
+        'rgba(160,210,255,.45) 0%,' +   /* top rim highlight */
+        'rgba(40,80,160,.9) 8%,' +       /* top face transition */
+        '#1a4590 15%,' +                  /* upper body */
+        '#2a68c8 30%,' +                  /* upper mid */
+        'rgba(120,190,255,.7) 46%,' +    /* center chrome highlight */
+        'rgba(180,220,255,.85) 50%,' +   /* bright center line */
+        'rgba(120,190,255,.7) 54%,' +    /* center chrome highlight */
+        '#2a68c8 70%,' +                  /* lower mid */
+        '#1a4590 85%,' +                  /* lower body */
+        'rgba(40,80,160,.9) 92%,' +      /* bottom face transition */
+        'rgba(100,170,240,.35) 100%)';   /* bottom rim highlight */
+
+    /* Groove overlay — vertical reeded lines */
+    var grooves = document.createElement('div');
+    grooves.style.cssText = 'position:absolute;inset:0;' +
+      'background:repeating-linear-gradient(90deg,' +
+        'transparent 0px,transparent 3px,' +
+        'rgba(255,255,255,.06) 3px,rgba(255,255,255,.06) 4px);' +
+      'mix-blend-mode:overlay';
+
+    /* Top and bottom rim accents */
+    var rimTop = document.createElement('div');
+    rimTop.style.cssText = 'position:absolute;top:0;left:8%;right:8%;height:1px;' +
+      'background:linear-gradient(90deg,transparent,rgba(180,220,255,.6),transparent)';
+    var rimBot = document.createElement('div');
+    rimBot.style.cssText = 'position:absolute;bottom:0;left:8%;right:8%;height:1px;' +
+      'background:linear-gradient(90deg,transparent,rgba(140,200,255,.4),transparent)';
+
+    inner.appendChild(grooves);
+    inner.appendChild(rimTop);
+    inner.appendChild(rimBot);
+    el.appendChild(inner);
+
+    el._offX = chipW / 2;
+    el._offY = chipH / 2;
+
+    /* Position at touch point */
+    var startX = this._touchStartClient.x;
+    var startY = this._touchStartClient.y;
+    el.style.left = (startX - el._offX) + 'px';
+    el.style.top = (startY - el._offY) + 'px';
+
+    /* Store canvas rect for drop-back target */
+    var rect = canvas.getBoundingClientRect();
+    el._canvasRect = rect;
+    el._stackCenterX = rect.left + rect.width * 0.5;
+    el._stackCenterY = rect.top + rect.height * 0.7;
+
+    document.body.appendChild(el);
+    this._liftedEl = el;
+  },
+
+  _dropBack: function(canvas){
+    var el = this._liftedEl;
+    if(!el) return;
+    this._lifted = false;
+    this._liftedEl = null;
+
+    /* Add performance hints */
+    el.style.willChange = 'transform, left, top, opacity';
+    el.style.contain = 'strict';
+
+    /* Animate back to stack center */
+    var tx = el._stackCenterX - el._offX;
+    var ty = el._stackCenterY - el._offY;
+    el.style.transition = 'left .25s cubic-bezier(.4,0,.2,1),top .25s cubic-bezier(.4,0,.2,1),transform .25s,opacity .25s';
+    el.style.left = tx + 'px';
+    el.style.top = ty + 'px';
+    el.style.transform = 'scale(0.8)';
+    el.style.opacity = '0';
+
+    /* Cascade sound on landing */
+    setTimeout(function(){ _chipSnd.playCascade(3); }, 180);
+
+    /* Trigger wobble on stack */
+    var state = _fxVialState.free;
+    if(state){
+      var visN = Math.floor((state._eased||0) * 14 + 1e-6);
+      this._wobbleChips = [];
+      this._wobbleStart = performance.now();
+      var wobbleCount = Math.min(4, Math.max(1, visN));
+      for(var wi = Math.max(0, visN - wobbleCount); wi < visN; wi++){
+        this._wobbleChips.push(wi);
+      }
+    }
+
+    /* Cleanup DOM on transition end (not hardcoded timeout) */
+    function onEnd(){ if(el.parentElement) el.remove(); el.removeEventListener('transitionend', onEnd); }
+    el.addEventListener('transitionend', onEnd);
+    /* Safety fallback in case transitionend doesn't fire */
+    setTimeout(function(){ if(el.parentElement) el.remove(); }, 500);
+  },
+
+  getWobble: function(chipIdx){
+    if(this._wobbleChips.indexOf(chipIdx) === -1) return 0;
+    var elapsed = (performance.now() - this._wobbleStart) / 1000;
+    if(elapsed > 0.5){ this._wobbleChips = []; return 0; }
+    var decay = Math.exp(-elapsed * 8);
+    var osc = Math.sin(elapsed * 35) * decay;
+    return osc * 1.2;
+  },
+
+  /* ═══════════════════════════════════════
+     CHIP INSPECTOR — Three.js WebGL Coin (v9)
+     Full 3D coin with guilloche, reeded edge,
+     bevel, clearcoat — dynamic fill % + tier.
+  ═══════════════════════════════════════ */
+  _openInspector: function(){
+    if(this._inspecting) return;
+    this._inspecting = true;
+
+    var state = _fxVialState.free;
+    var BILL_MAX = 14;
+    var exact = (state._eased||0) * BILL_MAX;
+    var visN = Math.floor(exact + 1e-6);
+    if(visN <= 0){ this._inspecting = false; return; }
+
+    var f = typeof getF === 'function' ? getF() : {};
+    var leftover = f.leftover || 0;
+    var current = (f.leftoverCurrent !== undefined) ? f.leftoverCurrent : leftover;
+    var chipValue = visN > 0 ? Math.round(current / visN) : 0;
+    var fillPct = state._eased || 0;
+    var tier = fillPct < 0.33 ? 0 : fillPct < 0.66 ? 1 : 2;
+    var pctNum = Math.round(fillPct * 100);
+    var tierNames = ['FOUNDATION','GROWTH','PREMIUM'];
+    var accentColors = ['#4D8DFF','#FFD88A','#E8F0FF'];
+
+    _chipSnd.playClink(0.6, 0.95);
+    if(navigator.vibrate) navigator.vibrate([12, 6, 18]);
+
+    var self = this;
+
+    /* ── Overlay ── */
+    var overlay = document.createElement('div');
+    overlay.id = 'chip-inspector-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .4s;touch-action:none;-webkit-tap-highlight-color:transparent;overflow:hidden';
+
+    overlay.innerHTML = '<div style="position:absolute;inset:0;background:linear-gradient(170deg,rgba(8,18,42,0.97),rgba(4,10,28,0.99));backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px)"></div>'
+      + '<div style="position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(77,141,255,.16) 0%,rgba(77,141,255,.04) 40%,transparent 70%);top:42%;left:50%;transform:translate(-50%,-55%);pointer-events:none;animation:inspGlow 4s ease-in-out infinite alternate"></div>'
+      + '<div style="position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(126,200,255,.08) 0%,transparent 60%);top:38%;left:55%;transform:translate(-50%,-50%);pointer-events:none;animation:inspGlow2 5s ease-in-out infinite alternate-reverse"></div>';
+
+    if(!document.getElementById('insp-kf')){
+      var kf = document.createElement('style');
+      kf.id = 'insp-kf';
+      kf.textContent = '@keyframes inspGlow{0%{opacity:.7;transform:translate(-50%,-55%) scale(1)}100%{opacity:1;transform:translate(-50%,-55%) scale(1.08)}}@keyframes inspGlow2{0%{opacity:.5;transform:translate(-50%,-50%) scale(1)}100%{opacity:.8;transform:translate(-50%,-50%) scale(1.12)}}';
+      document.head.appendChild(kf);
+    }
+
+    /* WebGL container — fills overlay above info panel */
+    var coinSize = Math.min(window.innerWidth, window.innerHeight * 0.58, 420);
+    var coinWrap = document.createElement('div');
+    coinWrap.style.cssText = 'width:'+coinSize+'px;height:'+coinSize+'px;position:relative;z-index:1;flex-shrink:0;transform:scale(0.5);opacity:0;transition:transform .55s cubic-bezier(.34,1.56,.64,1),opacity .35s;touch-action:none;border-radius:50%;overflow:visible';
+
+    var info = document.createElement('div');
+    info.style.cssText = 'text-align:center;margin-top:18px;font-family:Outfit,sans-serif;pointer-events:none;position:relative;z-index:1;background:rgba(255,255,255,.035);border:1px solid rgba(127,178,255,.14);border-radius:16px;padding:18px 32px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transform:translateY(24px);opacity:0;transition:transform .45s cubic-bezier(.34,1.3,.64,1) .15s,opacity .4s .15s;box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05)';
+    info.innerHTML = '<div style="font-size:10px;font-weight:800;letter-spacing:3px;color:'+accentColors[tier]+';margin-bottom:5px;opacity:.85">'+tierNames[tier]+' \u00b7 TIER '+(tier+1)+'</div>'
+      + '<div style="font-size:34px;font-weight:900;color:#fff;letter-spacing:-1.5px;margin-bottom:2px;background:linear-gradient(135deg,#fff 40%,'+accentColors[tier]+');-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">\uFDFC '+(chipValue||'\u2014')+'</div>'
+      + '<div style="font-size:11px;color:rgba(184,207,245,.55);margin-top:4px;font-weight:600">per chip \u00b7 '+visN+' chip'+(visN!==1?'s':'')+' in stack</div>'
+      + '<div style="font-size:10px;color:rgba(184,207,245,.3);margin-top:10px;font-weight:500">Drag to rotate \u00b7 Tap outside to close</div>';
+
+    overlay.appendChild(coinWrap);
+    overlay.appendChild(info);
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(function(){
+      overlay.style.opacity = '1';
+      coinWrap.style.transform = 'scale(1)';
+      coinWrap.style.opacity = '1';
+      info.style.transform = 'translateY(0)';
+      info.style.opacity = '1';
+    });
+
+    /* ── Build Three.js coin ── */
+    var animId = null;
+    var threeRenderer = null;
+
+    function buildCoin(THREE){
+      var W = coinSize, H = coinSize;
+      var dpr = Math.min(window.devicePixelRatio||1, 2);
+
+      var renderer = new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
+      renderer.setSize(W,H); renderer.setPixelRatio(dpr);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.5;
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.setClearColor(0x000000, 0);
+      renderer.domElement.style.cssText = 'width:'+W+'px;height:'+H+'px;display:block;border-radius:50%;touch-action:none';
+      coinWrap.appendChild(renderer.domElement);
+      threeRenderer = renderer;
+
+      var scene = new THREE.Scene();
+      var camera = new THREE.PerspectiveCamera(38, 1, 0.1, 80);
+      camera.position.set(0, 0, 5.4); camera.lookAt(0,0,0);
+
+      /* ENV MAP — brighter studio-style with warm/cool split */
+      var cubeRT = new THREE.WebGLCubeRenderTarget(256);
+      var eS = new THREE.Scene();
+      eS.add(new THREE.Mesh(new THREE.BoxGeometry(10,10,10), new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        vertexShader:'varying vec3 vP;void main(){vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+        fragmentShader:'varying vec3 vP;void main(){vec3 d=normalize(vP);float t=d.y*.5+.5;vec3 a=vec3(0.01,0.015,0.04);vec3 b=vec3(0.06,0.09,0.22);vec3 c=vec3(0.14,0.20,0.48);vec3 col=mix(a,b,smoothstep(0.,.35,t));col=mix(col,c,smoothstep(.35,1.,t));float s1=pow(max(dot(d,normalize(vec3(1,1,.6))),0.),24.);col+=vec3(.30,.34,.55)*s1;float s2=pow(max(dot(d,normalize(vec3(-.8,.6,-.4))),0.),18.);col+=vec3(.20,.24,.48)*s2;float s3=pow(max(dot(d,normalize(vec3(0,-1,.3))),0.),12.);col+=vec3(.08,.10,.25)*s3;gl_FragColor=vec4(col,1.);}'
+      })));
+      new THREE.CubeCamera(0.1,10,cubeRT).update(renderer,eS);
+      var envMap = cubeRT.texture;
+
+      /* LIGHTS — studio rig: bright key, cool fill, warm accent, rim kicker */
+      scene.add(new THREE.AmbientLight(0x2a4570,1.0));
+      var key = new THREE.DirectionalLight(0x8899cc,2.8); key.position.set(2,4,4); scene.add(key);
+      var fill = new THREE.DirectionalLight(0x4466aa,1.2); fill.position.set(-3,1,2); scene.add(fill);
+      var rim = new THREE.DirectionalLight(0x6688bb,1.8); rim.position.set(-2,3,-4); scene.add(rim);
+      var bot = new THREE.PointLight(0x2a4060,0.7,10); bot.position.set(0,-3,3); scene.add(bot);
+      /* Warm accent to break mono-blue — subtle gold kiss on rim */
+      var warm = new THREE.PointLight(0x886644,0.35,8); warm.position.set(3,-1,2); scene.add(warm);
+      var orb1 = new THREE.PointLight(0x5070bb,1.2,8); scene.add(orb1);
+      var orb2 = new THREE.PointLight(0x354880,0.9,8); scene.add(orb2);
+
+      var COL_BODY=0x152a52, COL_EDGE=0x1c3562, COL_REED=0x2e4e7e, COL_RING=0x243d6c, COL_BEVEL=0x223a65;
+      var coinGroup = new THREE.Group(); scene.add(coinGroup);
+      var R=1.35, THICK=0.22, SEG=200;
+
+      /* FRONT TEXTURE */
+      function drawFront(){
+        var S=1024, c=document.createElement('canvas'); c.width=c.height=S;
+        var x=c.getContext('2d'), cx=S/2, cy=S/2, r=S*0.47;
+        x.fillStyle='#070f2c'; x.fillRect(0,0,S,S);
+
+        /* outer chapter ring */
+        x.strokeStyle='rgba(80,120,200,0.35)'; x.lineWidth=2.5;
+        x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.stroke();
+        x.strokeStyle='rgba(80,120,200,0.25)'; x.lineWidth=2;
+        x.beginPath(); x.arc(cx,cy,r*0.94,0,Math.PI*2); x.stroke();
+        for(var i=0;i<120;i++){
+          var a=(i/120)*Math.PI*2-Math.PI/2;
+          var len=i%5===0?r*0.06:r*0.03;
+          x.strokeStyle=i%5===0?'rgba(100,150,230,0.4)':'rgba(70,110,190,0.2)';
+          x.lineWidth=i%5===0?1.5:0.8;
+          x.beginPath();
+          x.moveTo(cx+Math.cos(a)*(r-len),cy+Math.sin(a)*(r-len));
+          x.lineTo(cx+Math.cos(a)*r*0.95,cy+Math.sin(a)*r*0.95);
+          x.stroke();
+        }
+
+        /* guilloche — improved contrast */
+        x.globalCompositeOperation='lighter';
+        for(var ring=0;ring<3;ring++){
+          var baseR=r*(0.42+ring*0.16), count=36+ring*12;
+          for(var i=0;i<count;i++){
+            var a=(i/count)*Math.PI*2, spread=Math.PI/count*0.9;
+            x.strokeStyle='rgba(55,90,185,'+(0.08-ring*0.015)+')';
+            x.lineWidth=0.7;
+            x.beginPath();
+            x.arc(cx+Math.cos(a)*baseR*0.15,cy+Math.sin(a)*baseR*0.15,baseR,a-spread,a+spread);
+            x.stroke();
+          }
+        }
+        x.globalCompositeOperation='source-over';
+
+        /* inner ring — more visible */
+        x.strokeStyle='rgba(95,150,230,0.45)'; x.lineWidth=3;
+        x.beginPath(); x.arc(cx,cy,r*0.72,0,Math.PI*2); x.stroke();
+        x.strokeStyle='rgba(75,120,200,0.25)'; x.lineWidth=1.5;
+        x.beginPath(); x.arc(cx,cy,r*0.70,0,Math.PI*2); x.stroke();
+
+        /* diamond accents */
+        for(var i=0;i<12;i++){
+          var a=(i/12)*Math.PI*2-Math.PI/2;
+          var dx=cx+Math.cos(a)*r*0.71, dy=cy+Math.sin(a)*r*0.71;
+          x.save(); x.translate(dx,dy); x.rotate(a+Math.PI/4);
+          x.fillStyle='rgba(100,155,230,0.4)';
+          x.fillRect(-4,-4,8,8); x.restore();
+        }
+
+        /* starburst */
+        x.globalCompositeOperation='lighter';
+        for(var i=0;i<60;i++){
+          var a=(i/60)*Math.PI*2;
+          var g2=x.createLinearGradient(cx,cy,cx+Math.cos(a)*r*0.66,cy+Math.sin(a)*r*0.66);
+          g2.addColorStop(0,'rgba(60,100,200,0.04)'); g2.addColorStop(1,'rgba(60,100,200,0)');
+          x.strokeStyle=g2; x.lineWidth=1;
+          x.beginPath(); x.moveTo(cx,cy); x.lineTo(cx+Math.cos(a)*r*0.66,cy+Math.sin(a)*r*0.66); x.stroke();
+        }
+        x.globalCompositeOperation='source-over';
+
+        /* ── Dynamic % number (centered as unit) ── */
+        var serifFont='Georgia,serif';
+        var pctStr = String(pctNum);
+        var mainSize = pctNum >= 100 ? 220 : 280;
+        var pctSize = Math.round(mainSize * 0.42);
+        var numY = cy - r*0.02;
+
+        /* Measure combined width of "XX%" to center as one unit */
+        x.font='700 '+mainSize+'px '+serifFont;
+        var numW = x.measureText(pctStr).width;
+        x.font='700 '+pctSize+'px '+serifFont;
+        var pctW = x.measureText('%').width;
+        var totalW = numW + pctW * 0.65;
+        var startX = cx - totalW/2 + numW/2;
+        var pctX = startX + numW/2 + pctW*0.32;
+        var pctY = numY - mainSize*0.28;
+
+        /* deep glow */
+        x.textAlign='center'; x.textBaseline='middle';
+        x.shadowColor='#3366cc'; x.shadowBlur=70;
+        x.fillStyle='rgba(40,80,180,0.15)';
+        x.font='700 '+mainSize+'px '+serifFont;
+        x.fillText(pctStr, startX, numY);
+        x.textAlign='left';
+        x.font='700 '+pctSize+'px '+serifFont;
+        x.fillText('%', pctX, pctY);
+
+        /* mid glow */
+        x.shadowBlur=25; x.shadowColor='#4477cc';
+        x.fillStyle='rgba(165,195,240,0.92)';
+        x.textAlign='center';
+        x.font='700 '+mainSize+'px '+serifFont;
+        x.fillText(pctStr, startX, numY);
+        x.textAlign='left';
+        x.font='700 '+pctSize+'px '+serifFont;
+        x.fillText('%', pctX, pctY);
+
+        /* crisp top layer */
+        x.shadowBlur=0;
+        x.fillStyle='rgba(215,228,250,0.40)';
+        x.textAlign='center';
+        x.font='700 '+mainSize+'px '+serifFont;
+        x.fillText(pctStr, startX, numY);
+        x.textAlign='left';
+        x.font='700 '+pctSize+'px '+serifFont;
+        x.fillText('%', pctX, pctY);
+
+        /* rule — proportional to canvas */
+        var ruleY=cy+r*0.28;
+        var ruleHalf=r*0.36;
+        var grad=x.createLinearGradient(cx-ruleHalf,ruleY,cx+ruleHalf,ruleY);
+        grad.addColorStop(0,'rgba(80,130,210,0)'); grad.addColorStop(0.2,'rgba(80,130,210,0.28)');
+        grad.addColorStop(0.5,'rgba(110,165,240,0.40)'); grad.addColorStop(0.8,'rgba(80,130,210,0.28)');
+        grad.addColorStop(1,'rgba(80,130,210,0)');
+        x.strokeStyle=grad; x.lineWidth=1.5;
+        x.beginPath(); x.moveTo(cx-ruleHalf,ruleY); x.lineTo(cx+ruleHalf,ruleY); x.stroke();
+
+        /* Diamond on rule */
+        x.fillStyle='rgba(120,175,240,0.40)';
+        x.save(); x.translate(cx,ruleY); x.rotate(Math.PI/4); x.fillRect(-3.5,-3.5,7,7); x.restore();
+
+        /* tier label */
+        x.textAlign='center'; x.textBaseline='middle';
+        x.fillStyle='rgba(90,140,210,0.32)';
+        x.font='600 '+Math.round(r*0.048)+'px "SF Pro Display",-apple-system,sans-serif';
+        var tierChars = tierNames[tier].split('');
+        x.fillText(tierChars.join(' '), cx, ruleY+r*0.065);
+
+        /* edge arc text */
+        x.save(); x.translate(cx,cy);
+        var label = '\u2605 FREE CAPITAL \u00B7 LIFE OS \u00B7 VERIFIED \u00B7 ';
+        x.font='600 '+Math.round(r*0.04)+'px "SF Pro Display",sans-serif';
+        x.fillStyle='rgba(85,130,200,0.24)';
+        var echars=Array.from(label);
+        echars.forEach(function(ch,i){
+          var a=-Math.PI/2+(i/echars.length)*Math.PI*2;
+          x.save(); x.rotate(a); x.translate(0,-r*0.89); x.rotate(Math.PI); x.fillText(ch,0,0); x.restore();
+        });
+        x.restore();
+
+        var t=new THREE.CanvasTexture(c);
+        t.anisotropy=renderer.capabilities.getMaxAnisotropy();
+        return t;
+      }
+
+      /* BACK TEXTURE */
+      function drawBack(){
+        var S=1024, c=document.createElement('canvas'); c.width=c.height=S;
+        var x=c.getContext('2d'), cx=S/2, cy=S/2, r=S*0.47;
+        x.fillStyle='#070f2c'; x.fillRect(0,0,S,S);
+
+        x.strokeStyle='rgba(80,120,200,0.38)'; x.lineWidth=2.5;
+        x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.stroke();
+        x.strokeStyle='rgba(80,120,200,0.28)'; x.lineWidth=2;
+        x.beginPath(); x.arc(cx,cy,r*0.94,0,Math.PI*2); x.stroke();
+
+        x.globalCompositeOperation='lighter';
+        for(var i=0;i<8;i++){
+          var a=(i/8)*Math.PI*2;
+          x.beginPath();
+          x.ellipse(cx+Math.cos(a)*r*0.22,cy+Math.sin(a)*r*0.22,r*0.3,r*0.1,a,0,Math.PI*2);
+          x.strokeStyle='rgba(50,85,180,0.12)'; x.lineWidth=1; x.stroke();
+        }
+        /* star */
+        x.strokeStyle='rgba(60,100,190,0.18)'; x.lineWidth=1.2;
+        x.beginPath();
+        for(var i=0;i<=12;i++){
+          var a=(i/12)*Math.PI*2-Math.PI/2, rr=i%2===0?r*0.55:r*0.28;
+          var px=cx+Math.cos(a)*rr, py=cy+Math.sin(a)*rr;
+          i===0?x.moveTo(px,py):x.lineTo(px,py);
+        }
+        x.closePath(); x.stroke();
+        /* hex rings */
+        for(var h=0;h<5;h++){
+          var hr=r*(0.15+h*0.12);
+          x.strokeStyle='rgba(50,80,170,'+(0.10-h*0.012)+')'; x.lineWidth=0.8;
+          x.beginPath();
+          for(var i=0;i<=6;i++){
+            var a=(i/6)*Math.PI*2+(h%2?Math.PI/6:0), px=cx+Math.cos(a)*hr, py=cy+Math.sin(a)*hr;
+            i===0?x.moveTo(px,py):x.lineTo(px,py);
+          }
+          x.closePath(); x.stroke();
+        }
+        x.globalCompositeOperation='source-over';
+
+        /* IN monogram — large serif with proper octagon frame */
+        var serifFont='Georgia,serif';
+        var mR=r*0.68;
+        x.save(); x.translate(cx,cy);
+
+        /* Soft radial backdrop */
+        var bgGrad=x.createRadialGradient(0,0,0,0,0,mR+45);
+        bgGrad.addColorStop(0,'rgba(12,24,60,0.65)'); bgGrad.addColorStop(0.7,'rgba(10,20,55,0.3)'); bgGrad.addColorStop(1,'rgba(10,20,55,0)');
+        x.fillStyle=bgGrad; x.beginPath(); x.arc(0,0,mR+45,0,Math.PI*2); x.fill();
+
+        /* Octagon frame — 8 sides */
+        x.strokeStyle='rgba(100,155,230,0.48)'; x.lineWidth=3.5;
+        x.beginPath();
+        for(var i=0;i<8;i++){var a=(i/8)*Math.PI*2-Math.PI/8; x.lineTo(Math.cos(a)*(mR+38),Math.sin(a)*(mR+38));} 
+        x.closePath(); x.stroke();
+
+        /* "IN" — triple-pass for depth: deep glow → bright body → highlight sheen */
+        var fontSize=mR*1.28, textY=fontSize*0.06;
+        x.textAlign='center'; x.textBaseline='middle';
+
+        /* Pass 1: deep glow spread */
+        x.shadowColor='#3366cc'; x.shadowBlur=60;
+        x.fillStyle='rgba(40,80,180,0.14)'; x.font='700 '+fontSize+'px '+serifFont; x.fillText('IN',0,textY);
+        x.fillText('IN',0,textY); /* double-stamp for richer glow */
+
+        /* Pass 2: main body — brighter, solid */
+        x.shadowBlur=22; x.shadowColor='#4488dd';
+        x.fillStyle='rgba(165,200,245,0.92)'; x.font='700 '+fontSize+'px '+serifFont; x.fillText('IN',0,textY);
+
+        /* Pass 3: highlight overlay — adds that engraved-metal sheen */
+        x.shadowBlur=0;
+        x.fillStyle='rgba(210,225,250,0.30)'; x.font='700 '+fontSize+'px '+serifFont; x.fillText('IN',0,textY);
+
+        /* Pass 4: very subtle top-edge highlight for depth */
+        var tGrad=x.createLinearGradient(0,textY-fontSize*0.45,0,textY+fontSize*0.1);
+        tGrad.addColorStop(0,'rgba(230,240,255,0.18)'); tGrad.addColorStop(0.5,'rgba(230,240,255,0)'); tGrad.addColorStop(1,'rgba(230,240,255,0)');
+        x.fillStyle=tGrad; x.font='700 '+fontSize+'px '+serifFont; x.fillText('IN',0,textY);
+
+        x.restore();
+
+        /* edge text */
+        x.save(); x.translate(cx,cy);
+        var elabel='\u2605 LIFE OS \u00B7 DIGITAL \u00B7 '+tierNames[tier]+' \u00B7 ';
+        x.font='600 '+Math.round(r*0.04)+'px "SF Pro Display",sans-serif';
+        x.fillStyle='rgba(80,120,190,0.22)';
+        var echars=Array.from(elabel);
+        echars.forEach(function(ch,i){
+          var a=-Math.PI/2+(i/echars.length)*Math.PI*2;
+          x.save(); x.rotate(a); x.translate(0,-r*0.89); x.rotate(Math.PI); x.fillText(ch,0,0); x.restore();
+        });
+        x.restore();
+
+        var t=new THREE.CanvasTexture(c);
+        t.anisotropy=renderer.capabilities.getMaxAnisotropy();
+        return t;
+      }
+
+      /* BODY */
+      coinGroup.add(new THREE.Mesh(
+        new THREE.CylinderGeometry(R,R,THICK,SEG),
+        new THREE.MeshPhysicalMaterial({color:COL_BODY,metalness:0.96,roughness:0.08,envMap,envMapIntensity:1.6,clearcoat:1,clearcoatRoughness:0.06,reflectivity:0.7})
+      ));
+
+      /* FACE PLATES — CircleGeometry for correct flat UV mapping */
+      var frontTex=drawFront(), backTex=drawBack();
+      var faceGeo=new THREE.CircleGeometry(R*0.995,SEG);
+
+      var frontPlate=new THREE.Mesh(faceGeo,new THREE.MeshPhysicalMaterial({map:frontTex,color:0xdddddd,metalness:0.88,roughness:0.10,envMap,envMapIntensity:1.4,clearcoat:1.0,clearcoatRoughness:0.08}));
+      frontPlate.rotation.x=-Math.PI/2;
+      frontPlate.position.y=THICK/2+0.001; coinGroup.add(frontPlate);
+
+      var backPlate=new THREE.Mesh(faceGeo.clone(),new THREE.MeshPhysicalMaterial({map:backTex,color:0xdddddd,metalness:0.88,roughness:0.10,envMap,envMapIntensity:1.4,clearcoat:1.0,clearcoatRoughness:0.08}));
+      backPlate.rotation.x=Math.PI/2;
+      backPlate.position.y=-THICK/2-0.001; coinGroup.add(backPlate);
+
+      /* BEVEL — smooth rounded edge profile */
+      var bp=[]; var bs=12;
+      for(var i=0;i<=bs;i++){var a=(i/bs)*Math.PI*0.5; bp.push(new THREE.Vector2(R+Math.cos(a)*0.028,THICK/2-0.028+Math.sin(a)*0.028));}
+      for(var i=bs;i>=0;i--){var a=(i/bs)*Math.PI*0.5; bp.push(new THREE.Vector2(R+Math.cos(a)*0.028,-THICK/2+0.028-Math.sin(a)*0.028));}
+      coinGroup.add(new THREE.Mesh(new THREE.LatheGeometry(bp,SEG),new THREE.MeshPhysicalMaterial({color:COL_BEVEL,metalness:0.97,roughness:0.04,envMap,envMapIntensity:1.8,clearcoat:1,clearcoatRoughness:0.04})));
+
+      /* REEDED EDGE */
+      var rGeo=new THREE.BoxGeometry(0.008,THICK*1.02,0.038);
+      var rMat=new THREE.MeshPhysicalMaterial({color:COL_REED,metalness:0.98,roughness:0.03,envMap,envMapIntensity:1.6});
+      for(var i=0;i<200;i++){
+        var a=(i/200)*Math.PI*2;
+        var m=new THREE.Mesh(rGeo,rMat);
+        m.position.set(Math.cos(a)*(R+0.032),0,Math.sin(a)*(R+0.032));
+        m.rotation.y=-a; coinGroup.add(m);
+      }
+
+      /* RAISED EDGE RINGS — on both faces */
+      function ring(r,tube,col,yOff){
+        var g=new THREE.TorusGeometry(r,tube,16,SEG);
+        var mt=new THREE.MeshPhysicalMaterial({color:col,metalness:0.96,roughness:0.05,envMap,envMapIntensity:1.6,clearcoat:0.9,clearcoatRoughness:0.02});
+        [yOff,-yOff].forEach(function(y){var m=new THREE.Mesh(g,mt); m.position.y=y; m.rotation.x=Math.PI/2; coinGroup.add(m);});
+      }
+      ring(R*0.93,0.012,COL_RING,THICK/2+0.005);
+      ring(R*0.985,0.009,COL_RING,THICK/2+0.004);
+
+      /* INTERACTION — drag to rotate */
+      var tRX=0.15, tRY=0, isDrag=false, pX=0, pY=0, vX=0, vY=0, autoRot=true;
+      function onDown(e){ isDrag=true; autoRot=false; var p=e.touches?e.touches[0]:e; pX=p.clientX; pY=p.clientY; vX=0; vY=0; e.stopPropagation(); }
+      function onMove(e){ if(!isDrag)return; var p=e.touches?e.touches[0]:e; var dx=(p.clientX-pX)*0.008; var dy=(p.clientY-pY)*0.008; vX=dx; vY=dy; tRY+=dx; tRX+=dy; pX=p.clientX; pY=p.clientY; e.preventDefault(); e.stopPropagation(); }
+      function onUp(){ isDrag=false; setTimeout(function(){ if(!isDrag)autoRot=true; },4000); }
+
+      renderer.domElement.addEventListener('touchstart',onDown,{passive:false});
+      renderer.domElement.addEventListener('touchmove',onMove,{passive:false});
+      renderer.domElement.addEventListener('touchend',onUp);
+      renderer.domElement.addEventListener('mousedown',onDown);
+      window.addEventListener('mousemove',onMove);
+      window.addEventListener('mouseup',onUp);
+
+      var clock = {_start: Date.now(), getElapsedTime: function(){ return (Date.now()-this._start)/1000; }};
+
+      function loop(){
+        animId = requestAnimationFrame(loop);
+        var t = clock.getElapsedTime();
+        coinGroup.position.y = Math.sin(t*.7)*.12 + Math.sin(t*1.3)*.03;
+        coinGroup.position.x = Math.sin(t*.25)*.04;
+        if(autoRot){ tRY+=0.004; tRX+=(Math.sin(t*.35)*.15-tRX)*.004; }
+        if(!isDrag){ vX*=.97; vY*=.97; tRY+=vX; tRX+=vY; }
+        coinGroup.rotation.y += (tRY - coinGroup.rotation.y)*.08;
+        coinGroup.rotation.x += (tRX - coinGroup.rotation.x)*.08;
+        orb1.position.set(Math.sin(t*.6)*3, 2+Math.sin(t*.9)*.5, Math.cos(t*.6)*2);
+        orb2.position.set(Math.cos(t*.4)*2.5, -1.5, Math.sin(t*.4)*3);
+        renderer.render(scene, camera);
+      }
+      loop();
+
+      /* cleanup helpers on close */
+      renderer.domElement._cleanupDrag = function(){
+        renderer.domElement.removeEventListener('touchstart',onDown);
+        renderer.domElement.removeEventListener('touchmove',onMove);
+        renderer.domElement.removeEventListener('touchend',onUp);
+        renderer.domElement.removeEventListener('mousedown',onDown);
+        window.removeEventListener('mousemove',onMove);
+        window.removeEventListener('mouseup',onUp);
+      };
+    }
+
+    /* ── Load Three.js if not present, then build ── */
+    function initThreeCoin(){
+      if(typeof THREE !== 'undefined'){
+        buildCoin(THREE);
+      } else {
+        var s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        s.onload = function(){ buildCoin(THREE); };
+        document.head.appendChild(s);
+      }
+    }
+    initThreeCoin();
+
+    overlay.addEventListener('click', function(e){
+      /* close only when tapping the background, not the coin or info */
+      if(e.target === overlay || (e.target.nodeType===1 && e.target.parentElement === overlay && e.target !== coinWrap && e.target !== info)){
+        closeInspector();
+      }
+    });
+    function onKey(e){ if(e.key==='Escape') closeInspector(); }
+    window.addEventListener('keydown', onKey);
+
+    function closeInspector(){
+      _chipSnd.playCascade(3);
+      coinWrap.style.transform = 'scale(0.7)'; coinWrap.style.opacity = '0';
+      info.style.transform = 'translateY(20px)'; info.style.opacity = '0';
+      overlay.style.opacity = '0';
+      setTimeout(function(){
+        if(animId) cancelAnimationFrame(animId);
+        if(threeRenderer){
+          if(threeRenderer.domElement && threeRenderer.domElement._cleanupDrag) threeRenderer.domElement._cleanupDrag();
+          threeRenderer.dispose();
+        }
+        window.removeEventListener('keydown', onKey);
+        overlay.remove();
+        self._inspecting = false;
+      }, 420);
+    }
+  }
+};
+
+/* (fxOpenSavings override removed — interaction is on Finance page canvas) */
+
+/* ── Hook chip clink into bill drop animation ── */
+var _chipDropSoundLast = -1;
+function _chipDropSoundCheck(){
+  var state = _fxVialState.free;
+  if(!state || !state._bills) return;
+  var BILL_MAX = 14;
+  var exact = (state._eased||0) * BILL_MAX;
+  var fullN = Math.floor(exact + 1e-6);
+  if(fullN > _chipDropSoundLast && _chipDropSoundLast >= 0){
+    var count = Math.min(3, fullN - _chipDropSoundLast);
+    for(var i=0;i<count;i++){
+      (function(idx){
+        setTimeout(function(){
+          _chipSnd.playClink(0.55 + idx*0.1, 1 - idx*0.05);
+        }, idx*70);
+      })(i);
+    }
+  }
+  _chipDropSoundLast = fullN;
+}
+
+/* ── Boot interaction system when finance canvas starts ── */
+var _chipInteractBooted = false;
+var _origFxVialBootCanvas = _fxVialBootCanvas;
+_fxVialBootCanvas = function(){
+  _origFxVialBootCanvas();
+  if(!_chipInteractBooted){
+    _chipInteractBooted = true;
+    setTimeout(function(){
+      _chipInteract.bind();
+    }, 200);
+  }
+};
+
+/* ═══════════════════════════════════════════════
+   CASH BILL STACK — Leftover / Spending vial
+   Folded blue notes viewed edge-on, drop physics,
+   reflective floor, ambient particles
+═══════════════════════════════════════════════ */
 function _fxDrawCashStack(ctx, W, H, t, state){
   var BILL_MAX = 14;
   function clamp(v,lo,hi){return v<lo?lo:v>hi?hi:v}
@@ -11602,9 +12868,29 @@ function fxSetLeftover(){
   if(setEl){ setEl.value = ''; setEl.placeholder = 'or set total to...'; }
   var noteEl = document.getElementById('cm-update-note'); if(noteEl) noteEl.value = '';
   window._fxLeftoverMode = true;
+  window._fxSavingsMode = false;
   openModal('cm-update-modal');
 }
 
+/* Savings vial tap → add to savings */
+function fxOpenSavings(){
+  const f = getF();
+  const eg = (f.goals||[]).find(function(g){return (g.name||'').toLowerCase().indexOf('emergency')>-1});
+  const saved = eg ? (eg.saved||0) : 0;
+  const target = eg ? (eg.target||0) : 0;
+  if(target <= 0){ fnxOpenEdit(); return; }
+  var amtEl = document.getElementById('cm-update-amt');
+  var setEl = document.getElementById('cm-update-set');
+  var titleEl = document.getElementById('cm-update-title');
+  if(!amtEl || typeof openModal !== 'function'){ fnxOpenEdit(); return; }
+  if(titleEl) titleEl.textContent = 'Add Savings ('+fnxFmt(saved)+' of '+fnxFmt(target)+')';
+  if(amtEl){ amtEl.value = ''; amtEl.placeholder = 'amount to add'; }
+  if(setEl){ setEl.value = ''; setEl.placeholder = 'or set total saved to...'; }
+  var noteEl = document.getElementById('cm-update-note'); if(noteEl) noteEl.value = '';
+  window._fxSavingsMode = true;
+  window._fxLeftoverMode = false;
+  openModal('cm-update-modal');
+}
 
 /* ── Bottle Adjust: inline +/− below vials ── */
 function fxAdjustLeftover(dir){
@@ -11649,8 +12935,8 @@ function fxAdjustLeftover(dir){
     }
   }
   if(typeof _chipSnd !== 'undefined'){
-    if(dir === 1) _chipSnd.playClink(0.65, 0.95);
-    else _chipSnd.playCascade(3);
+    if(dir === 1) _chipSnd.playClink(0.5, 0.9);
+    else _chipSnd.playCascade(2);
   }
   if(navigator.vibrate) navigator.vibrate(dir === 1 ? [8, 4, 12] : [12, 6, 8]);
 }
@@ -11757,6 +13043,178 @@ function fxRenderBottleLog(){
   }).join('');
 }
 
+/* ── Savings history log (Savings page) ── */
+function fxDeleteSavingsEntry(id){
+  var f = getF();
+  if(!f.savingsLog) return;
+  var entry = f.savingsLog.find(function(e){ return e.id === id; });
+  if(!entry) return;
+  f.savingsLog = f.savingsLog.filter(function(e){ return e.id !== id; });
+  /* Revert the saved amount on the emergency goal */
+  var eg = (f.goals||[]).find(function(g){ return (g.name||'').toLowerCase().indexOf('emergency')>-1; });
+  if(eg){
+    var delta = entry.dir === 1 ? -entry.amt : entry.amt;
+    eg.saved = Math.max(0, (eg.saved||0) + delta);
+  }
+  setF(f);
+  if(typeof fnxRender === 'function') fnxRender();
+  fxRenderSavingsLog();
+  if(typeof toast === 'function') toast('Entry removed');
+}
+
+function fxEditSavingsEntry(id){
+  var f = getF();
+  if(!f.savingsLog) return;
+  var e = f.savingsLog.find(function(x){ return x.id === id; });
+  if(!e) return;
+  var bg2 = document.getElementById('fx-edit-sav-bg');
+  if(!bg2){
+    bg2 = document.createElement('div');
+    bg2.id = 'fx-edit-sav-bg';
+    bg2.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(5,15,60,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:300;align-items:flex-end;justify-content:center';
+    bg2.innerHTML = '<div style="background:linear-gradient(180deg,rgba(30,60,150,.97),rgba(15,40,120,.99));border-top:1px solid rgba(126,200,255,.35);border-radius:18px 18px 0 0;padding:22px 18px 32px;width:100%;max-width:520px;box-shadow:0 -10px 40px rgba(0,0,0,.5)">'
+      +'<div style="font-family:var(--font-ui);font-size:13px;font-weight:800;color:#fff;margin-bottom:16px">Edit Savings Entry</div>'
+      +'<div style="margin-bottom:10px"><div style="font-family:var(--font-ui);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Amount (﷼)</div>'
+      +'<input id="fx-edit-sav-amt" type="number" inputmode="decimal" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(127,178,255,.25);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:16px;font-weight:700;padding:10px 14px;outline:none"></div>'
+      +'<div style="margin-bottom:16px"><div style="font-family:var(--font-ui);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Note</div>'
+      +'<input id="fx-edit-sav-note" type="text" maxlength="60" placeholder="Optional note" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(127,178,255,.25);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13px;font-weight:600;padding:10px 14px;outline:none"></div>'
+      +'<div style="display:flex;gap:8px">'
+      +'<button id="fx-edit-sav-save" style="flex:1;background:linear-gradient(135deg,#4D8DFF,#2d6fff);border:none;border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13px;font-weight:800;padding:12px;cursor:pointer;min-height:44px">Save</button>'
+      +'<button onclick="var b=document.getElementById(\"fx-edit-sav-bg\");if(b)b.style.display=\"none\"" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(127,178,255,.2);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:13px;font-weight:700;padding:12px;cursor:pointer;min-height:44px">Cancel</button>'
+      +'</div>'
+      +'</div>';
+    document.body.appendChild(bg2);
+  }
+  document.getElementById('fx-edit-sav-amt').value = e.amt;
+  document.getElementById('fx-edit-sav-note').value = e.note || '';
+  bg2.style.display = 'flex';
+  bg2.onclick = function(ev){ if(ev.target === bg2) bg2.style.display = 'none'; };
+  document.getElementById('fx-edit-sav-save').onclick = function(){
+    var newAmt = parseFloat(document.getElementById('fx-edit-sav-amt').value);
+    if(!newAmt || isNaN(newAmt) || newAmt <= 0){ if(typeof toast==='function') toast('Enter a valid amount'); return; }
+    var newNote = document.getElementById('fx-edit-sav-note').value.trim();
+    /* Re-fetch to avoid stale closure */
+    var freshF = getF();
+    var freshE = (freshF.savingsLog||[]).find(function(x){ return x.id === id; });
+    if(!freshE){ if(typeof toast==='function') toast('Entry not found'); bg2.style.display='none'; return; }
+    var oldAmt = freshE.amt;
+    freshE.amt = newAmt;
+    freshE.note = newNote;
+    /* Adjust goal saved amount */
+    var eg = (freshF.goals||[]).find(function(g){ return (g.name||'').toLowerCase().indexOf('emergency')>-1; });
+    if(eg){
+      var diff = (freshE.dir === 1 ? newAmt - oldAmt : oldAmt - newAmt);
+      eg.saved = Math.max(0, (eg.saved||0) + diff);
+    }
+    setF(freshF);
+    bg2.style.display = 'none';
+    if(typeof fnxRender === 'function') fnxRender();
+    fxRenderSavingsLog();
+    if(typeof toast === 'function') toast('Entry updated');
+  };
+}
+
+function fxRenderSavingsLog(){
+  var el = document.getElementById('vault-savings-log');
+  if(!el) return;
+  var f = getF();
+  var log = f.savingsLog || [];
+  /* Ensure all entries have id */
+  var changed = false;
+  log.forEach(function(e){ if(!e.id){ e.id = Date.now() + Math.random(); changed = true; } });
+  if(changed){ setF(f); }
+
+  if(!log.length){
+    el.innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--muted);font-family:var(--font-ui);font-size:12px;font-weight:600">No deposits yet — tap the vault to add</div>';
+    return;
+  }
+  el.innerHTML = log.map(function(e){
+    var isAdd = e.dir === 1;
+    var color = isAdd ? 'var(--green)' : 'var(--red)';
+    var bg    = isAdd ? 'rgba(74,222,128,.07)' : 'rgba(255,100,100,.07)';
+    var bdr   = isAdd ? 'rgba(74,222,128,.2)'  : 'rgba(255,100,100,.18)';
+    var sign  = isAdd ? '+' : '\u2212';
+    var sar   = '\uFDFC';
+    var prefix = e.set ? 'set to ' : '';
+    var eid = JSON.stringify(e.id);
+    return '<div style="display:flex;align-items:center;background:'+bg+';border:1px solid '+bdr+';border-radius:10px;padding:10px 14px;gap:10px">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-family:var(--font-ui);font-size:13px;font-weight:800;color:'+color+'">'+sign+' '+sar+(+e.amt).toLocaleString()+'</div>'
+      +(e.note ? '<div style="font-family:var(--font-ui);font-size:11px;font-weight:600;color:rgba(255,255,255,.75);margin-top:1px">'+e.note+'</div>' : '')
+      +'<div style="font-size:10px;color:var(--muted);margin-top:2px">'+e.date+' &nbsp;&middot;&nbsp; '+prefix+'was '+sar+Math.round(e.prev).toLocaleString()+' &rarr; '+sar+Math.round(e.next).toLocaleString()+'</div>'
+      +'</div>'
+      +'<button onclick="fxEditSavingsEntry('+eid+')" style="width:30px;height:30px;background:rgba(77,141,255,.12);border:1px solid rgba(107,182,255,.25);color:var(--a2);cursor:pointer;font-size:12px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s" title="Edit">✏️</button>'
+      +'<button onclick="fxDeleteSavingsEntry('+eid+')" style="width:30px;height:30px;background:rgba(255,100,100,.1);border:1px solid rgba(255,100,100,.25);color:var(--red);cursor:pointer;font-size:13px;font-weight:700;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s" title="Delete">✕</button>'
+      +'</div>';
+  }).join('');
+}
+
+/* renderSavingsPage — called from _onPageEnter when user lands on Savings */
+function renderSavingsPage(){
+  /* fnxRender already updates the UI bindings via fxRenderVials; just nudge it */
+  if(typeof fnxRender === 'function') fnxRender();
+  else if(typeof renderFinance === 'function') renderFinance();
+  fxRenderSavingsLog();
+}
+
+(function(){
+  var _origNavTo = window.navTo;
+  window.navTo = function(idx, animate){
+    if(typeof _origNavTo==="function") _origNavTo(idx, animate);
+    if(idx===0) setTimeout(fxRenderBottleLog, 150);   /* Finance */
+    if(idx===1) setTimeout(fxRenderSavingsLog, 150);  /* Savings */
+  };
+  setTimeout(function(){ fxRenderBottleLog(); fxRenderSavingsLog(); }, 1200);
+})();
+
+/* Monkey-patch confirmCMUpdate to handle leftover + savings modes */
+var _origConfirmCMUpdate = window.confirmCMUpdate;
+window.confirmCMUpdate = function(){
+  if(!window._fxSavingsMode && !window._fxLeftoverMode){ if(typeof _origConfirmCMUpdate==='function') _origConfirmCMUpdate(); return; }
+  var amt = parseFloat(document.getElementById('cm-update-amt').value)||0;
+  var setTo = document.getElementById('cm-update-set').value;
+  var setVal = setTo!==''?parseFloat(setTo):null;
+  if(!amt && setVal===null){ if(typeof toast==='function') toast('Enter an amount'); return; }
+  var f = getF();
+
+  if(window._fxLeftoverMode){
+    window._fxLeftoverMode = false;
+    if(setVal!==null){ f.leftover = Math.max(0, setVal); f.leftoverCurrent = f.leftover; }
+    else { f.leftover = Math.max(0, (f.leftover||0) + amt); f.leftoverCurrent = f.leftover; }
+    setF(f);
+    if(typeof closeModal==='function') closeModal('cm-update-modal');
+    var _noteEl=document.getElementById('cm-update-note'); if(_noteEl) _noteEl.value='';
+    fnxRender();
+    if(typeof toast==='function') toast(setVal!==null?'Leftover set to '+fnxFmt(f.leftover):'+'+fnxFmt(amt)+' added ✓');
+    return;
+  }
+
+  if(window._fxSavingsMode){
+    window._fxSavingsMode = false;
+    if(!f.goals) f.goals=[];
+    var eg = f.goals.find(function(g){return (g.name||'').toLowerCase().indexOf('emergency')>-1});
+    if(!eg){ eg = {id:Date.now(), icon:'🛡️', name:'Emergency Fund', target:0, saved:0, deadline:''}; f.goals.push(eg); }
+    var prevSaved = eg.saved || 0;
+    if(setVal!==null) eg.saved = Math.max(0, setVal);
+    else eg.saved = Math.max(0, (eg.saved||0) + amt);
+    /* Log this deposit */
+    if(!f.savingsLog) f.savingsLog = [];
+    var sNow = new Date();
+    var sDateStr = sNow.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) + ' ' + sNow.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    var deltaAmt = setVal!==null ? (eg.saved - prevSaved) : amt;
+    var logDir = deltaAmt >= 0 ? 1 : -1;
+    var noteEl2 = document.getElementById('cm-update-note');
+    var savNote = noteEl2 ? noteEl2.value.trim() : '';
+    f.savingsLog.unshift({ id: Date.now(), dir: logDir, amt: Math.abs(deltaAmt), prev: prevSaved, next: eg.saved, date: sDateStr, set: setVal!==null, note: savNote });
+    if(f.savingsLog.length > 50) f.savingsLog = f.savingsLog.slice(0, 50);
+    setF(f);
+    if(typeof closeModal==='function') closeModal('cm-update-modal');
+    var _noteEl=document.getElementById('cm-update-note'); if(_noteEl) _noteEl.value='';
+    fnxRender();
+    fxRenderSavingsLog();
+    if(typeof toast==='function') toast(setVal!==null?'Savings set to '+fnxFmt(eg.saved):'+'+fnxFmt(amt)+' saved ✓');
+  }
+};
 
 /* ══════════════════════════════════════════════════
    TRANSACTION LOG — simplified
@@ -12012,14 +13470,15 @@ window.finMonthNav = function(delta){
   }
 })();
 
-/* Pause vial animation when leaving finance page, resume on enter */
+/* Pause vial animation when leaving finance/savings pages, resume on enter */
 (function(){
   var _origNavTo = window.navTo;
   if(typeof _origNavTo !== 'function') return;
   window.navTo = function(idx, animate){
     _origNavTo(idx, animate);
+    /* Check if finance OR savings page is active — both have canvases */
     var pgId = (typeof PAGE_IDS !== 'undefined') ? PAGE_IDS[idx] : '';
-    var needsCanvas = (pgId === 'finance');
+    var needsCanvas = (pgId === 'finance' || pgId === 'savings');
     if(needsCanvas){
       if(!_fxVialAnimId) _fxVialBootCanvas();
     } else {
@@ -12051,6 +13510,11 @@ window.finMonthNav = function(delta){
         <div class="fnx-modal-section-lbl">💎 Monthly Leftover</div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Your money after all bills are paid</div>
         <div id="fnx-edit-leftover"></div>
+      </div>
+
+      <div class="fnx-modal-section">
+        <div class="fnx-modal-section-lbl">🛡️ Savings</div>
+        <div id="fnx-edit-emergency"></div>
       </div>
 
       <div class="fnx-modal-btns">
@@ -12089,7 +13553,7 @@ window.finMonthNav = function(delta){
 <!-- Savings update modal -->
 <div class="modal-bg" id="cm-update-modal">
 <div class="modal">
-<div class="modal-title" id="cm-update-title">Update Leftover</div>
+<div class="modal-title" id="cm-update-title">Add Savings</div>
 <div class="modal-row">
 <div class="modal-label">Amount to add (﷼)</div>
 <input class="fin-input" id="cm-update-amt" type="number" placeholder="e.g. 500" inputmode="decimal"/>
@@ -12296,7 +13760,7 @@ window.finMonthNav = function(delta){
         _compressor.threshold.value = -18;
         _compressor.knee.value = 12;
         _compressor.ratio.value = 8;
-        _compressor.attack.value = 0.005; /* eased: let initial transient punch through */
+        _compressor.attack.value = 0.002;
         _compressor.release.value = 0.08;
         _compressor.connect(_ac.destination);
       }catch(e){ _compressor = null; }
@@ -12325,14 +13789,14 @@ window.finMonthNav = function(delta){
       var dest = _dest();
 
       if(_isMobile){
-        /* ── MOBILE ENHANCED: noise + 2 ring partials ── */
+        /* ── MOBILE FAST: 3 nodes total (source → filter → gain) ── */
         if(_noiseBuf){
           var src = ac.createBufferSource();
           src.buffer = _noiseBuf;
           var bp = ac.createBiquadFilter();
           bp.type = 'bandpass';
           bp.frequency.value = 3500 + Math.random()*2000;
-          bp.Q.value = 5; /* wider Q — less synthetic, more natural spread */
+          bp.Q.value = 8;
           var gn = ac.createGain();
           gn.gain.setValueAtTime(intensity * 0.55, now);
           gn.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
@@ -12342,24 +13806,15 @@ window.finMonthNav = function(delta){
         } else {
           _activeClanks = Math.max(0, _activeClanks - 1);
         }
-        /* Primary ring tone — boosted for mobile speaker audibility */
+        /* Single ring tone */
         var osc = ac.createOscillator();
         osc.type = 'sine';
         osc.frequency.value = 680 + Math.random()*300;
         var og = ac.createGain();
-        og.gain.setValueAtTime(intensity * 0.22, now);
+        og.gain.setValueAtTime(intensity * 0.18, now);
         og.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
         osc.connect(og); og.connect(dest);
         osc.start(now); osc.stop(now + 0.07);
-        /* Second ring partial — mid-high for presence on small speakers */
-        var osc2 = ac.createOscillator();
-        osc2.type = 'sine';
-        osc2.frequency.value = 1400 + Math.random()*200;
-        var og2 = ac.createGain();
-        og2.gain.setValueAtTime(intensity * 0.10, now);
-        og2.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-        osc2.connect(og2); og2.connect(dest);
-        osc2.start(now); osc2.stop(now + 0.05);
       } else {
         /* ── DESKTOP: full layered sound ── */
         var bufLen = Math.floor(ac.sampleRate * 0.045);
@@ -12402,12 +13857,9 @@ window.finMonthNav = function(delta){
     });
   }
 
-  /* Rolling rumble: low continuous friction noise during excited mode
-     Enhanced with LFO amplitude modulation for "tumbling" texture */
+  /* Rolling rumble: low continuous friction noise during excited mode */
   var _rollNode = null;
   var _rollGain = null;
-  var _rollLFO = null;
-  var _rollLFOGain = null;
   function _startRolling(){
     if(!window._isSoundEnabled() || _rollNode) return;
     var _acCheck = _getAC(); if(!_acCheck) return;
@@ -12437,16 +13889,6 @@ window.finMonthNav = function(delta){
         _rollGain.gain.setValueAtTime(0.001, t0);
         _rollGain.gain.linearRampToValueAtTime(0.28, t0 + 0.25);
 
-        /* LFO: 5-7 Hz amplitude modulation — balls bunching and spreading */
-        _rollLFO = ac.createOscillator();
-        _rollLFO.type = 'sine';
-        _rollLFO.frequency.setValueAtTime(5.5, t0);
-        _rollLFOGain = ac.createGain();
-        _rollLFOGain.gain.setValueAtTime(0.09, t0); /* modulation depth ~30% */
-        _rollLFO.connect(_rollLFOGain);
-        _rollLFOGain.connect(_rollGain.gain);
-        _rollLFO.start(t0);
-
         _rollNode.connect(lp); lp.connect(hp2); hp2.connect(_rollGain); _rollGain.connect(_dest());
         _rollNode.start();
       }catch(e){ _rollNode = null; }
@@ -12455,15 +13897,10 @@ window.finMonthNav = function(delta){
   function _stopRolling(){
     if(!_rollGain || !_ac) return;
     try{
-      /* Longer fade-out — balls decelerate, they don't stop instantly */
-      _rollGain.gain.linearRampToValueAtTime(0.001, _ac.currentTime + 0.7);
-      if(_rollLFOGain) _rollLFOGain.gain.linearRampToValueAtTime(0.001, _ac.currentTime + 0.5);
-      var node = _rollNode; var gain = _rollGain; var lfo = _rollLFO;
-      _rollNode = null; _rollGain = null; _rollLFO = null; _rollLFOGain = null;
-      setTimeout(function(){
-        try{ node.stop(); }catch(e){}
-        try{ if(lfo) lfo.stop(); }catch(e){}
-      }, 800);
+      _rollGain.gain.linearRampToValueAtTime(0.001, _ac.currentTime + 0.3);
+      var node = _rollNode; var gain = _rollGain;
+      _rollNode = null; _rollGain = null;
+      setTimeout(function(){ try{ node.stop(); }catch(e){} }, 400);
     }catch(e){}
   }
 
@@ -13252,8 +14689,6 @@ window.finMonthNav = function(delta){
     _gbPaused = false;
     _raf = requestAnimationFrame(loop);
   };
-  /* Expose clank for shared use by _playBallsShaking (unifies both ball sound systems) */
-  window._gbPlayClank = _playClank;
 
   /* ── Touch / click ripple on globe ── */
   function _playGlassPing(){
@@ -13262,39 +14697,22 @@ window.finMonthNav = function(delta){
     window._ensureAudioReady(function(ac){
       var now = ac.currentTime + 0.01;
       var dest = _dest();
-    /* Crystal glass ping — enhanced with attack transient + shimmer */
-    var freqs = _isMobile ? [1520, 2180, 3200] : [1520, 1840, 2180, 3200];
+    /* Crystal glass ping — fewer tones on mobile */
+    var freqs = _isMobile ? [1520, 2180] : [1520, 1840, 2180];
     var master = ac.createGain();
-    master.gain.setValueAtTime(0.28, now);
-    master.gain.exponentialRampToValueAtTime(0.001, now + (_isMobile ? 0.40 : 0.65));
+    master.gain.setValueAtTime(0.18, now);
+    master.gain.exponentialRampToValueAtTime(0.001, now + (_isMobile ? 0.35 : 0.6));
     master.connect(dest);
-
-    /* Finger-on-glass transient — 3ms noise burst */
-    try{
-      var tLen = Math.floor(ac.sampleRate * 0.003);
-      var tBuf = ac.createBuffer(1, tLen, ac.sampleRate);
-      var td = tBuf.getChannelData(0);
-      for(var ti=0;ti<tLen;ti++) td[ti]=(Math.random()*2-1)*Math.pow(1-ti/tLen,2);
-      var tSrc = ac.createBufferSource(); tSrc.buffer = tBuf;
-      var tHP = ac.createBiquadFilter(); tHP.type='highpass'; tHP.frequency.value=5000;
-      var tG = ac.createGain(); tG.gain.setValueAtTime(0.15, now); tG.gain.exponentialRampToValueAtTime(0.001, now+0.006);
-      tSrc.connect(tHP); tHP.connect(tG); tG.connect(dest);
-      tSrc.start(now);
-    }catch(e){}
-
     for(var fi = 0; fi < freqs.length; fi++){
       var osc = ac.createOscillator();
       var g = ac.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freqs[fi], now);
       osc.frequency.exponentialRampToValueAtTime(freqs[fi] * 0.995, now + 0.6);
-      /* Upper partials quieter but with longer tail for glass shimmer */
-      var ampVal = fi === 0 ? 0.6 : fi === 1 ? 0.3 : fi === 2 ? 0.18 : 0.08;
-      var decVal = 0.5 + fi * 0.08;
-      g.gain.setValueAtTime(ampVal, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + decVal);
+      g.gain.setValueAtTime(fi === 0 ? 0.6 : 0.3, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.5 + fi * 0.05);
       osc.connect(g); g.connect(master);
-      osc.start(now); osc.stop(now + decVal + 0.05);
+      osc.start(now); osc.stop(now + 0.65);
     }
     }); /* end _ensureAudioReady */
   }

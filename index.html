@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-21-vault-coins-v33-emblem-sfx'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-21-vault-coins-v39-maple-5lobe'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -8753,6 +8753,61 @@ function _fxVialDraw(ts){
 
 
 /* ═══════════════════════════════════════════════
+   COIN INTERACTION — fills the _chipInteract stub
+   that drawStack & finance code already reference.
+   • getWobble(i) — push the stack, top coins jiggle
+   • inspect mode — tap a coin to lift it out
+   • tilt — drag during inspect, specular follows
+═══════════════════════════════════════════════ */
+window._chipInteract = window._chipInteract || {
+  _wobbleChips: [],
+  _wobbleStart: 0,
+  _inspect: { idx:-1, t:0, dir:0, tiltX:0, tiltY:0, tiltTargetX:0, tiltTargetY:0 },
+
+  getWobble: function(i){
+    if(!this._wobbleChips || !this._wobbleChips.length) return 0;
+    var elapsed = (performance.now() - this._wobbleStart) / 1000;
+    if(elapsed > 0.9){ this._wobbleChips = []; return 0; }
+    if(this._wobbleChips.indexOf(i) < 0) return 0;
+    var decay = Math.exp(-elapsed * 4.2);
+    return Math.sin(elapsed * 23) * 3.4 * decay;
+  },
+
+  triggerStackWobble: function(visN){
+    this._wobbleChips = [];
+    this._wobbleStart = performance.now();
+    var n = Math.min(4, visN);
+    for(var i = Math.max(0, visN - n); i < visN; i++) this._wobbleChips.push(i);
+  },
+
+  startInspect: function(idx){
+    this._inspect.idx = idx;
+    this._inspect.dir = 1;
+    this._inspect.tiltX = 0; this._inspect.tiltY = 0;
+    this._inspect.tiltTargetX = 0; this._inspect.tiltTargetY = 0;
+  },
+  endInspect: function(){ this._inspect.dir = -1; },
+  setTilt: function(x, y){
+    var I = this._inspect;
+    I.tiltTargetX = Math.max(-0.7, Math.min(0.7, x));
+    I.tiltTargetY = Math.max(-0.5, Math.min(0.5, y));
+  },
+  tick: function(dt){
+    var I = this._inspect;
+    if(I.dir > 0) I.t = Math.min(1, I.t + dt * 3.4);
+    else if(I.dir < 0){
+      I.t = Math.max(0, I.t - dt * 3.8);
+      if(I.t === 0){ I.idx = -1; I.dir = 0; }
+    }
+    var k = Math.min(1, dt * 9);
+    I.tiltX += (I.tiltTargetX - I.tiltX) * k;
+    I.tiltY += (I.tiltTargetY - I.tiltY) * k;
+  },
+  isInspecting: function(){ return this._inspect.idx >= 0 && this._inspect.t > 0; }
+};
+
+
+/* ═══════════════════════════════════════════════
    COIN STACK — Vault chips
    Polished blue-chrome coins, reeded edges, specular
    sweep, sun glint, anisotropic streak, reflection.
@@ -8789,6 +8844,9 @@ function _fxDrawCashStack(ctx, W, H, t, state){
   if(!isFinite(dt)||dt<0)dt=0.016;
   if(dt>0.08)dt=0.05;
   state._lastT=t;
+
+  /* Tick interaction state — inspect lift/settle + tilt easing */
+  if(window._chipInteract && _chipInteract.tick) _chipInteract.tick(dt);
 
   var tgt=clamp(state.target!=null?state.target:(state.level||0),0,1);
   var k=1-Math.exp(-dt*3.4);
@@ -8910,36 +8968,49 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     ctx.ellipse(_cx,_cy,_rx,_ry,0,0,Math.PI*2);
   }
 
-  /* ─── EMBOSSED EMBLEM — 3-LAYER MINTED COIN FACE ───
-     Layer 1: octagonal seal frame + ascending chevron stack (center motif)
-     Layer 2: chronograph inscription ring (60 ticks, every 5th tall)
-     Layer 3: four cardinal accent dots
-     All layers struck with dark/bright stroke offsets for relief. */
-  function drawEmbossedMark(_cx,_cy,_rx,_ry,opacityScale,isFilled){
+  /* ─── EMBOSSED EMBLEM — CANADIAN MAPLE LEAF ───
+     Single sugar-maple leaf struck into the field:
+       • 11-point silhouette, vertical symmetry
+       • Palmate vein structure — central vein + 5 paired branches
+       • Short petiole at base
+       • Polished mirror fill (diagonal gradient) against matte frosted field
+       • Deepest strike on the coin — leaf anchors the composition
+       • Chronograph inscription ring as outer frame
+     Tilt-responsive: leaf gains a polished sheen highlight
+     when the coin is being inspected (matches real silver satin finish). */
+  function drawEmbossedMark(_cx,_cy,_rx,_ry,opacityScale,isFilled,tilt){
     opacityScale=opacityScale==null?1:opacityScale;
     var ratio=_ry/_rx; /* oblique squish — y is compressed vs x */
 
-    /* Helper: emboss a path-building closure with dark+bright passes */
-    function emboss(buildPath,darkW,brightW){
+    /* Helper: emboss a path-building closure with dark+bright passes.
+       opts.depth scales the strike offset (>1 = deeper relief);
+       opts.darkA / opts.brightA override default alphas. */
+    function emboss(buildPath,darkW,brightW,opts){
+      opts=opts||{};
+      var depth=opts.depth||1;
+      var darkA=opts.darkA!=null?opts.darkA:0.85;
+      var brightA=opts.brightA!=null?opts.brightA:0.65;
       ctx.save();
-      ctx.translate(0.5,0.4);
-      ctx.strokeStyle='rgba(3,10,25,'+(0.85*opacityScale)+')';
+      ctx.translate(0.5*depth,0.4*depth);
+      ctx.strokeStyle='rgba(3,10,25,'+(darkA*opacityScale)+')';
       ctx.lineWidth=darkW;ctx.lineJoin='round';ctx.lineCap='round';
       buildPath();ctx.stroke();
       ctx.restore();
       ctx.save();
-      ctx.translate(-0.4,-0.5);
-      ctx.strokeStyle='rgba(195,230,255,'+(0.65*opacityScale)+')';
+      ctx.translate(-0.4*depth,-0.5*depth);
+      ctx.strokeStyle='rgba(195,230,255,'+(brightA*opacityScale)+')';
       ctx.lineWidth=brightW;ctx.lineJoin='round';ctx.lineCap='round';
       buildPath();ctx.stroke();
       ctx.restore();
     }
-    function embossFill(buildPath,darkA,brightA){
-      ctx.save();ctx.translate(0.5,0.4);
+    function embossFill(buildPath,darkA,brightA,opts){
+      opts=opts||{};
+      var depth=opts.depth||1;
+      ctx.save();ctx.translate(0.5*depth,0.4*depth);
       ctx.fillStyle='rgba(3,10,25,'+(darkA*opacityScale)+')';
       buildPath();ctx.fill();
       ctx.restore();
-      ctx.save();ctx.translate(-0.4,-0.5);
+      ctx.save();ctx.translate(-0.4*depth,-0.5*depth);
       ctx.fillStyle='rgba(195,230,255,'+(brightA*opacityScale)+')';
       buildPath();ctx.fill();
       ctx.restore();
@@ -8957,13 +9028,13 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       ctx.fill();
     }
 
-    /* ─── LAYER 2: CHRONOGRAPH INSCRIPTION RING (drawn first, behind motif) ─── */
-    var insR=_rx*0.62; /* radius of inscription ring on the unsquished circle */
+    /* ─── OUTER FRAME: CHRONOGRAPH INSCRIPTION RING ─── */
+    var insR=_rx*0.62;
     var tickI=insR*0.94, tickO=insR*1.04, tickOLong=insR*1.08;
     function pathTicks(){
       ctx.beginPath();
       for(var ti=0;ti<60;ti++){
-        var th=(ti/60)*Math.PI*2 - Math.PI/2; /* start at top */
+        var th=(ti/60)*Math.PI*2 - Math.PI/2;
         var cosT=Math.cos(th), sinT=Math.sin(th);
         var rO=(ti%5===0)?tickOLong:tickO;
         var x0=_cx+tickI*cosT, y0=_cy+tickI*sinT*ratio;
@@ -8971,63 +9042,145 @@ function _fxDrawCashStack(ctx, W, H, t, state){
         ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);
       }
     }
-    emboss(pathTicks,0.7,0.5);
+    emboss(pathTicks,0.7,0.5,{brightA:0.32});
 
-    /* ─── LAYER 1: CENTER MOTIF — octagonal seal + chevron stack ─── */
-    var oR=_rx*0.40; /* outer octagon radius */
-    var oRi=_rx*0.28; /* inner negative-space cut radius */
-    function pathOctagonOuter(){
+    /* ─── CANADIAN MAPLE LEAF — the subject ───
+       Sugar-maple, 5 main lobes (top + 2 upper-sides + 2 lower-sides),
+       deep V-notches between each lobe, palmate vein structure,
+       short petiole at base. Matches the Royal Canadian Mint
+       Silver Maple Leaf coin design. */
+    var leafR=_rx*0.56;
+
+    /* Right-side outline (normalized to leafR, mirrored to left).
+       Trace: top apex → right edge → lobes → notches → stem.
+       The deep V-notches between lobes are what makes this READ as maple
+       (broadleaf trees like oak have shallower lobing). */
+    var leafPts=[
+      [0.00,-0.96], /*  0: top apex */
+      [0.20,-0.65], /*  1: top lobe right edge */
+      [0.12,-0.45], /*  2: NOTCH 1 (deep V-cut, inward) */
+      [0.30,-0.50], /*  3: upper-right lobe left edge */
+      [0.62,-0.55], /*  4: upper-right lobe TIP */
+      [0.50,-0.32], /*  5: upper-right lobe right edge */
+      [0.18,-0.10], /*  6: NOTCH 2 (deep V-cut, inward) */
+      [0.50,-0.05], /*  7: lower-right lobe left edge */
+      [0.92, 0.02], /*  8: lower-right lobe TIP (widest point) */
+      [0.75, 0.22], /*  9: lower-right lobe right edge */
+      [0.30, 0.35], /* 10: NOTCH 3 (deep V-cut toward stem) */
+      [0.08, 0.50], /* 11: leaf-stem transition */
+      [0.06, 0.56], /* 12: stem attach right */
+      [0.05, 0.96]  /* 13: stem bottom right */
+    ];
+
+    function pathLeaf(){
       ctx.beginPath();
-      for(var oi=0;oi<8;oi++){
-        var th=(oi/8)*Math.PI*2 - Math.PI/8; /* rotate so flats face N/S/E/W */
-        var x=_cx+oR*Math.cos(th), y=_cy+oR*Math.sin(th)*ratio;
-        if(oi===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      /* Right side from top apex down to stem bottom */
+      for(var li=0;li<leafPts.length;li++){
+        var nx=leafPts[li][0], ny=leafPts[li][1];
+        var x=_cx + nx*leafR;
+        var y=_cy + ny*leafR*ratio;
+        if(li===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      /* Close stem bottom across to left */
+      ctx.lineTo(_cx - 0.05*leafR, _cy + 0.96*leafR*ratio);
+      /* Left side from stem bottom back up to apex (mirror of right) */
+      for(var li=leafPts.length-1;li>=0;li--){
+        var nx=-leafPts[li][0], ny=leafPts[li][1];
+        var x=_cx + nx*leafR;
+        var y=_cy + ny*leafR*ratio;
+        ctx.lineTo(x,y);
       }
       ctx.closePath();
     }
-    function pathOctagonInner(){
-      ctx.beginPath();
-      for(var oi=0;oi<8;oi++){
-        var th=(oi/8)*Math.PI*2 + Math.PI/8; /* rotated 22.5° relative to outer */
-        var x=_cx+oRi*Math.cos(th), y=_cy+oRi*Math.sin(th)*ratio;
-        if(oi===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-      }
-      ctx.closePath();
-    }
-    /* Outer & inner octagon frames (thicker — primary hierarchy) */
-    emboss(pathOctagonOuter,1.2,0.9);
-    emboss(pathOctagonInner,1.0,0.75);
 
-    /* Ascending chevron stack inside the inner octagon — 3 chevrons */
-    function pathChevrons(){
-      ctx.beginPath();
-      var cW=oRi*0.62; /* chevron half-width */
-      var cH=oRi*0.30*ratio; /* chevron rise (apex), squished */
-      var cSpacing=cH*1.15;
-      for(var ci=0;ci<3;ci++){
-        var yOff=(ci-1)*cSpacing; /* -1, 0, +1 → stacked above/at/below center */
-        var apexY=_cy+yOff-cH*0.55;
-        var baseY=_cy+yOff+cH*0.45;
-        ctx.moveTo(_cx-cW,baseY);
-        ctx.lineTo(_cx,apexY);
-        ctx.lineTo(_cx+cW,baseY);
-      }
-    }
-    emboss(pathChevrons,1.1,0.85);
+    /* ─── LEAF FILL ─── Diagonal gradient — polished mirror catching sky */
+    ctx.save();
+    pathLeaf();
+    ctx.clip();
+    var leafFill=ctx.createLinearGradient(
+      _cx - leafR*0.4, _cy - leafR*ratio*0.9,
+      _cx + leafR*0.4, _cy + leafR*ratio*0.9
+    );
+    leafFill.addColorStop(0.00,'rgba(225,242,255,'+(0.85*opacityScale)+')');
+    leafFill.addColorStop(0.45,'rgba(150,195,240,'+(0.75*opacityScale)+')');
+    leafFill.addColorStop(1.00,'rgba(40,75,135,'+(0.85*opacityScale)+')');
+    ctx.fillStyle=leafFill;
+    ctx.fillRect(_cx - leafR*1.1, _cy - leafR*ratio*1.1, leafR*2.2, leafR*ratio*2.2);
+    ctx.restore();
 
-    /* ─── LAYER 3: FOUR CARDINAL ACCENT DOTS ─── */
-    var dotR=_rx*0.485; /* between inscription ring and engraved inner ring */
-    function pathCardinals(){
-      var angs=[-Math.PI/2,0,Math.PI/2,Math.PI]; /* N, E, S, W */
+    /* ─── LEAF OUTLINE ─── Deepest strike — the leaf anchors the coin */
+    emboss(pathLeaf, 1.5, 1.1, {depth:2.0});
+
+    /* ─── VEINS ─── PALMATE structure: all main veins originate from a
+       single point at the petiole attach (where stem meets leaf), then
+       radiate outward to each of the 5 lobe tips. Plus 4 secondary
+       veins branching from the main side veins toward lobe shoulders. */
+    function pathVeins(){
       ctx.beginPath();
-      for(var ci=0;ci<4;ci++){
-        var th=angs[ci];
-        var dx=_cx+dotR*Math.cos(th), dy=_cy+dotR*Math.sin(th)*ratio;
-        ctx.moveTo(dx+1.4,dy);
-        ctx.arc(dx,dy,1.4,0,Math.PI*2);
+      /* Origin: just above the petiole attach */
+      var ox_n=0.00, oy_n=0.50;
+      var ox=_cx + ox_n*leafR;
+      var oy=_cy + oy_n*leafR*ratio;
+
+      /* 5 main veins — each radiates from origin to its corresponding lobe tip,
+         stopping 88% of the way (fade into chlorophyll, like a real leaf) */
+      var mainTips=[
+        [0.00,-0.90], /* central → top apex */
+        [0.58,-0.52], /* upper-right */
+        [-0.58,-0.52],/* upper-left */
+        [0.86, 0.02], /* lower-right (mid-side widest) */
+        [-0.86, 0.02] /* lower-left */
+      ];
+      for(var vi=0;vi<mainTips.length;vi++){
+        var tx_n=mainTips[vi][0], ty_n=mainTips[vi][1];
+        var ex=_cx + tx_n*leafR;
+        var ey=_cy + ty_n*leafR*ratio;
+        ctx.moveTo(ox,oy);
+        ctx.lineTo(ex,ey);
+      }
+
+      /* 4 secondary veins — branch from each SIDE main vein at 55% of its
+         length, reach toward the lobe's shoulder (sub-point near the tip).
+         Adds the secondary detail visible on the real Silver Maple Leaf. */
+      var sideMains=[
+        {tip:[0.58,-0.52],  shoulder:[0.48,-0.30]}, /* upper-right */
+        {tip:[-0.58,-0.52], shoulder:[-0.48,-0.30]},/* upper-left */
+        {tip:[0.86, 0.02],  shoulder:[0.72, 0.20]}, /* lower-right */
+        {tip:[-0.86, 0.02], shoulder:[-0.72, 0.20]} /* lower-left */
+      ];
+      var branchT=0.55;
+      for(var si=0;si<sideMains.length;si++){
+        var sm=sideMains[si];
+        /* Branch point: origin + t*(tip - origin) */
+        var bx_n=ox_n + branchT*(sm.tip[0]-ox_n);
+        var by_n=oy_n + branchT*(sm.tip[1]-oy_n);
+        var bxPx=_cx + bx_n*leafR;
+        var byPx=_cy + by_n*leafR*ratio;
+        var shXpx=_cx + sm.shoulder[0]*leafR;
+        var shYpx=_cy + sm.shoulder[1]*leafR*ratio;
+        ctx.moveTo(bxPx,byPx);
+        ctx.lineTo(shXpx,shYpx);
       }
     }
-    embossFill(pathCardinals,0.85,0.65);
+    emboss(pathVeins, 0.9, 0.6, {depth:1.3, brightA:0.50});
+
+    /* ─── LEAF SHEEN — tilt-responsive polished-metal highlight ───
+       When inspecting, the leaf catches the light as you tilt the coin.
+       Matches the satin-mirror finish of the actual Silver Maple Leaf. */
+    if(tilt){
+      var sheenX=_cx + tilt.tx*leafR*0.55;
+      var sheenY=_cy + tilt.ty*leafR*0.55*ratio - leafR*0.12;
+      ctx.save();
+      pathLeaf();
+      ctx.clip();
+      var sheen=ctx.createRadialGradient(sheenX,sheenY,0,sheenX,sheenY,leafR*0.85);
+      sheen.addColorStop(0.00,'rgba(255,255,255,'+(0.75*opacityScale)+')');
+      sheen.addColorStop(0.35,'rgba(225,242,255,'+(0.35*opacityScale)+')');
+      sheen.addColorStop(1.00,'rgba(220,240,255,0)');
+      ctx.fillStyle=sheen;
+      ctx.fillRect(_cx - leafR*1.2, _cy - leafR*ratio*1.2, leafR*2.4, leafR*ratio*2.4);
+      ctx.restore();
+    }
   }
 
   /* ─── FROSTED FIELD NOISE PATTERN (lazy-cached on state) ─── */
@@ -9048,12 +9201,15 @@ function _fxDrawCashStack(ctx, W, H, t, state){
   }
 
   /* ─── ONE COIN ─── */
-  function drawCoin(_cx,cyTop,rx,ry,h,idx,mintAnim,opacityScale){
+  function drawCoin(_cx,cyTop,rx,ry,h,idx,mintAnim,opacityScale,tilt){
     /* Scale-in for new coins */
     var scale=mintAnim<1?0.55+mintAnim*0.45:1;
     rx*=scale;ry*=scale;
     var _h=h*scale;
     opacityScale=opacityScale==null?1:opacityScale;
+
+    /* Bill ref hoisted — used by reed loop (glint-knowledge) and edge-glint render */
+    var bill=state._bills[idx];
 
     /* Cast shadow */
     ctx.fillStyle='rgba(3,10,28,'+(0.50*opacityScale)+')';
@@ -9094,6 +9250,20 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     /* ─── REEDED EDGE RIDGES ─── */
     /* Locked to 45 visible (89-reed full circle / 2) for consistent authenticity. */
     var ridgeCount=45;
+
+    /* Pre-compute glint state once per coin (not per reed) */
+    var _glintActive=false, _glintAng=0, _glintEnvelope=0;
+    if(bill && bill.glintT != null){
+      var _gE=(t-bill.glintT)/1.1; /* 1100ms travel */
+      if(_gE>=0 && _gE<=1){
+        _glintActive=true;
+        _glintAng=_gE*Math.PI*2 - Math.PI/2; /* CW from top */
+        _glintEnvelope=Math.sin(_gE*Math.PI); /* peaks mid-travel */
+      }
+    }
+    var _glintSigma=0.18; /* ~10° spread per reed */
+    var _glintGain=1.4;
+
     for(var ri=0;ri<=ridgeCount;ri++){
       var rt=(ri/ridgeCount)*Math.PI;
       var xR=_cx+rx*Math.cos(Math.PI-rt);
@@ -9103,15 +9273,26 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       var lightDir=Math.PI/2+specPhase;
       var angleDiff=Math.abs((Math.PI-rt)-lightDir);
       var specBoost=Math.max(0,1-angleDiff*2.5);
+
+      /* Reed-knows-glint: Gaussian boost when the traveling glint passes overhead */
+      var glintBoost=0;
+      if(_glintActive){
+        var reedAng=Math.PI-rt;
+        var dA=Math.abs(reedAng-_glintAng);
+        if(dA>Math.PI) dA=Math.PI*2-dA; /* shortest arc */
+        glintBoost=Math.exp(-(dA*dA)/(2*_glintSigma*_glintSigma))*_glintGain*_glintEnvelope;
+      }
+
       var alpha=facing*0.85*opacityScale;
+      if(glintBoost>0.05) alpha=Math.min(1,alpha+glintBoost*0.35*opacityScale);
       if(alpha<0.04) continue;
       if(ri%2===0){
-        var b=0.30+facing*0.45+specBoost*0.55;
+        var b=0.30+facing*0.45+specBoost*0.55+glintBoost;
         ctx.strokeStyle='rgba('+Math.round(120+b*135)+','+Math.round(165+b*90)+','+Math.round(200+b*55)+','+alpha+')';
       } else {
         ctx.strokeStyle='rgba(5,12,28,'+(alpha*0.85)+')';
       }
-      ctx.lineWidth=facing>0.65?1.0:0.7;
+      ctx.lineWidth=(facing>0.65||glintBoost>0.5)?1.0:0.7;
       ctx.beginPath();
       ctx.moveTo(xR,yT);ctx.lineTo(xR,yB);
       ctx.stroke();
@@ -9143,7 +9324,7 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     for(var ai=0;ai<arcN;ai++){
       var rr=(ai+0.5)/arcN;
       var ax=rx*rr,ay=ry*rr;
-      var aa=(0.055+Math.sin(ai*1.91)*0.035)*opacityScale;
+      var aa=(0.038+Math.sin(ai*1.91)*0.024)*opacityScale;
       ctx.strokeStyle='rgba(190,225,255,'+aa+')';
       ctx.lineWidth=0.5;
       ctx.beginPath();
@@ -9186,48 +9367,27 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       ctx.restore();
     }
 
-    /* ─── RIM TEXT: 16 micro-ticks just inside the outer rim ───
-       The detail people zoom in on. Follows the squished ellipse curve. */
-    if(ry>10){
-      ctx.save();
-      ctx.strokeStyle='rgba(3,10,25,'+(0.55*opacityScale)+')';
-      ctx.lineWidth=0.7;
-      var rimI=0.91, rimO=0.965;
-      ctx.beginPath();
-      for(var rti=0;rti<16;rti++){
-        var rth=(rti/16)*Math.PI*2 - Math.PI/2;
-        var cT=Math.cos(rth), sT=Math.sin(rth);
-        ctx.moveTo(_cx+rx*rimI*cT,cyTop+ry*rimI*sT);
-        ctx.lineTo(_cx+rx*rimO*cT,cyTop+ry*rimO*sT);
-      }
-      ctx.stroke();
-      /* bright pass for relief */
-      ctx.strokeStyle='rgba(195,230,255,'+(0.32*opacityScale)+')';
-      ctx.lineWidth=0.5;
-      ctx.translate(-0.4,-0.5);
-      ctx.beginPath();
-      for(var rti=0;rti<16;rti++){
-        var rth=(rti/16)*Math.PI*2 - Math.PI/2;
-        var cT=Math.cos(rth), sT=Math.sin(rth);
-        ctx.moveTo(_cx+rx*rimI*cT,cyTop+ry*rimI*sT);
-        ctx.lineTo(_cx+rx*rimO*cT,cyTop+ry*rimO*sT);
-      }
-      ctx.stroke();
-      ctx.restore();
-    }
+    /* (Outer 16-tick ring removed — chronograph inscription is the only tick band.) */
 
-    /* Embossed center emblem — octagonal seal w/ chevron stack + inscription ring */
+    /* Embossed center emblem — sunrise scene + chronograph ring */
     if(ry>14){
       var isFilledCoin=(mintAnim>=1);
-      drawEmbossedMark(_cx,cyTop,rx*0.78,ry*0.78,opacityScale,isFilledCoin);
+      drawEmbossedMark(_cx,cyTop,rx*0.78,ry*0.78,opacityScale,isFilledCoin,tilt);
     }
 
     /* ─── SPECULAR SWEEP ─── */
     ctx.save();
     ellipsePath(_cx,cyTop,rx,ry);
     ctx.clip();
-    var sweepX=_cx+Math.cos(t*0.75+idx*0.15)*rx*0.45;
-    var sweepY=cyTop-ry*0.55;
+    var sweepX, sweepY;
+    if(tilt){
+      /* Inspect mode: highlight tracks the finger */
+      sweepX = _cx + tilt.tx * rx * 0.85;
+      sweepY = cyTop + tilt.ty * ry * 0.85 - ry * 0.25;
+    } else {
+      sweepX = _cx + Math.cos(t*0.75+idx*0.15) * rx * 0.45;
+      sweepY = cyTop - ry * 0.55;
+    }
     var sweep=ctx.createRadialGradient(sweepX,sweepY,0,sweepX,sweepY,rx*1.3);
     sweep.addColorStop(0,'rgba(255,255,255,'+(0.75*opacityScale)+')');
     sweep.addColorStop(0.20,'rgba(220,240,255,'+(0.40*opacityScale)+')');
@@ -9236,18 +9396,20 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     ctx.fillStyle=sweep;
     ctx.fillRect(_cx-rx,cyTop-ry,rx*2,ry*2);
 
-    /* Orbiting sun glint */
-    var glintAng=(t*0.6+idx*0.9)%(Math.PI*2);
-    var glintVisible=Math.max(0,-Math.sin(glintAng));
-    if(glintVisible>0.1){
-      var glintX=_cx+rx*0.82*Math.cos(glintAng);
-      var glintY=cyTop+ry*0.82*Math.sin(glintAng);
-      var glint=ctx.createRadialGradient(glintX,glintY,0,glintX,glintY,rx*0.18);
-      glint.addColorStop(0,'rgba(255,255,255,'+(glintVisible*0.95*opacityScale)+')');
-      glint.addColorStop(0.3,'rgba(220,240,255,'+(glintVisible*0.45*opacityScale)+')');
-      glint.addColorStop(1,'rgba(220,240,255,0)');
-      ctx.fillStyle=glint;
-      ctx.fillRect(glintX-rx*0.2,glintY-rx*0.2,rx*0.4,rx*0.4);
+    /* Orbiting sun glint — only during the drop arc; settled coins go still */
+    if(mintAnim<1){
+      var glintAng=(t*0.6+idx*0.9)%(Math.PI*2);
+      var glintVisible=Math.max(0,-Math.sin(glintAng));
+      if(glintVisible>0.1){
+        var glintX=_cx+rx*0.82*Math.cos(glintAng);
+        var glintY=cyTop+ry*0.82*Math.sin(glintAng);
+        var glint=ctx.createRadialGradient(glintX,glintY,0,glintX,glintY,rx*0.18);
+        glint.addColorStop(0,'rgba(255,255,255,'+(glintVisible*0.95*opacityScale)+')');
+        glint.addColorStop(0.3,'rgba(220,240,255,'+(glintVisible*0.45*opacityScale)+')');
+        glint.addColorStop(1,'rgba(220,240,255,0)');
+        ctx.fillStyle=glint;
+        ctx.fillRect(glintX-rx*0.2,glintY-rx*0.2,rx*0.4,rx*0.4);
+      }
     }
     ctx.restore();
 
@@ -9258,17 +9420,7 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     arcTop(_cx,cyTop,rx,ry);
     ctx.stroke();
 
-    /* Breathing rim glow on bottom front arc */
-    var breathe=0.5+0.5*Math.sin(t*1.9+idx*0.55);
-    ctx.save();
-    ctx.shadowColor='rgba(120,200,255,'+(0.35+breathe*0.30)*opacityScale+')';
-    ctx.shadowBlur=5+breathe*7;
-    ctx.strokeStyle='rgba(150,215,255,'+(0.18+breathe*0.22)*opacityScale+')';
-    ctx.lineWidth=0.8;
-    ctx.beginPath();
-    arcBottom(_cx,cyTop+_h,rx,ry,true);
-    ctx.stroke();
-    ctx.restore();
+    /* (Breathing rim glow removed — settled coins are still metal, not pacemakers.) */
 
     /* Mint flash during drop animation */
     if(mintAnim<1){
@@ -9285,26 +9437,27 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       ctx.restore();
     }
 
-    /* ─── EDGE GLINT: a single bright point travels the rim over 800ms
-       after the coin settles (mintAnim >= 1). One pass, then dormant. */
-    var bill=state._bills[idx];
+    /* ─── EDGE GLINT: a single bright point travels the rim over 1100ms
+       after the coin settles (mintAnim >= 1). One pass, then dormant.
+       The reed loop above also reads bill.glintT to brighten each reed as
+       the glint passes — light is in the metal, not on top of it. */
     if(bill && bill.glintT != null){
-      var gE=(t-bill.glintT)/0.8;
+      var gE=(t-bill.glintT)/1.1;
       if(gE>=0 && gE<=1){
         var gAng=gE*Math.PI*2 - Math.PI/2; /* start at top, sweep CW */
         var gx=_cx+rx*Math.cos(gAng);
         var gy=cyTop+ry*Math.sin(gAng);
         /* Brightness peaks mid-travel, fades at ends */
-        var gA=Math.sin(gE*Math.PI)*0.85*opacityScale;
+        var gA=Math.sin(gE*Math.PI)*1.0*opacityScale;
         ctx.save();
         ellipsePath(_cx,cyTop,rx*1.03,ry*1.03);
         ctx.clip();
-        var gGrad=ctx.createRadialGradient(gx,gy,0,gx,gy,rx*0.20);
+        var gGrad=ctx.createRadialGradient(gx,gy,0,gx,gy,rx*0.24);
         gGrad.addColorStop(0,'rgba(255,255,255,'+gA+')');
         gGrad.addColorStop(0.35,'rgba(220,240,255,'+(gA*0.55)+')');
         gGrad.addColorStop(1,'rgba(180,220,255,0)');
         ctx.fillStyle=gGrad;
-        ctx.fillRect(gx-rx*0.22,gy-rx*0.22,rx*0.44,rx*0.44);
+        ctx.fillRect(gx-rx*0.26,gy-rx*0.26,rx*0.52,rx*0.52);
         ctx.restore();
       } else if(gE>1){
         bill.glintT=null; /* one-shot — dormant after travel */
@@ -9315,6 +9468,10 @@ function _fxDrawCashStack(ctx, W, H, t, state){
   /* ─── DRAW STACK (bottom-up for correct z-order) ─── */
   function drawStack(isReflection){
     var stackBob=isReflection?0:bobY;
+    var insp = window._chipInteract ? _chipInteract._inspect : null;
+    var inspIdx = insp ? insp.idx : -1;
+    var inspT = insp ? insp.t : 0;
+    var dimAmt = inspT * 0.55;
     for(var i=0;i<fullN;i++){
       var b=state._bills[i];
       /* Advance drop animation; detect landing edges for sound + glint */
@@ -9349,7 +9506,19 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       if(typeof _chipInteract !== 'undefined' && _chipInteract.getWobble){
         xOff+=_chipInteract.getWobble(i);
       }
-      drawCoin(cx+xOff,yTop,rx,ry,coinH,i,mintAnim,1);
+
+      /* Inspect mode: skip the lifted coin in the real stack, fade it in the reflection,
+         dim background coins so the focus is on the inspected one. */
+      var op = 1;
+      if(i === inspIdx){
+        if(!isReflection) continue;        /* drawn separately as floating overlay */
+        op = 1 - inspT;                    /* reflection fades as coin lifts */
+      } else {
+        op = 1 - dimAmt;
+      }
+      if(op <= 0.01) continue;
+
+      drawCoin(cx+xOff,yTop,rx,ry,coinH,i,mintAnim,op,null);
     }
   }
 
@@ -9372,6 +9541,77 @@ function _fxDrawCashStack(ctx, W, H, t, state){
 
   /* ─── REAL STACK ─── */
   drawStack(false);
+
+  /* ─── INSPECTED COIN OVERLAY ───
+     Lifts out of the stack, scales up, un-squishes to face-on,
+     tilt-aware specular. Drawn last so it's above everything. */
+  if(window._chipInteract && _chipInteract._inspect.t > 0 && _chipInteract._inspect.idx >= 0){
+    var I = _chipInteract._inspect;
+    var idx = I.idx;
+    /* If the stack shrank below the inspected coin, dismiss */
+    if(idx >= fullN){
+      _chipInteract.endInspect();
+    } else {
+      var b = state._bills[idx];
+      if(b){
+        /* Home position (where the coin lives in the stack) */
+        var persp = 1 - (idx/COIN_MAX) * 0.06;
+        var homeYTop = baseY - (idx+1) * coinSpacing + bobY;
+        var homeRx = baseRx * persp;
+        var homeRy = baseRy * persp;
+        var homeH = coinH;
+        var homeX = cx + (b.xOff || 0);
+
+        /* Lifted position — centered, large, face-on */
+        var liftedRx = Math.min(W * 0.42, H * 0.22);
+        var targetX = cx;
+        var targetYTop = H * 0.34;
+        var targetRx = liftedRx;
+        var targetRy = liftedRx;          /* un-squished — looking dead at it */
+        var targetH = coinH * 0.28;       /* thin edge — face-on cylinder */
+
+        /* Ease-in-out cubic */
+        var et = I.t < 0.5 ? 4*I.t*I.t*I.t : 1 - Math.pow(-2*I.t+2, 3)/2;
+
+        var px = homeX + (targetX - homeX) * et;
+        var pyTop = homeYTop + (targetYTop - homeYTop) * et;
+        var prx = homeRx + (targetRx - homeRx) * et;
+        var pry = homeRy + (targetRy - homeRy) * et;
+        var ph  = homeH + (targetH - homeH) * et;
+
+        /* Tilt: subtle 3D rotation faked via scale on each axis */
+        var tiltScaleX = Math.cos(I.tiltX * 0.45);
+        var tiltScaleY = Math.cos(I.tiltY * 0.45);
+        prx *= tiltScaleX;
+        pry *= tiltScaleY;
+
+        /* Soft shadow under lifted coin — depth cue */
+        if(et > 0.05){
+          ctx.save();
+          ctx.fillStyle = 'rgba(3,10,28,' + (0.28 * et) + ')';
+          ctx.beginPath();
+          ctx.ellipse(px, pyTop + ph + pry * 0.55,
+                      prx * 1.15, pry * 0.35 + 6, 0, 0, Math.PI*2);
+          ctx.filter = 'blur(8px)';
+          ctx.fill();
+          ctx.restore();
+        }
+
+        drawCoin(px, pyTop, prx, pry, ph, idx, b.dropT, 1, {tx: I.tiltX, ty: I.tiltY});
+
+        /* Hint chip — tells user how to dismiss. Fades in with inspect. */
+        if(et > 0.4){
+          ctx.save();
+          ctx.globalAlpha = (et - 0.4) / 0.6;
+          ctx.fillStyle = 'rgba(220,235,255,0.55)';
+          ctx.font = '500 11px DM Sans, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('drag to tilt · tap to close', cx, H * 0.96);
+          ctx.restore();
+        }
+      }
+    }
+  }
 }
 
 /* Leftover vial tap → set leftover amount */
@@ -11180,6 +11420,118 @@ window.finMonthNav = function(delta){
     <button class="ios-confirm-cancel" id="ios-confirm-cancel">Cancel</button>
   </div>
 </div>
+
+
+<script>
+/* === VAULT INTERACTION — pointer events on #fx-canvas-free === */
+(function(){
+  function setup(){
+    var canvas = document.getElementById('fx-canvas-free');
+    if(!canvas){ setTimeout(setup, 400); return; }
+    if(canvas._chipInteractWired) return;
+    canvas._chipInteractWired = true;
+
+    /* Tell touch devices: we own horizontal+vertical gestures on this canvas */
+    canvas.style.touchAction = 'none';
+    canvas.style.cursor = 'pointer';
+
+    function getGeo(){
+      return (typeof _fxVialState !== 'undefined') && _fxVialState.free && _fxVialState.free._stackGeo;
+    }
+
+    function hitTest(mx, my){
+      var g = getGeo();
+      if(!g) return -1;
+      var state = _fxVialState.free;
+      var bobY = Math.sin((_fxVialTime||0) * 0.90) * 1.2;
+      var COIN_MAX = 15;
+      var baseRx = g.billW / 2;
+      var baseRy = baseRx * 0.28;
+      var coinH = baseRy * 0.85;
+      for(var i = g.visN - 1; i >= 0; i--){
+        var persp = 1 - (i / COIN_MAX) * 0.06;
+        var rx = baseRx * persp;
+        var ry = baseRy * persp;
+        var yTop = g.baseY - (i+1) * g.step + bobY;
+        var b = state._bills && state._bills[i];
+        var xOff = (b && b.xOff) || 0;
+        var ccx = g.cx + xOff;
+        /* Forgiving silhouette: top ellipse + side band + bottom arc */
+        if(mx < ccx - rx || mx > ccx + rx) continue;
+        if(my < yTop - ry || my > yTop + coinH + ry) continue;
+        /* For coins under the top one, only the front strip below the next coin's bottom counts */
+        if(i < g.visN - 1 && my < yTop - ry * 0.2) continue;
+        return i;
+      }
+      return -1;
+    }
+
+    var startX=0, startY=0, startT=0, lastX=0, lastY=0;
+    var moved=false, pid=null;
+
+    canvas.addEventListener('pointerdown', function(e){
+      pid = e.pointerId;
+      startX = lastX = e.offsetX;
+      startY = lastY = e.offsetY;
+      startT = performance.now();
+      moved = false;
+      try { canvas.setPointerCapture(pid); } catch(_){}
+    });
+
+    canvas.addEventListener('pointermove', function(e){
+      if(e.pointerId !== pid) return;
+      lastX = e.offsetX; lastY = e.offsetY;
+      var totalDx = e.offsetX - startX;
+      var totalDy = e.offsetY - startY;
+      if(Math.abs(totalDx) > 6 || Math.abs(totalDy) > 6) moved = true;
+
+      /* While inspecting, drag → tilt. Mapped from canvas center. */
+      if(window._chipInteract && _chipInteract.isInspecting()){
+        var cW = canvas._cssW || canvas.clientWidth || 1;
+        var cH = canvas._cssH || canvas.clientHeight || 1;
+        var tx = (e.offsetX - cW * 0.5) / (cW * 0.5);
+        var ty = (e.offsetY - cH * 0.34) / (cH * 0.5);
+        _chipInteract.setTilt(tx, ty);
+      }
+    });
+
+    canvas.addEventListener('pointerup', function(e){
+      if(e.pointerId !== pid) return;
+      try { canvas.releasePointerCapture(pid); } catch(_){}
+      var dur = performance.now() - startT;
+      var wasTap = !moved && dur < 600;
+
+      if(window._chipInteract && _chipInteract.isInspecting()){
+        if(wasTap){
+          _chipInteract.endInspect();
+          if(window._chipSnd && _chipSnd.playPickup) _chipSnd.playPickup(0.32);
+        } else {
+          /* Released from tilt — relax back to flat */
+          _chipInteract.setTilt(0, 0);
+        }
+      } else if(wasTap){
+        var hit = hitTest(e.offsetX, e.offsetY);
+        if(hit >= 0){
+          _chipInteract.startInspect(hit);
+          if(window._chipSnd && _chipSnd.playPickup) _chipSnd.playPickup(0.45);
+          if(navigator.vibrate) navigator.vibrate(14);
+        } else {
+          var g = getGeo();
+          if(g && g.visN > 0){
+            _chipInteract.triggerStackWobble(g.visN);
+            if(window._chipSnd && _chipSnd.playClink) _chipSnd.playClink(0.38);
+            if(navigator.vibrate) navigator.vibrate(8);
+          }
+        }
+      }
+      pid = null; moved = false;
+    });
+
+    canvas.addEventListener('pointercancel', function(){ pid = null; moved = false; });
+  }
+  setTimeout(setup, 500);
+})();
+</script>
 
 
 <script>

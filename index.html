@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-21-steve-review-v30'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-21-vault-coins-v33-emblem-sfx'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -2590,6 +2590,8 @@ const CONFIG = {
 const STEPS_WEEK = ['B','D','E','G','S','T','U','V','W','H','M','X','N']; // I/K/O dropped (no cards), C removed (ghost), J removed (Arrive Home), A/F removed (happen automatically)
 const STEPS_FRI  = ['B','D','K','N'];
 const STEPS_SAT  = ['B','D','G','Q','K','N','R'];
+const OPTIONAL_FRI = []; // weekend optional habits (Fri) — empty by default
+const OPTIONAL_SAT = []; // weekend optional habits (Sat) — empty by default
 /* Eid Al-Fitr 2026 — 17 Mar to 23 Mar: wellness-only essentials */
 const STEPS_EID  = ['B','K','N'];
 let STEPS      = STEPS_WEEK; // updated at runtime by applyDaySchedule()
@@ -5429,6 +5431,254 @@ function toggleSound(){
   if(btn) btn.textContent = _soundEnabled ? '🔊 Sound On' : '🔇 Sound Off';
   toast(_soundEnabled ? '🔊 Sound on' : '🔇 Sound off');
 }
+/* ═══════════════════════════════════════════════════
+   COIN STACK SOUND ENGINE — _chipSnd
+   Synthesized vault-coin SFX via Web Audio API.
+   Three-layer per-strike: transient noise + sine ring + body sweep.
+   Each strike randomized ±50 cents / ±15% decay / ±30% body.
+═══════════════════════════════════════════════════ */
+window._chipSnd = (function(){
+  function getCtx(){
+    return (window._getSharedAudioCtx ? window._getSharedAudioCtx()
+      : (window._getAudioCtx ? window._getAudioCtx() : null));
+  }
+  function soundOn(){
+    return (typeof _soundEnabled === 'undefined') ? true : !!_soundEnabled;
+  }
+  function rand(a,b){ return a + Math.random()*(b-a); }
+  function clamp01(v){ return v<0?0:(v>1?1:v); }
+
+  /* Sample-accurate envelope using exponentialRampToValueAtTime */
+  function envAR(param, ac, t0, peak, attack, release, floor){
+    floor = floor || 0.0001;
+    if(peak<floor) peak=floor*2;
+    param.cancelScheduledValues(t0);
+    param.setValueAtTime(floor, t0);
+    param.exponentialRampToValueAtTime(peak, t0 + attack);
+    param.exponentialRampToValueAtTime(floor, t0 + attack + release);
+  }
+
+  /* One synthesized coin strike at absolute `when` time on context `ac` */
+  function strike(ac, when, opts){
+    opts = opts || {};
+    var vel = clamp01(opts.velocity != null ? opts.velocity : 0.7);
+    var freqShift = opts.freqShift || 0;   /* cents */
+    var decayMul = opts.decayMul || 1;
+    var bodyMul = opts.bodyMul || 1;
+    var ringMul = opts.ringMul || 1;
+    var dest = opts.destination || ac.destination;
+    var pitchMul = Math.pow(2, freqShift/1200);
+
+    /* STRIKE TRANSIENT — 0-30ms — bandpassed noise burst at ~5kHz */
+    try {
+      var buf = ac.createBuffer(1, Math.floor(ac.sampleRate*0.06), ac.sampleRate);
+      var d = buf.getChannelData(0);
+      for(var i=0;i<d.length;i++) d[i] = (Math.random()*2-1);
+      var nSrc = ac.createBufferSource(); nSrc.buffer = buf;
+      var bp = ac.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 5000 + rand(-600,600);
+      bp.Q.value = 1.8;
+      var nG = ac.createGain(); nG.gain.value = 0.0001;
+      nSrc.connect(bp).connect(nG).connect(dest);
+      envAR(nG.gain, ac, when, 0.22*vel, 0.005, 0.028);
+      nSrc.start(when);
+      nSrc.stop(when + 0.08);
+    } catch(e){}
+
+    /* RING — 3 sine partials, exponential decay 300-400ms */
+    var ringDecay = 0.34 * decayMul;
+    var partials = [
+      { f: 2400 * pitchMul, g: 0.22, det: 0 },
+      { f: 3850 * pitchMul, g: 0.13, det: rand(-8,8) },
+      { f: 5200 * pitchMul, g: 0.07, det: rand(-5,5) }
+    ];
+    partials.forEach(function(p){
+      try {
+        var osc = ac.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = p.f;
+        osc.detune.value = p.det;
+        var g = ac.createGain(); g.gain.value = 0.0001;
+        osc.connect(g).connect(dest);
+        envAR(g.gain, ac, when + 0.002, p.g * vel * ringMul, 0.004, ringDecay);
+        osc.start(when + 0.001);
+        osc.stop(when + 0.01 + ringDecay + 0.08);
+      } catch(e){}
+    });
+
+    /* BODY — sine sweep 200→80Hz over 80ms — gives mass */
+    try {
+      var bo = ac.createOscillator(); bo.type = 'sine';
+      var bg = ac.createGain(); bg.gain.value = 0.0001;
+      bo.frequency.setValueAtTime(200 * pitchMul, when);
+      bo.frequency.exponentialRampToValueAtTime(80 * pitchMul, when + 0.08);
+      bo.connect(bg).connect(dest);
+      envAR(bg.gain, ac, when, 0.085 * vel * bodyMul, 0.003, 0.13);
+      bo.start(when);
+      bo.stop(when + 0.18);
+    } catch(e){}
+  }
+
+  /* Procedural exponential-decay impulse response — used only by playStackComplete */
+  var _ir = null, _irRate = 0;
+  function getIR(ac){
+    if(_ir && _irRate === ac.sampleRate) return _ir;
+    var len = Math.floor(ac.sampleRate * 0.4);
+    var buf = ac.createBuffer(2, len, ac.sampleRate);
+    for(var ch=0; ch<2; ch++){
+      var d = buf.getChannelData(ch);
+      for(var i=0; i<len; i++){
+        var n = i/len;
+        d[i] = (Math.random()*2-1) * Math.exp(-n*5);
+      }
+    }
+    _ir = buf; _irRate = ac.sampleRate;
+    return buf;
+  }
+
+  /* ─── PUBLIC API ─── */
+  function playClink(velocity){
+    if(!soundOn()) return;
+    var ac = getCtx(); if(!ac) return;
+    var v = velocity != null ? velocity : 0.7;
+    strike(ac, ac.currentTime + 0.005, {
+      velocity: v,
+      freqShift: rand(-50, 50),
+      decayMul: rand(0.85, 1.15),
+      bodyMul: rand(0.70, 1.30)
+    });
+  }
+
+  function playCascade(count){
+    if(!soundOn()) return;
+    var ac = getCtx(); if(!ac) return;
+    var n = Math.max(1, Math.min(8, (count|0) || 3));
+    var t0 = ac.currentTime + 0.005;
+    var vel = 0.75;
+    for(var i=0;i<n;i++){
+      strike(ac, t0, {
+        velocity: vel,
+        /* Each successive strike slightly higher (stack tightens) */
+        freqShift: rand(-50,50) + i*45,
+        decayMul: rand(0.85, 1.15),
+        bodyMul: rand(0.7, 1.3)
+      });
+      t0 += rand(0.025, 0.080);
+      vel *= 0.86;
+    }
+  }
+
+  function playPickup(velocity){
+    if(!soundOn()) return;
+    var ac = getCtx(); if(!ac) return;
+    var v = velocity != null ? velocity : 0.5;
+    strike(ac, ac.currentTime + 0.005, {
+      velocity: v * 0.85,
+      freqShift: rand(-180, -60),   /* lower pitch — lifting away */
+      decayMul: rand(0.55, 0.75),    /* quicker decay */
+      bodyMul:  rand(0.35, 0.65),    /* less mass */
+      ringMul:  0.85
+    });
+  }
+
+  function playStackComplete(){
+    if(!soundOn()) return;
+    var ac = getCtx(); if(!ac) return;
+    var now = ac.currentTime + 0.005;
+    /* Reverb send via convolver + procedural IR */
+    var conv = null, wet = null;
+    try {
+      conv = ac.createConvolver();
+      conv.buffer = getIR(ac);
+      wet = ac.createGain(); wet.gain.value = 0.32;
+      conv.connect(wet).connect(ac.destination);
+    } catch(e){}
+    var dry = ac.createGain(); dry.gain.value = 0.65;
+    dry.connect(ac.destination);
+
+    var partials = [
+      { f: 1800, g: 0.34 },
+      { f: 2700, g: 0.16 },
+      { f: 3600, g: 0.09 }
+    ];
+    partials.forEach(function(p, idx){
+      try {
+        var osc = ac.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = p.f;
+        osc.detune.value = (idx-1) * 4;
+        var g = ac.createGain(); g.gain.value = 0.0001;
+        osc.connect(g);
+        g.connect(dry);
+        if(conv) g.connect(conv);
+        envAR(g.gain, ac, now, p.g, 0.008, 0.80);
+        osc.start(now);
+        osc.stop(now + 1.0);
+      } catch(e){}
+    });
+    /* Low body for weight */
+    try {
+      var bo = ac.createOscillator(); bo.type='sine';
+      var bg = ac.createGain(); bg.gain.value=0.0001;
+      bo.frequency.setValueAtTime(150, now);
+      bo.frequency.exponentialRampToValueAtTime(60, now + 0.15);
+      bo.connect(bg);
+      bg.connect(dry);
+      if(conv) bg.connect(conv);
+      envAR(bg.gain, ac, now, 0.18, 0.005, 0.42);
+      bo.start(now);
+      bo.stop(now + 0.6);
+    } catch(e){}
+  }
+
+  return {
+    playClink: playClink,
+    playCascade: playCascade,
+    playPickup: playPickup,
+    playStackComplete: playStackComplete
+  };
+})();
+
+/* Drop watcher — wired into _fxVialDraw via existing hook.
+   Detects: (a) coins crossing landing threshold → playClink(velocity)
+            (b) level reaching full → playStackComplete */
+window._chipDropSoundCheck = (function(){
+  var _prev = [];       /* per-coin previous dropT */
+  var _prevLevel = 0;
+  var _completeFired = false;
+  return function(){
+    try {
+      var state = (window._fxVialState && window._fxVialState.free);
+      if(!state || !state._bills || !window._chipSnd) return;
+      var bills = state._bills;
+      for(var i=0;i<bills.length;i++){
+        var prev = _prev[i];
+        var cur = bills[i].dropT;
+        /* Crossing the 0.78 bounce threshold = first contact */
+        if(prev != null && prev < 0.78 && cur >= 0.78){
+          /* Velocity scales with stack height: higher coins hit a taller stack
+             with slightly more force; cap so it doesn't get loud. */
+          var vel = 0.42 + Math.min(0.20, i*0.012);
+          window._chipSnd.playClink(vel);
+        }
+        _prev[i] = cur;
+      }
+      var lv = state._eased || 0;
+      if(!_completeFired && _prevLevel < 0.999 && lv >= 0.999){
+        _completeFired = true;
+        /* Delay slightly so it lands after the final clink decays */
+        setTimeout(function(){
+          if(window._chipSnd) window._chipSnd.playStackComplete();
+        }, 260);
+      }
+      /* Re-arm if level drops back below 1 (user subtracts) */
+      if(lv < 0.95) _completeFired = false;
+      _prevLevel = lv;
+    } catch(e){}
+  };
+})();
+
 function _getAudioCtx(){
   if(!_audioCtx){
     try { _audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){}
@@ -8503,34 +8753,34 @@ function _fxVialDraw(ts){
 
 
 /* ═══════════════════════════════════════════════
-   CASH BILL STACK — Leftover / Spending vial
-   Folded blue notes viewed edge-on, drop physics,
-   reflective floor, ambient particles
+   COIN STACK — Vault chips
+   Polished blue-chrome coins, reeded edges, specular
+   sweep, sun glint, anisotropic streak, reflection.
+   Drop-in replacement for the cash bill stack.
 ═══════════════════════════════════════════════ */
 function _fxDrawCashStack(ctx, W, H, t, state){
-  var BILL_MAX = 14;
+  var COIN_MAX = 15;
   function clamp(v,lo,hi){return v<lo?lo:v>hi?hi:v}
   function hash(n){var x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)}
 
   if(!state._init){
     state._init=true; state._lastT=t; state._eased=state.level||0;
-    state._lastFull=Math.floor(state._eased*BILL_MAX);
+    state._lastFull=Math.floor(state._eased*COIN_MAX);
     state._bills=state._bills||[];
     state._ambient=state._ambient||[];
-    for(var i=state._bills.length;i<BILL_MAX;i++){
+    /* Per-coin scatter — tiny xOff so the stack isn't a perfect cylinder */
+    for(var i=state._bills.length;i<COIN_MAX;i++){
       state._bills.push({
-        xOff:(hash(i*9.13+1)-0.5)*(W*0.05),
-        widthVar:1.0 - hash(i*3.71+5)*0.08,
-        rot:(hash(i*5.27+7)-0.5)*0.045,
+        xOff:(hash(i*9.13+1)-0.5)*(W*0.018),
         dropT:1,
         landed:true
       });
     }
     if(!state._ambient.length){
-      for(var i=0;i<32;i++){
+      for(var i=0;i<28;i++){
         state._ambient.push({x:Math.random(),y:Math.random(),vx:(Math.random()-0.5)*0.022,
-          vy:-0.014-Math.random()*0.035,size:0.4+Math.random()*1.4,phase:Math.random()*Math.PI*2,
-          alpha:0.05+Math.random()*0.22,bright:Math.random()<0.20});
+          vy:-0.012-Math.random()*0.030,size:0.4+Math.random()*1.4,phase:Math.random()*Math.PI*2,
+          alpha:0.04+Math.random()*0.20,bright:Math.random()<0.20});
       }
     }
   }
@@ -8546,32 +8796,50 @@ function _fxDrawCashStack(ctx, W, H, t, state){
   if(Math.abs(tgt-state._eased)<1e-4)state._eased=tgt;
   state.level=state._eased;
 
-  var exact=state._eased*BILL_MAX;
+  var exact=state._eased*COIN_MAX;
   var fullN=Math.floor(exact+1e-6);
-  var topFrac=clamp(exact-fullN,0,1);
-  var visN=Math.min(BILL_MAX,fullN+(topFrac>0.02?1:0));
 
+  /* Trigger drop animation for newly-filled coins */
   if(fullN>state._lastFull){
     for(var i=state._lastFull;i<fullN;i++){var b=state._bills[i];if(b){b.dropT=0;b.landed=false;}}
   }
   state._lastFull=fullN;
 
-  var cx=W*0.5, baseY=H*0.84;
-  var billW=W*0.88;
-  var billH=Math.max(8, Math.min(W*0.10, H*0.045));
-  var step=billH*0.88;
+  /* ─── GEOMETRY ─── */
+  var cx=W*0.5;
+  var baseY=H*0.86;
+  var baseRx=Math.min(W*0.42, W*0.42);   // fill canvas width
+  var baseRy=baseRx*0.28;
+  var coinH=baseRy*0.85;                 // thicker coins for 15-count stack
+  var coinSpacing=coinH*1.10;
 
-  /* Expose geometry for hit-testing */
-  state._stackGeo = {cx:cx,baseY:baseY,billW:billW,billH:billH,step:step,visN:visN,W:W,H:H};
+  /* Specular phase — slow drift, shared across coins */
+  var specPhase=Math.sin(t*0.70)*0.40;
 
-  /* Background ambient glow */
-  var bg=ctx.createRadialGradient(cx,baseY-billH*4,0,cx,baseY-billH*4,Math.max(W,H)*0.75);
-  bg.addColorStop(0,'rgba(45,95,175,0.20)');
-  bg.addColorStop(0.5,'rgba(22,50,108,0.06)');
+  /* Whole-stack bob */
+  var bobY=Math.sin(t*0.90)*1.2;
+
+  /* Expose geometry for external hit-testing (chip wobble system) */
+  state._stackGeo={cx:cx,baseY:baseY,billW:baseRx*2,billH:coinH,step:coinSpacing,visN:fullN,W:W,H:H};
+
+  /* ─── BACKGROUND ATMOSPHERE ─── */
+  /* Vertical volumetric light beam */
+  var beamGrad=ctx.createLinearGradient(W*0.15,0,W*0.85,0);
+  beamGrad.addColorStop(0,'rgba(127,200,255,0)');
+  beamGrad.addColorStop(0.4,'rgba(127,200,255,0.06)');
+  beamGrad.addColorStop(0.6,'rgba(127,200,255,0.06)');
+  beamGrad.addColorStop(1,'rgba(127,200,255,0)');
+  ctx.fillStyle=beamGrad;
+  ctx.fillRect(W*0.15,0,W*0.7,H);
+
+  /* Radial bg glow behind stack */
+  var bg=ctx.createRadialGradient(cx,baseY-coinSpacing*COIN_MAX*0.5,0,cx,baseY-coinSpacing*COIN_MAX*0.5,Math.max(W,H)*0.7);
+  bg.addColorStop(0,'rgba(45,95,175,0.18)');
+  bg.addColorStop(0.5,'rgba(22,50,108,0.05)');
   bg.addColorStop(1,'rgba(0,0,0,0)');
   ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
 
-  /* Ambient floating particles */
+  /* Ambient floating particles (kept from your original) */
   for(var pi=0;pi<state._ambient.length;pi++){
     var p=state._ambient[pi];
     p.x+=p.vx*dt;p.y+=p.vy*dt;p.phase+=dt*1.8;
@@ -8586,135 +8854,524 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     ctx.fillStyle=pg;ctx.fillRect(px-pr,py-pr,pr*2,pr*2);
   }
 
-  function drawBill(b,i,opacityScale){
-    var isTopB=(i===fullN)&&topFrac<0.98;
-    var frac=isTopB?topFrac:1;
-    var dE=1-Math.pow(1-b.dropT,3);
-    var descend=(1-dE)*-billH*7;
-    var bounce=0;
-    if(b.dropT>0.78&&b.dropT<1){
-      var bb=(b.dropT-0.78)/0.22;
-      bounce=Math.sin(bb*Math.PI)*(1-bb)*billH*0.18;
-    }
-    var settled=baseY-i*step-billH*0.5;
-    var y=settled+descend-bounce;
-    var x=cx+b.xOff;
-    var wobbleX = (typeof _chipInteract !== 'undefined') ? _chipInteract.getWobble(i) : 0;
-    x += wobbleX;
-    var bW=billW*b.widthVar;
-    var bH=billH*frac;
-    var pos=i/Math.max(1,BILL_MAX-1);
-    var lt=(0.62+pos*0.38)*opacityScale;
+  /* ─── BASE PLATFORM ─── */
+  var baseGrad=ctx.createRadialGradient(cx,baseY,0,cx,baseY,W*0.65);
+  baseGrad.addColorStop(0,'rgba(50,80,120,0.50)');
+  baseGrad.addColorStop(0.5,'rgba(20,40,70,0.30)');
+  baseGrad.addColorStop(1,'rgba(8,18,35,0)');
+  ctx.fillStyle=baseGrad;
+  ctx.fillRect(0,baseY-20,W,160);
+  /* Horizon */
+  ctx.strokeStyle='rgba(127,178,255,0.18)';
+  ctx.lineWidth=0.8;
+  ctx.beginPath();ctx.moveTo(W*0.06,baseY);ctx.lineTo(W*0.94,baseY);ctx.stroke();
 
-    ctx.save();
-    ctx.translate(x,y);
-    ctx.rotate(b.rot);
-
-    /* Bill body — deep blue paper gradient */
-    var bgB=ctx.createLinearGradient(-bW/2,0,bW/2,0);
-    bgB.addColorStop(0,  'rgba('+Math.round(18*lt)+','+Math.round(44*lt)+','+Math.round(102*lt)+',1)');
-    bgB.addColorStop(0.25,'rgba('+Math.round(42*lt)+','+Math.round(88*lt)+','+Math.round(168*lt)+',1)');
-    bgB.addColorStop(0.5, 'rgba('+Math.round(62*lt)+','+Math.round(120*lt)+','+Math.round(212*lt)+',1)');
-    bgB.addColorStop(0.75,'rgba('+Math.round(42*lt)+','+Math.round(88*lt)+','+Math.round(168*lt)+',1)');
-    bgB.addColorStop(1,  'rgba('+Math.round(18*lt)+','+Math.round(44*lt)+','+Math.round(102*lt)+',1)');
-    ctx.fillStyle=bgB;
-    ctx.fillRect(-bW/2,-bH/2,bW,bH);
-
-    /* Vertical paper-edge gradient (top lit, bottom shadowed) */
-    if(bH>3.5){
-      var vg=ctx.createLinearGradient(0,-bH/2,0,bH/2);
-      vg.addColorStop(0,'rgba(245,252,255,'+(0.30*lt)+')');
-      vg.addColorStop(0.25,'rgba(245,252,255,0)');
-      vg.addColorStop(0.75,'rgba(0,5,20,0)');
-      vg.addColorStop(1,'rgba(0,5,20,0.55)');
-      ctx.fillStyle=vg;
-      ctx.fillRect(-bW/2,-bH/2,bW,bH);
-    }
-
-    /* Top edge highlight — paper edge catching light */
-    var th=ctx.createLinearGradient(0,-bH/2,0,-bH/2+Math.max(1,bH*0.18));
-    th.addColorStop(0,'rgba(245,252,255,'+(0.85*lt)+')');
-    th.addColorStop(1,'rgba(245,252,255,0)');
-    ctx.fillStyle=th;
-    ctx.fillRect(-bW/2,-bH/2,bW,Math.max(1,bH*0.18));
-
-    /* Bottom dark seam — where it meets bill below */
-    ctx.fillStyle='rgba(0,3,14,0.7)';
-    ctx.fillRect(-bW/2,bH/2-Math.max(0.6,bH*0.10),bW,Math.max(0.6,bH*0.10));
-
-    /* Side security strips (left + right edge bands) */
-    if(bH>4){
-      var stripeH=bH-Math.max(1,bH*0.30);
-      ctx.fillStyle='rgba(165,210,255,'+(0.32*lt)+')';
-      ctx.fillRect(-bW/2+bW*0.08, -bH/2+bH*0.18, Math.max(0.8,bW*0.012), stripeH);
-      ctx.fillRect( bW/2-bW*0.08-Math.max(0.8,bW*0.012), -bH/2+bH*0.18, Math.max(0.8,bW*0.012), stripeH);
-    }
-
-    /* Central specular shine line (chrome highlight band) */
-    var sp=ctx.createLinearGradient(-bW/2,0,bW/2,0);
-    sp.addColorStop(0.42,'rgba(255,255,255,0)');
-    sp.addColorStop(0.48,'rgba(245,252,255,'+(0.20*lt)+')');
-    sp.addColorStop(0.50,'rgba(255,255,255,'+(0.40*lt)+')');
-    sp.addColorStop(0.52,'rgba(245,252,255,'+(0.20*lt)+')');
-    sp.addColorStop(0.58,'rgba(255,255,255,0)');
-    ctx.fillStyle=sp;
-    ctx.fillRect(-bW/2,-bH/2+Math.max(0.5,bH*0.10),bW,bH-Math.max(1,bH*0.20));
-
-    /* Outer thin border */
-    ctx.lineWidth=Math.max(0.4,bW*0.0015);
-    ctx.strokeStyle='rgba(180,215,255,'+(0.35*lt)+')';
-    ctx.strokeRect(-bW/2,-bH/2,bW,bH);
-
-    ctx.restore();
-  }
-
-  /* Reflection */
-  if(visN>0){
-    ctx.save();
-    ctx.translate(cx,baseY);
-    ctx.scale(1,-0.55);
-    ctx.translate(-cx,-baseY);
-    ctx.globalAlpha=0.30;
-    for(var i=0;i<visN;i++){
-      drawBill(state._bills[i], i, 0.7);
-    }
-    ctx.restore();
-    var fade=ctx.createLinearGradient(0,baseY,0,baseY+billH*5);
-    fade.addColorStop(0,'rgba(4,9,18,0)');
-    fade.addColorStop(1,'rgba(4,9,18,1)');
-    ctx.fillStyle=fade;ctx.fillRect(0,baseY,W,H-baseY);
-  }
-
-  /* Floor glow */
-  var fg=ctx.createRadialGradient(cx,baseY,0,cx,baseY,billW*0.85);
-  fg.addColorStop(0,'rgba(120,180,250,0.28)');
-  fg.addColorStop(0.5,'rgba(80,140,210,0.07)');
-  fg.addColorStop(1,'rgba(80,140,210,0)');
-  ctx.fillStyle=fg;
-  ctx.fillRect(0,baseY-billH*0.6,W,billH*2);
-
-  /* Contact shadow */
-  var shI=0.30+0.42*(visN/BILL_MAX);
-  var shR=billW*0.55*(1.05+0.04*visN);
+  /* Contact shadow under bottom coin */
+  var shI=0.28+0.40*(fullN/COIN_MAX);
+  var shR=baseRx*1.05;
   ctx.save();
-  ctx.translate(cx,baseY+2);
-  ctx.scale(1,0.28);
+  ctx.translate(cx,baseY+1);
+  ctx.scale(1,0.25);
   var sg2=ctx.createRadialGradient(0,0,0,0,0,shR);
   sg2.addColorStop(0,'rgba(0,0,0,'+shI+')');
-  sg2.addColorStop(0.5,'rgba(0,0,0,'+(shI*0.45)+')');
+  sg2.addColorStop(0.55,'rgba(0,0,0,'+(shI*0.40)+')');
   sg2.addColorStop(1,'rgba(0,0,0,0)');
   ctx.fillStyle=sg2;
   ctx.beginPath();ctx.arc(0,0,shR,0,Math.PI*2);ctx.fill();
   ctx.restore();
 
-  /* Draw the bill stack */
-  for(var i=0;i<visN;i++){
-    var b=state._bills[i];
-    if(b.dropT<1){
-      b.dropT=Math.min(1,b.dropT+dt*2.6);
+  /* ─── PATH HELPERS ─── */
+  function arcBottom(_cx,_cy,_rx,_ry,leftToRight){
+    var steps=24;
+    if(leftToRight){
+      ctx.moveTo(_cx-_rx,_cy);
+      for(var i=1;i<=steps;i++){
+        var ang=Math.PI-(i/steps)*Math.PI;
+        ctx.lineTo(_cx+_rx*Math.cos(ang),_cy+_ry*Math.sin(ang));
+      }
+    } else {
+      ctx.lineTo(_cx+_rx,_cy);
+      for(var i=1;i<=steps;i++){
+        var ang=(i/steps)*Math.PI;
+        ctx.lineTo(_cx+_rx*Math.cos(ang),_cy+_ry*Math.sin(ang));
+      }
     }
-    drawBill(b, i, 1.0);
   }
+  function arcTop(_cx,_cy,_rx,_ry){
+    var steps=24;
+    ctx.moveTo(_cx-_rx,_cy);
+    for(var i=1;i<=steps;i++){
+      var ang=Math.PI+(i/steps)*Math.PI;
+      ctx.lineTo(_cx+_rx*Math.cos(ang),_cy+_ry*Math.sin(ang));
+    }
+  }
+  function ellipsePath(_cx,_cy,_rx,_ry){
+    ctx.beginPath();
+    ctx.ellipse(_cx,_cy,_rx,_ry,0,0,Math.PI*2);
+  }
+
+  /* ─── EMBOSSED EMBLEM — 3-LAYER MINTED COIN FACE ───
+     Layer 1: octagonal seal frame + ascending chevron stack (center motif)
+     Layer 2: chronograph inscription ring (60 ticks, every 5th tall)
+     Layer 3: four cardinal accent dots
+     All layers struck with dark/bright stroke offsets for relief. */
+  function drawEmbossedMark(_cx,_cy,_rx,_ry,opacityScale,isFilled){
+    opacityScale=opacityScale==null?1:opacityScale;
+    var ratio=_ry/_rx; /* oblique squish — y is compressed vs x */
+
+    /* Helper: emboss a path-building closure with dark+bright passes */
+    function emboss(buildPath,darkW,brightW){
+      ctx.save();
+      ctx.translate(0.5,0.4);
+      ctx.strokeStyle='rgba(3,10,25,'+(0.85*opacityScale)+')';
+      ctx.lineWidth=darkW;ctx.lineJoin='round';ctx.lineCap='round';
+      buildPath();ctx.stroke();
+      ctx.restore();
+      ctx.save();
+      ctx.translate(-0.4,-0.5);
+      ctx.strokeStyle='rgba(195,230,255,'+(0.65*opacityScale)+')';
+      ctx.lineWidth=brightW;ctx.lineJoin='round';ctx.lineCap='round';
+      buildPath();ctx.stroke();
+      ctx.restore();
+    }
+    function embossFill(buildPath,darkA,brightA){
+      ctx.save();ctx.translate(0.5,0.4);
+      ctx.fillStyle='rgba(3,10,25,'+(darkA*opacityScale)+')';
+      buildPath();ctx.fill();
+      ctx.restore();
+      ctx.save();ctx.translate(-0.4,-0.5);
+      ctx.fillStyle='rgba(195,230,255,'+(brightA*opacityScale)+')';
+      buildPath();ctx.fill();
+      ctx.restore();
+    }
+
+    /* Subtle wear highlight on FILLED coins — relief catching light */
+    if(isFilled){
+      var wear=ctx.createRadialGradient(_cx,_cy,0,_cx,_cy,_rx*0.45);
+      wear.addColorStop(0,'rgba(220,240,255,'+(0.30*opacityScale)+')');
+      wear.addColorStop(0.55,'rgba(220,240,255,'+(0.08*opacityScale)+')');
+      wear.addColorStop(1,'rgba(220,240,255,0)');
+      ctx.fillStyle=wear;
+      ctx.beginPath();
+      ctx.ellipse(_cx,_cy,_rx*0.45,_ry*0.45,0,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    /* ─── LAYER 2: CHRONOGRAPH INSCRIPTION RING (drawn first, behind motif) ─── */
+    var insR=_rx*0.62; /* radius of inscription ring on the unsquished circle */
+    var tickI=insR*0.94, tickO=insR*1.04, tickOLong=insR*1.08;
+    function pathTicks(){
+      ctx.beginPath();
+      for(var ti=0;ti<60;ti++){
+        var th=(ti/60)*Math.PI*2 - Math.PI/2; /* start at top */
+        var cosT=Math.cos(th), sinT=Math.sin(th);
+        var rO=(ti%5===0)?tickOLong:tickO;
+        var x0=_cx+tickI*cosT, y0=_cy+tickI*sinT*ratio;
+        var x1=_cx+rO*cosT,    y1=_cy+rO*sinT*ratio;
+        ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);
+      }
+    }
+    emboss(pathTicks,0.7,0.5);
+
+    /* ─── LAYER 1: CENTER MOTIF — octagonal seal + chevron stack ─── */
+    var oR=_rx*0.40; /* outer octagon radius */
+    var oRi=_rx*0.28; /* inner negative-space cut radius */
+    function pathOctagonOuter(){
+      ctx.beginPath();
+      for(var oi=0;oi<8;oi++){
+        var th=(oi/8)*Math.PI*2 - Math.PI/8; /* rotate so flats face N/S/E/W */
+        var x=_cx+oR*Math.cos(th), y=_cy+oR*Math.sin(th)*ratio;
+        if(oi===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.closePath();
+    }
+    function pathOctagonInner(){
+      ctx.beginPath();
+      for(var oi=0;oi<8;oi++){
+        var th=(oi/8)*Math.PI*2 + Math.PI/8; /* rotated 22.5° relative to outer */
+        var x=_cx+oRi*Math.cos(th), y=_cy+oRi*Math.sin(th)*ratio;
+        if(oi===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.closePath();
+    }
+    /* Outer & inner octagon frames (thicker — primary hierarchy) */
+    emboss(pathOctagonOuter,1.2,0.9);
+    emboss(pathOctagonInner,1.0,0.75);
+
+    /* Ascending chevron stack inside the inner octagon — 3 chevrons */
+    function pathChevrons(){
+      ctx.beginPath();
+      var cW=oRi*0.62; /* chevron half-width */
+      var cH=oRi*0.30*ratio; /* chevron rise (apex), squished */
+      var cSpacing=cH*1.15;
+      for(var ci=0;ci<3;ci++){
+        var yOff=(ci-1)*cSpacing; /* -1, 0, +1 → stacked above/at/below center */
+        var apexY=_cy+yOff-cH*0.55;
+        var baseY=_cy+yOff+cH*0.45;
+        ctx.moveTo(_cx-cW,baseY);
+        ctx.lineTo(_cx,apexY);
+        ctx.lineTo(_cx+cW,baseY);
+      }
+    }
+    emboss(pathChevrons,1.1,0.85);
+
+    /* ─── LAYER 3: FOUR CARDINAL ACCENT DOTS ─── */
+    var dotR=_rx*0.485; /* between inscription ring and engraved inner ring */
+    function pathCardinals(){
+      var angs=[-Math.PI/2,0,Math.PI/2,Math.PI]; /* N, E, S, W */
+      ctx.beginPath();
+      for(var ci=0;ci<4;ci++){
+        var th=angs[ci];
+        var dx=_cx+dotR*Math.cos(th), dy=_cy+dotR*Math.sin(th)*ratio;
+        ctx.moveTo(dx+1.4,dy);
+        ctx.arc(dx,dy,1.4,0,Math.PI*2);
+      }
+    }
+    embossFill(pathCardinals,0.85,0.65);
+  }
+
+  /* ─── FROSTED FIELD NOISE PATTERN (lazy-cached on state) ─── */
+  function getNoisePattern(){
+    if(state._noisePattern) return state._noisePattern;
+    var nC=document.createElement('canvas');
+    nC.width=64;nC.height=64;
+    var nx=nC.getContext('2d');
+    var imd=nx.createImageData(64,64);
+    var d=imd.data;
+    for(var i=0;i<d.length;i+=4){
+      var v=Math.random()*255|0;
+      d[i]=v;d[i+1]=v;d[i+2]=v;d[i+3]=28; /* very low alpha */
+    }
+    nx.putImageData(imd,0,0);
+    state._noisePattern=ctx.createPattern(nC,'repeat');
+    return state._noisePattern;
+  }
+
+  /* ─── ONE COIN ─── */
+  function drawCoin(_cx,cyTop,rx,ry,h,idx,mintAnim,opacityScale){
+    /* Scale-in for new coins */
+    var scale=mintAnim<1?0.55+mintAnim*0.45:1;
+    rx*=scale;ry*=scale;
+    var _h=h*scale;
+    opacityScale=opacityScale==null?1:opacityScale;
+
+    /* Cast shadow */
+    ctx.fillStyle='rgba(3,10,28,'+(0.50*opacityScale)+')';
+    ctx.beginPath();
+    ctx.ellipse(_cx,cyTop+_h+1.2,rx*1.02,ry*1.05,0,0,Math.PI*2);
+    ctx.fill();
+
+    /* ─── SIDE BAND ─── */
+    ctx.beginPath();
+    arcBottom(_cx,cyTop,rx,ry,true);
+    arcBottom(_cx,cyTop+_h,rx,ry,false);
+    ctx.closePath();
+    var bandGrad=ctx.createLinearGradient(_cx-rx,0,_cx+rx,0);
+    bandGrad.addColorStop(0.00,'#070f22');
+    bandGrad.addColorStop(0.15,'#1d3358');
+    bandGrad.addColorStop(0.42,'#6896cc');
+    bandGrad.addColorStop(0.50,'#8cb6e0');
+    bandGrad.addColorStop(0.58,'#6896cc');
+    bandGrad.addColorStop(0.85,'#1d3358');
+    bandGrad.addColorStop(1.00,'#070f22');
+    ctx.fillStyle=bandGrad;ctx.fill();
+
+    /* Vertical light/shadow gradient on band */
+    ctx.save();
+    ctx.beginPath();
+    arcBottom(_cx,cyTop,rx,ry,true);
+    arcBottom(_cx,cyTop+_h,rx,ry,false);
+    ctx.closePath();
+    ctx.clip();
+    var bandVert=ctx.createLinearGradient(0,cyTop,0,cyTop+_h);
+    bandVert.addColorStop(0,'rgba(170,220,255,0.10)');
+    bandVert.addColorStop(0.5,'rgba(255,255,255,0)');
+    bandVert.addColorStop(1,'rgba(0,5,20,0.28)');
+    ctx.fillStyle=bandVert;
+    ctx.fillRect(_cx-rx,cyTop,rx*2,_h);
+    ctx.restore();
+
+    /* ─── REEDED EDGE RIDGES ─── */
+    /* Locked to 45 visible (89-reed full circle / 2) for consistent authenticity. */
+    var ridgeCount=45;
+    for(var ri=0;ri<=ridgeCount;ri++){
+      var rt=(ri/ridgeCount)*Math.PI;
+      var xR=_cx+rx*Math.cos(Math.PI-rt);
+      var yT=cyTop+ry*Math.sin(Math.PI-rt);
+      var yB=cyTop+_h+ry*Math.sin(Math.PI-rt);
+      var facing=Math.sin(Math.PI-rt);
+      var lightDir=Math.PI/2+specPhase;
+      var angleDiff=Math.abs((Math.PI-rt)-lightDir);
+      var specBoost=Math.max(0,1-angleDiff*2.5);
+      var alpha=facing*0.85*opacityScale;
+      if(alpha<0.04) continue;
+      if(ri%2===0){
+        var b=0.30+facing*0.45+specBoost*0.55;
+        ctx.strokeStyle='rgba('+Math.round(120+b*135)+','+Math.round(165+b*90)+','+Math.round(200+b*55)+','+alpha+')';
+      } else {
+        ctx.strokeStyle='rgba(5,12,28,'+(alpha*0.85)+')';
+      }
+      ctx.lineWidth=facing>0.65?1.0:0.7;
+      ctx.beginPath();
+      ctx.moveTo(xR,yT);ctx.lineTo(xR,yB);
+      ctx.stroke();
+    }
+
+    /* AO line between top face & band */
+    ctx.strokeStyle='rgba(2,8,22,'+(0.7*opacityScale)+')';
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    arcBottom(_cx,cyTop,rx,ry,true);
+    ctx.stroke();
+
+    /* ─── TOP FACE ─── */
+    var topGrad=ctx.createRadialGradient(_cx-rx*0.28,cyTop-ry*0.55,0,_cx,cyTop,rx*1.15);
+    topGrad.addColorStop(0.00,'#a8c8e8');
+    topGrad.addColorStop(0.25,'#6c9cd0');
+    topGrad.addColorStop(0.55,'#33598c');
+    topGrad.addColorStop(0.80,'#142a48');
+    topGrad.addColorStop(1.00,'#060e20');
+    ctx.fillStyle=topGrad;
+    ellipsePath(_cx,cyTop,rx,ry);
+    ctx.fill();
+
+    /* Brushed metal concentric arcs */
+    ctx.save();
+    ellipsePath(_cx,cyTop,rx,ry);
+    ctx.clip();
+    var arcN=18;
+    for(var ai=0;ai<arcN;ai++){
+      var rr=(ai+0.5)/arcN;
+      var ax=rx*rr,ay=ry*rr;
+      var aa=(0.055+Math.sin(ai*1.91)*0.035)*opacityScale;
+      ctx.strokeStyle='rgba(190,225,255,'+aa+')';
+      ctx.lineWidth=0.5;
+      ctx.beginPath();
+      ctx.ellipse(_cx,cyTop,ax,ay,0,0,Math.PI*2);
+      ctx.stroke();
+    }
+
+    /* Anisotropic horizontal streak */
+    var streakY=cyTop+Math.sin(specPhase+idx*0.2)*ry*0.35;
+    var streakGrad=ctx.createLinearGradient(0,streakY-ry*0.25,0,streakY+ry*0.25);
+    streakGrad.addColorStop(0,'rgba(255,255,255,0)');
+    streakGrad.addColorStop(0.5,'rgba(220,240,255,'+(0.22*opacityScale)+')');
+    streakGrad.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=streakGrad;
+    ctx.fillRect(_cx-rx,streakY-ry*0.25,rx*2,ry*0.5);
+    ctx.restore();
+
+    /* Engraved inner ring */
+    ctx.strokeStyle='rgba(10,25,50,'+(0.85*opacityScale)+')';
+    ctx.lineWidth=1.0;
+    ellipsePath(_cx,cyTop,rx*0.78,ry*0.78);
+    ctx.stroke();
+    ctx.strokeStyle='rgba(170,220,255,'+(0.40*opacityScale)+')';
+    ctx.lineWidth=0.7;
+    ellipsePath(_cx+0.3,cyTop-0.3,rx*0.78,ry*0.78);
+    ctx.stroke();
+
+    /* ─── FROSTED FIELD (inside engraved inner ring, behind emblem) ───
+       Dual-finish contrast: field is matte-noise, emblem stays mirror-polished. */
+    if(ry>14){
+      ctx.save();
+      ellipsePath(_cx,cyTop,rx*0.77,ry*0.77);
+      ctx.clip();
+      var noisePat=getNoisePattern();
+      if(noisePat){
+        ctx.globalAlpha=0.55*opacityScale;
+        ctx.fillStyle=noisePat;
+        ctx.fillRect(_cx-rx,cyTop-ry,rx*2,ry*2);
+      }
+      ctx.restore();
+    }
+
+    /* ─── RIM TEXT: 16 micro-ticks just inside the outer rim ───
+       The detail people zoom in on. Follows the squished ellipse curve. */
+    if(ry>10){
+      ctx.save();
+      ctx.strokeStyle='rgba(3,10,25,'+(0.55*opacityScale)+')';
+      ctx.lineWidth=0.7;
+      var rimI=0.91, rimO=0.965;
+      ctx.beginPath();
+      for(var rti=0;rti<16;rti++){
+        var rth=(rti/16)*Math.PI*2 - Math.PI/2;
+        var cT=Math.cos(rth), sT=Math.sin(rth);
+        ctx.moveTo(_cx+rx*rimI*cT,cyTop+ry*rimI*sT);
+        ctx.lineTo(_cx+rx*rimO*cT,cyTop+ry*rimO*sT);
+      }
+      ctx.stroke();
+      /* bright pass for relief */
+      ctx.strokeStyle='rgba(195,230,255,'+(0.32*opacityScale)+')';
+      ctx.lineWidth=0.5;
+      ctx.translate(-0.4,-0.5);
+      ctx.beginPath();
+      for(var rti=0;rti<16;rti++){
+        var rth=(rti/16)*Math.PI*2 - Math.PI/2;
+        var cT=Math.cos(rth), sT=Math.sin(rth);
+        ctx.moveTo(_cx+rx*rimI*cT,cyTop+ry*rimI*sT);
+        ctx.lineTo(_cx+rx*rimO*cT,cyTop+ry*rimO*sT);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    /* Embossed center emblem — octagonal seal w/ chevron stack + inscription ring */
+    if(ry>14){
+      var isFilledCoin=(mintAnim>=1);
+      drawEmbossedMark(_cx,cyTop,rx*0.78,ry*0.78,opacityScale,isFilledCoin);
+    }
+
+    /* ─── SPECULAR SWEEP ─── */
+    ctx.save();
+    ellipsePath(_cx,cyTop,rx,ry);
+    ctx.clip();
+    var sweepX=_cx+Math.cos(t*0.75+idx*0.15)*rx*0.45;
+    var sweepY=cyTop-ry*0.55;
+    var sweep=ctx.createRadialGradient(sweepX,sweepY,0,sweepX,sweepY,rx*1.3);
+    sweep.addColorStop(0,'rgba(255,255,255,'+(0.75*opacityScale)+')');
+    sweep.addColorStop(0.20,'rgba(220,240,255,'+(0.40*opacityScale)+')');
+    sweep.addColorStop(0.55,'rgba(160,205,250,'+(0.10*opacityScale)+')');
+    sweep.addColorStop(1,'rgba(140,190,240,0)');
+    ctx.fillStyle=sweep;
+    ctx.fillRect(_cx-rx,cyTop-ry,rx*2,ry*2);
+
+    /* Orbiting sun glint */
+    var glintAng=(t*0.6+idx*0.9)%(Math.PI*2);
+    var glintVisible=Math.max(0,-Math.sin(glintAng));
+    if(glintVisible>0.1){
+      var glintX=_cx+rx*0.82*Math.cos(glintAng);
+      var glintY=cyTop+ry*0.82*Math.sin(glintAng);
+      var glint=ctx.createRadialGradient(glintX,glintY,0,glintX,glintY,rx*0.18);
+      glint.addColorStop(0,'rgba(255,255,255,'+(glintVisible*0.95*opacityScale)+')');
+      glint.addColorStop(0.3,'rgba(220,240,255,'+(glintVisible*0.45*opacityScale)+')');
+      glint.addColorStop(1,'rgba(220,240,255,0)');
+      ctx.fillStyle=glint;
+      ctx.fillRect(glintX-rx*0.2,glintY-rx*0.2,rx*0.4,rx*0.4);
+    }
+    ctx.restore();
+
+    /* Top rim highlight */
+    ctx.strokeStyle='rgba(220,240,255,'+(0.75*opacityScale)+')';
+    ctx.lineWidth=1.0;
+    ctx.beginPath();
+    arcTop(_cx,cyTop,rx,ry);
+    ctx.stroke();
+
+    /* Breathing rim glow on bottom front arc */
+    var breathe=0.5+0.5*Math.sin(t*1.9+idx*0.55);
+    ctx.save();
+    ctx.shadowColor='rgba(120,200,255,'+(0.35+breathe*0.30)*opacityScale+')';
+    ctx.shadowBlur=5+breathe*7;
+    ctx.strokeStyle='rgba(150,215,255,'+(0.18+breathe*0.22)*opacityScale+')';
+    ctx.lineWidth=0.8;
+    ctx.beginPath();
+    arcBottom(_cx,cyTop+_h,rx,ry,true);
+    ctx.stroke();
+    ctx.restore();
+
+    /* Mint flash during drop animation */
+    if(mintAnim<1){
+      var flashAlpha=(1-mintAnim)*0.85;
+      ctx.save();
+      ellipsePath(_cx,cyTop,rx,ry);
+      ctx.clip();
+      var flashGrad=ctx.createRadialGradient(_cx,cyTop,0,_cx,cyTop,rx*1.4);
+      flashGrad.addColorStop(0,'rgba(255,255,255,'+flashAlpha+')');
+      flashGrad.addColorStop(0.5,'rgba(170,220,255,'+(flashAlpha*0.5)+')');
+      flashGrad.addColorStop(1,'rgba(170,220,255,0)');
+      ctx.fillStyle=flashGrad;
+      ctx.fillRect(_cx-rx,cyTop-ry,rx*2,ry*2);
+      ctx.restore();
+    }
+
+    /* ─── EDGE GLINT: a single bright point travels the rim over 800ms
+       after the coin settles (mintAnim >= 1). One pass, then dormant. */
+    var bill=state._bills[idx];
+    if(bill && bill.glintT != null){
+      var gE=(t-bill.glintT)/0.8;
+      if(gE>=0 && gE<=1){
+        var gAng=gE*Math.PI*2 - Math.PI/2; /* start at top, sweep CW */
+        var gx=_cx+rx*Math.cos(gAng);
+        var gy=cyTop+ry*Math.sin(gAng);
+        /* Brightness peaks mid-travel, fades at ends */
+        var gA=Math.sin(gE*Math.PI)*0.85*opacityScale;
+        ctx.save();
+        ellipsePath(_cx,cyTop,rx*1.03,ry*1.03);
+        ctx.clip();
+        var gGrad=ctx.createRadialGradient(gx,gy,0,gx,gy,rx*0.20);
+        gGrad.addColorStop(0,'rgba(255,255,255,'+gA+')');
+        gGrad.addColorStop(0.35,'rgba(220,240,255,'+(gA*0.55)+')');
+        gGrad.addColorStop(1,'rgba(180,220,255,0)');
+        ctx.fillStyle=gGrad;
+        ctx.fillRect(gx-rx*0.22,gy-rx*0.22,rx*0.44,rx*0.44);
+        ctx.restore();
+      } else if(gE>1){
+        bill.glintT=null; /* one-shot — dormant after travel */
+      }
+    }
+  }
+
+  /* ─── DRAW STACK (bottom-up for correct z-order) ─── */
+  function drawStack(isReflection){
+    var stackBob=isReflection?0:bobY;
+    for(var i=0;i<fullN;i++){
+      var b=state._bills[i];
+      /* Advance drop animation; detect landing edges for sound + glint */
+      if(!isReflection && b.dropT<1){
+        var prevDrop=b.dropT;
+        b.dropT=Math.min(1,b.dropT+dt*2.6);
+        /* Bounce/contact frame — fire clink + start edge glint */
+        if(prevDrop<0.78 && b.dropT>=0.78){
+          b.landT=t;
+          b.glintT=t; /* kickoff rim-glint travel (800ms one-shot) */
+        }
+      }
+      var mintAnim=b.dropT;
+      /* Subtle perspective: higher coins are very slightly smaller */
+      var persp=1-(i/COIN_MAX)*0.06;
+      var rx=baseRx*persp;
+      var ry=baseRy*persp;
+      var yTop=baseY-(i+1)*coinSpacing+stackBob;
+      /* Drop physics: descend from above + tiny bounce */
+      if(mintAnim<1){
+        var dE=1-Math.pow(1-mintAnim,3);
+        var descend=(1-dE)*-coinH*6;
+        var bounce=0;
+        if(mintAnim>0.78){
+          var bb=(mintAnim-0.78)/0.22;
+          bounce=Math.sin(bb*Math.PI)*(1-bb)*coinH*0.15;
+        }
+        yTop+=descend-bounce;
+      }
+      /* External wobble hook (chip interaction) */
+      var xOff=b.xOff||0;
+      if(typeof _chipInteract !== 'undefined' && _chipInteract.getWobble){
+        xOff+=_chipInteract.getWobble(i);
+      }
+      drawCoin(cx+xOff,yTop,rx,ry,coinH,i,mintAnim,1);
+    }
+  }
+
+  /* ─── REFLECTION (filled coins flipped + faded) ─── */
+  ctx.save();
+  ctx.translate(cx,baseY);
+  ctx.scale(1,-0.45);
+  ctx.translate(-cx,-baseY);
+  ctx.globalAlpha=0.28;
+  drawStack(true);
+  ctx.restore();
+
+  /* Reflection fade overlay */
+  var fade=ctx.createLinearGradient(0,baseY,0,baseY+120);
+  fade.addColorStop(0,'rgba(10,22,42,0)');
+  fade.addColorStop(0.35,'rgba(10,22,42,0.55)');
+  fade.addColorStop(1,'rgba(10,22,42,1)');
+  ctx.fillStyle=fade;
+  ctx.fillRect(0,baseY,W,140);
+
+  /* ─── REAL STACK ─── */
+  drawStack(false);
 }
 
 /* Leftover vial tap → set leftover amount */
@@ -8802,7 +9459,7 @@ function fxAdjustLeftover(dir){
   if(typeof _chipInteract !== 'undefined'){
     var state = _fxVialState.free;
     if(state){
-      var visN = Math.floor((state._eased||0) * 14 + 1e-6);
+      var visN = Math.floor((state._eased||0) * 15 + 1e-6);
       _chipInteract._wobbleChips = [];
       _chipInteract._wobbleStart = performance.now();
       var wobbleCount = Math.min(3, Math.max(1, visN));
@@ -8812,8 +9469,8 @@ function fxAdjustLeftover(dir){
     }
   }
   if(typeof _chipSnd !== 'undefined'){
-    if(dir === 1) _chipSnd.playClink(0.5, 0.9);
-    else _chipSnd.playCascade(2);
+    if(dir === 1) _chipSnd.playClink(0.55);
+    else _chipSnd.playPickup(0.55);
   }
   if(navigator.vibrate) navigator.vibrate(dir === 1 ? [8, 4, 12] : [12, 6, 8]);
 }

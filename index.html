@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-21-vault-coins-v39-maple-5lobe'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-21-vault-coins-v39-maple-5lobe-p25'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -27,12 +27,17 @@
   try { last = localStorage.getItem('lifeOS_build'); } catch(e){}
   if(last !== BUILD){
     try { localStorage.setItem('lifeOS_build', BUILD); } catch(e){}
-    /* Wipe bowl library so it resets to updated defaults on new build */
+    /* Wipe bowl library on new build ONLY if user hasn't customized.
+       If b.libraryCustomized is true, preserve their changes.
+       getBowl() will still patch in new default balls via id-merge. */
     try {
       var _s = localStorage.getItem('lifeOS');
       if(_s){
         var _d = JSON.parse(_s);
-        if(_d.bowl){ delete _d.bowl.library; delete _d.bowl._themeLibMigrated; }
+        if(_d.bowl && !_d.bowl.libraryCustomized){
+          delete _d.bowl.library;
+          delete _d.bowl._themeLibMigrated;
+        }
         localStorage.setItem('lifeOS', JSON.stringify(_d));
       }
     } catch(e){}
@@ -441,16 +446,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 }
 .tc-ball.shattering{animation:tc-ball-shatter .5s ease-out forwards}
 
-/* Ball floor shadow */
-.tc-ball::before{
-  content:'';
-  position:absolute;
-  bottom:-5px;left:15%;right:15%;
-  height:4px;
-  background:radial-gradient(ellipse,rgba(0,0,0,.45) 0%,rgba(0,0,0,0) 100%);
-  border-radius:50%;
-  pointer-events:none;
-}
+/* Ball floor shadow moved to wrapper div in tcRender — keeps shadow static under bouncing ball */
 
 .tc-empty-state{
   position:absolute;inset:0;
@@ -2202,7 +2198,7 @@ backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid r
   <div class="bowl-progress" id="bowl-progress-card">
     <div class="bowl-progress-hdr">
       <span class="bowl-progress-lbl">Cycle Progress</span>
-      <span class="bowl-progress-stat" id="bowl-progress-stat">0 / 10</span>
+      <span class="bowl-progress-stat" id="bowl-progress-stat">0 pts</span>
     </div>
     <div class="bowl-progress-sub" id="bowl-progress-sub">Complete challenges to fill vials and earn tier rewards.</div>
     <div class="bowl-progress-bar">
@@ -2588,12 +2584,12 @@ const CONFIG = {
    Legacy days with I ticked keep their rating; removing from STEPS just means
    new days don't require it for "perfect day" completion. */
 const STEPS_WEEK = ['B','D','E','G','S','T','U','V','W','H','M','X','N']; // I/K/O dropped (no cards), C removed (ghost), J removed (Arrive Home), A/F removed (happen automatically)
-const STEPS_FRI  = ['B','D','K','N'];
-const STEPS_SAT  = ['B','D','G','Q','K','N','R'];
+const STEPS_FRI  = ['B','D','N'];
+const STEPS_SAT  = ['B','D','G','Q','N','R'];
 const OPTIONAL_FRI = []; // weekend optional habits (Fri) — empty by default
 const OPTIONAL_SAT = []; // weekend optional habits (Sat) — empty by default
 /* Eid Al-Fitr 2026 — 17 Mar to 23 Mar: wellness-only essentials */
-const STEPS_EID  = ['B','K','N'];
+const STEPS_EID  = ['B','N'];
 let STEPS      = STEPS_WEEK; // updated at runtime by applyDaySchedule()
 
 function isEidDay(d){
@@ -2700,6 +2696,8 @@ let todayKey = localKey(today);
         let s=gs(); if(!s.days) s.days={}; if(!s.days[todayKey]) s.days[todayKey]={}; ss(s,true);
         initToday(); buildYesterday(); buildHeatmap(); renderFinStrip();
         /* Refresh Bowl + Reward so crank resets and strip updates if page stays open */
+        _bowlDrawMap=null; _bowlDrawMapLen=-1; /* bust draw cache */
+        _bowlCrankBusy=false; /* unlock crank for new day */
         if(typeof renderBowl==='function') try{ renderBowl(); }catch(e){}
         if(typeof renderRewardStrip==='function') try{ renderRewardStrip(); }catch(e){}
         if(typeof renderReward==='function') try{ renderReward(); }catch(e){}
@@ -2760,6 +2758,15 @@ function _doSave(s){
     }
   }
 }
+
+/* ── Background flush: write pending state immediately when tab hides ──
+   iOS Safari may throttle/kill setTimeout when tab is backgrounded. */
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'hidden' && _saveTimer){
+    clearTimeout(_saveTimer); _saveTimer=null;
+    if(_stateCache) _doSave(_stateCache);
+  }
+});
 
 /* ── Cross-tab sync: if another tab writes to lifeOS, invalidate our cache ── */
 /* NOTE: on iOS Safari, localStorage.setItem fires the storage event in the SAME tab too.
@@ -3766,7 +3773,6 @@ function updStreaks(s){
   if(typeof _updateStreakBadges==='function') _updateStreakBadges(cur,best,s);
 }
 
-const _resetArmed=false,_resetTimer=null;
 function resetDay(){
   /* Fix 9: Show confirmation modal instead of double-tap pattern */
   const modal=document.getElementById('reset-confirm-modal');
@@ -4119,23 +4125,8 @@ function buildYesterday(){
 /* ── Heatmap ── */
 /* ── Fast-path: update only today's cell without full rebuild ── */
 function _hmUpdateToday(){
-  const grid=document.getElementById('hm-grid'); if(!grid) return buildHeatmap();
-  const cells=grid.querySelectorAll('.hm-cell');
-  if(!cells.length) return buildHeatmap();
-  /* Find today's cell by title prefix */
-  let s=gs(); let days=s.days||{};
-  const dd=days[todayKey]; let n=0;
-  if(dd&&typeof dd==='object') n=getTodaySteps().filter(function(st){ return !!dd[st]; }).length;
-  let total=getTodaySteps().length;
-  for(let i=0;i<cells.length;i++){
-    if(cells[i].title&&cells[i].title.indexOf('Today:')===0){
-      cells[i].title='Today: '+n+'/'+total+' habits';
-      /* No background change for today cell — it stays highlighted */
-      cells[i].setAttribute('aria-label',cells[i].title);
-      return;
-    }
-  }
-  /* Fallback: cell not found, do full rebuild */
+  /* Full rebuild — fast path was only updating title text, not background color.
+     buildHeatmap is cheap (16 weeks × 7 days = 112 cells) and gets it right. */
   buildHeatmap();
 }
 function buildHeatmap(){
@@ -4290,9 +4281,15 @@ function importData(e){
         if(validIds.length && validIds.indexOf(dr.themeId) === -1) return false;
         return true;
       });
-      /* Restore satellite data (reward image) if present in backup */
+      /* Restore satellite data (reward image) if present in backup.
+         Fallback: older backups stored image inline in reward.active.imageData. */
       try{
-        if(d._satellite_rwImg){ localStorage.setItem('lifeOS_rwImg', d._satellite_rwImg); delete d._satellite_rwImg; }
+        if(d._satellite_rwImg){
+          localStorage.setItem('lifeOS_rwImg', d._satellite_rwImg);
+          delete d._satellite_rwImg;
+        } else if(d.reward && d.reward.active && d.reward.active.imageData){
+          localStorage.setItem('lifeOS_rwImg', d.reward.active.imageData);
+        }
       }catch(e){}
       _stateCache=null;
       localStorage.setItem('lifeOS',JSON.stringify(d));
@@ -4467,7 +4464,6 @@ function _doExcelExport(){
   XLSX.writeFile(wb,'MyLifeOS-Export-'+todayKey+'.xlsx');
   toast('Excel exported ✓ — all your data is in the file!');
 }
-let _resetFinArmed=false;let _resetFinTimer=null;
 function resetFinanceData(){
   var modal=document.getElementById('reset-finance-modal');
   if(modal){ modal.classList.add('on'); return; }
@@ -4509,7 +4505,6 @@ function confirmResetFinance(){
   toast('✓ Finance template restored! Refreshing...');
   setTimeout(function(){ location.reload(); },1200);
 }
-let _clearAllArmed=false;let _clearAllTimer=null;
 function clearAll(){
   var modal=document.getElementById('clear-all-modal');
   if(modal){ modal.classList.add('on'); return; }
@@ -5038,12 +5033,12 @@ function rwCheckStreakIntegrity(){
   var scanDate=new Date(levelStart+'T12:00:00');
   var yesterday=new Date(today); yesterday.setDate(yesterday.getDate()-1);
   var missedDay=null;
+  var dmap=_getBowlDrawMap();
   while(scanDate<=yesterday){
     var dk=localKey(scanDate);
-    var dd=b.dailyDraws.find(function(x){ return x.date===dk; });
+    var dd=dmap[dk];
     if(!dd||!dd.chosenTier){ missedDay=dk; break; }
-    /* Skipped days are intentional passes — no streak break (matches UI promise) */
-    /* if(dd.chosenTier==='skipped') — continue, don't break */
+    /* Skipped days are intentional passes — no streak break */
     scanDate.setDate(scanDate.getDate()+1);
   }
   if(missedDay){
@@ -5096,10 +5091,11 @@ function _grantHabitBonus(dateKey){
   if(!stepsForDay.length) return;
   var allDone=stepsForDay.every(function(st){ return !!dayData[st]; });
   if(!allDone) return;
-  /* Grant it */
+  /* Grant it — immediate write, no debounce on bonus points */
   b.habitBonus[dateKey]=true;
   dd.pts=(dd.pts||0)+5;
-  setBowl(b);
+  _rwScoreCache=null; _rwScoreCacheKey=null;
+  let _s=gs(); _s.bowl=b; ss(_s,true);
   if(typeof renderRewardStrip==='function') setTimeout(renderRewardStrip,200);
   if(typeof renderBowl==='function') setTimeout(renderBowl,200);
   toast('⭐ Perfect Day bonus — +5 pts!');
@@ -5393,7 +5389,7 @@ function renderRewardStrip(){
   const a=rw.active;
   let imgSrc=a.imageData||a.imageUrl||'';
   const statusColor=isUnlocked?'var(--gold)':dailyStreak>0?'var(--a2)':'var(--muted)';
-  const statusLabel=isUnlocked?'🎉 CLAIM IT':'🔥 '+dailyStreak+' day streak';
+  const statusLabel=isUnlocked?'🎉 CLAIM IT':dailyStreak>0?'🔥 '+dailyStreak+' day streak':'⚡ Pull the crank';
   el.style.display='block';
   el.innerHTML=
     '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(107,182,255,.15);border-radius:10px;cursor:pointer" onclick="navTo(PAGE_IDS.indexOf(\'reward\'))">'
@@ -5934,8 +5930,10 @@ function _playGumballCrank(){
    This avoids the 180-node spike that caused the crackling. */
 var _ballSoundInterval = null;
 var _ballSoundPhase = 0;
+var _ballSoundVersion = 0;
 
 function _stopBallSound(){
+  _ballSoundVersion++;
   if(_ballSoundInterval){ clearTimeout(_ballSoundInterval); _ballSoundInterval=null; }
 }
 
@@ -6011,10 +6009,12 @@ function _playOneBallClank(actx, intensity){
 function _playBallsShaking(durationMs){
   if(!_soundEnabled) return;
   _stopBallSound();
+  var myVersion = ++_ballSoundVersion;
   var start = Date.now();
   var dur = durationMs || 3000;
 
   function scheduleNext(){
+    if(myVersion !== _ballSoundVersion) return; /* stale — abort */
     var elapsed = Date.now() - start;
     if(elapsed >= dur){ _stopBallSound(); return; }
     var actx = _getAudioCtx();
@@ -6443,10 +6443,10 @@ function renderScheduleSlider(){
   el.innerHTML=
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'+
       '<div>'+
-        '<div style="font-size:13px;font-weight:800;color:var(--sec)">Current schedule</div>'+
+        '<div style="font-size:13px;font-weight:800;color:var(--sec)">Habit card times</div>'+
         '<div style="font-size:12px;color:var(--muted);margin-top:3px">'+
-          'Wake: <strong style="color:var(--a2)">'+wakeTime+'</strong>'+
-          ' &nbsp;&middot;&nbsp; Sleep: <strong style="color:var(--a2)">'+sleepTime+'</strong>'+
+          'Earliest: <strong style="color:var(--a2)">'+wakeTime+'</strong>'+
+          ' &nbsp;&middot;&nbsp; Latest: <strong style="color:var(--a2)">'+sleepTime+'</strong>'+
         '</div>'+
       '</div>'+
       '<button onclick="setScheduleOffset(0);applyScheduleOffset();renderScheduleSlider();toast(\'Reset &#10003;\')" '+
@@ -6855,10 +6855,10 @@ function recalcTotalXP(){
   const bp=_getBP(s);
   bp.totalXP=isNaN(total)?0:total;
   bp.dailyXP[todayKey]=calcDayXP(todayKey,s).earned;
-  /* §2 FIX: Trim dailyXP to last 90 days to prevent unbounded storage growth. */
+  /* Trim dailyXP to last 365 days — matches bowl retention. */
   const _dxKeys=Object.keys(bp.dailyXP);
-  if(_dxKeys.length>90){
-    _dxKeys.sort().slice(0,_dxKeys.length-90).forEach(function(k){ delete bp.dailyXP[k]; });
+  if(_dxKeys.length>365){
+    _dxKeys.sort().slice(0,_dxKeys.length-365).forEach(function(k){ delete bp.dailyXP[k]; });
   }
   _setBP(bp);
   return total;
@@ -6968,7 +6968,11 @@ function getBowl(){
   if(_dirty) ss(s,true);
   return s.bowl;
 }
-function setBowl(b){ _rwScoreCache=null; _rwScoreCacheKey=null; let s=gs(); s.bowl=b; ss(s,true); }
+function setBowl(b){
+  _rwScoreCache=null; _rwScoreCacheKey=null;
+  _bowlDrawMap=null; _bowlDrawMapLen=-1;
+  let s=gs(); s.bowl=b; ss(s,true);
+}
 
 function bowlGetLibBall(id){
   var b=getBowl();
@@ -7009,9 +7013,21 @@ function bowlPickTheme(excludeId){
 }
 
 /* Find today's daily draw */
+/* Cached date→draw map. Invalidated on every setBowl(). */
+var _bowlDrawMap = null;
+var _bowlDrawMapLen = -1;
+function _getBowlDrawMap(){
+  var b = getBowl();
+  if(_bowlDrawMap && _bowlDrawMapLen === b.dailyDraws.length) return _bowlDrawMap;
+  _bowlDrawMap = Object.create(null);
+  for(var i=0; i<b.dailyDraws.length; i++){
+    _bowlDrawMap[b.dailyDraws[i].date] = b.dailyDraws[i];
+  }
+  _bowlDrawMapLen = b.dailyDraws.length;
+  return _bowlDrawMap;
+}
 function bowlFindDailyDraw(dateKey){
-  var b=getBowl();
-  return b.dailyDraws.find(function(d){ return d.date===dateKey; });
+  return _getBowlDrawMap()[dateKey] || null;
 }
 
 /* Draw a theme for today */
@@ -7038,7 +7054,10 @@ function bowlDrawTheme(source){
 }
 
 /* Manual crank — draw today's theme with animation */
+var _bowlCrankBusy = false;
 function bowlManualDraw(){
+  if(_bowlCrankBusy) return;
+
   /* Audio unlock — do this first on the gesture */
   try{
     var _ac2 = _getAudioCtx();
@@ -7053,7 +7072,6 @@ function bowlManualDraw(){
   /* Already drawn today? */
   var existing = bowlFindDailyDraw(todayKey2);
   if(existing){
-
     toast('Already drawn today — pick your tier below');
     renderBowl();
     return;
@@ -7062,10 +7080,11 @@ function bowlManualDraw(){
   /* Draw a theme */
   var theme = bowlDrawTheme('manual');
   if(!theme){
-
     toast('No themes available — add some in Settings');
     return;
   }
+
+  _bowlCrankBusy = true;
 
 
   /* Immediate UI feedback — disable crank, show spinning state */
@@ -7102,6 +7121,7 @@ function bowlManualDraw(){
     _triggerHaptic('heavy');
     /* SPARK 1: Dispense sound — the reveal moment */
     try{ _playBowlDispense(); }catch(e){}
+    _bowlCrankBusy = false;
   }, 3800);
 }
 
@@ -8000,6 +8020,8 @@ function bowlCloseModal(){
 }
 
 function bowlSaveBall(){
+  /* Mark library as customized — protects from build-buster wipe */
+  var _bc = getBowl(); _bc.libraryCustomized = true; setBowl(_bc);
   const name=(document.getElementById('bowl-modal-name').value||'').trim();
   const icon=(document.getElementById('bowl-modal-icon').value||'').trim()||'🎯';
   const easyDesc=(document.getElementById('bowl-modal-easy-desc').value||'').trim();
@@ -8122,7 +8144,10 @@ function tcComputeStreak(){
       break;
     }
     if(draw.chosenTier && draw.chosenTier !== 'skipped'){ streak++; continue; }
-    /* Past draw with no completion or skipped = break */
+    /* Skipped = intentional pass: doesn't break streak, doesn't increment.
+       Matches reward streak rule and the UI promise on Skip button. */
+    if(draw.chosenTier === 'skipped') continue;
+    /* Past draw with no completion at all = break */
     break;
   }
   return streak;
@@ -8343,7 +8368,7 @@ function tcRender(animateNew){
   var lastSize = tc._lastStreakSize || 0;
 
   /* Update header */
-  if(streakEl) streakEl.textContent = liveStreak + (liveStreak === 1 ? ' streak' : ' streak');
+  if(streakEl) streakEl.textContent = liveStreak + (liveStreak === 1 ? ' day streak' : ' day streak');
   if(bestEl) bestEl.textContent = 'Best: ' + bestStreak;
 
   /* Empty vs populated */
@@ -8373,14 +8398,21 @@ function tcRender(animateNew){
 
   inner.innerHTML = '';
   balls.forEach(function(b, idx){
+    /* Wrapper holds the static floor shadow; inner ball does the floating transform.
+       Decouples shadow from animation so it stays put under the bouncing ball. */
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;display:inline-block;';
+    var shadow = document.createElement('div');
+    shadow.style.cssText = 'position:absolute;bottom:-5px;left:15%;right:15%;height:4px;background:radial-gradient(ellipse,rgba(0,0,0,.45) 0%,rgba(0,0,0,0) 100%);border-radius:50%;pointer-events:none;';
     var el = document.createElement('div');
     el.className = 'tc-ball' + (animateNew && idx === balls.length - 1 ? ' entering' : '');
     el.setAttribute('data-diff', b.tier || 'easy');
     el.setAttribute('title', (b.ballName || '') + ' · ' + (b.tier || 'easy') + ' · ' + b.dateKey);
-    /* Deterministic shade: hash from dateKey so same ball always same shade */
     var seed = b.dateKey ? b.dateKey.split('').reduce(function(a,c){ return a+c.charCodeAt(0); }, 0) + idx : idx;
     el.innerHTML = tcBallSVG(b.tone, b.icon, 56, seed);
-    inner.appendChild(el);
+    wrap.appendChild(shadow);
+    wrap.appendChild(el);
+    inner.appendChild(wrap);
   });
 }
 
@@ -8586,10 +8618,11 @@ function fnxRender(){
 ══════════════════════════════════════════════════ */
 function fxRenderHero(f, mk, stats){
   const leftover = f.leftover || 0;
-  /* Use the running balance (leftoverCurrent) so hero matches the vial display */
+  /* Bottle log is the single source of truth.
+     leftoverCurrent = running balance maintained by +/- adjusts.
+     Spent = leftover - leftoverCurrent (what's been drained from the bottle). */
   const current = (f.leftoverCurrent !== undefined) ? f.leftoverCurrent : leftover;
-  const monthTx = fnxTxForMonth(f.transactions||[], mk);
-  const totalSpent = monthTx.reduce(function(a,t){return t.type==='expense'?a+t.amount:a},0);
+  const totalSpent = Math.max(0, leftover - current);
   const eg = (f.goals||[]).find(function(g){return (g.name||'').toLowerCase().indexOf('emergency')>-1});
 
   const d = fnxParseMK(mk);
@@ -9615,19 +9648,35 @@ function _fxDrawCashStack(ctx, W, H, t, state){
 }
 
 /* Leftover vial tap → set leftover amount */
+/* Modal-relocation: move all finance modals to body once on first need. */
+function _ensureModalsOnBody(){
+  if(document._finModalsRelocated) return;
+  ['cm-update-modal','fnx-edit-modal','edit-tx-modal','fnx-vdp'].forEach(function(id){
+    var m = document.getElementById(id);
+    if(m && m.parentNode !== document.body) document.body.appendChild(m);
+  });
+  document._finModalsRelocated = true;
+}
+
 function fxSetLeftover(){
+  _ensureModalsOnBody();
   const f = getF();
   const cur = f.leftover || 0;
   var amtEl = document.getElementById('cm-update-amt');
   var setEl = document.getElementById('cm-update-set');
   var titleEl = document.getElementById('cm-update-title');
-  if(!amtEl || typeof openModal !== 'function'){ fnxOpenEdit(); return; }
+  if(!amtEl){ fnxOpenEdit(); return; }
   if(titleEl) titleEl.textContent = 'Set Leftover' + (cur > 0 ? ' (currently '+fnxFmt(cur)+')' : '');
-  if(amtEl){ amtEl.value = ''; amtEl.placeholder = 'add to leftover'; }
+  amtEl.value = ''; amtEl.placeholder = 'add to leftover';
   if(setEl){ setEl.value = ''; setEl.placeholder = 'or set total to...'; }
   var noteEl = document.getElementById('cm-update-note'); if(noteEl) noteEl.value = '';
   window._fxLeftoverMode = true;
-  openModal('cm-update-modal');
+  var modal = document.getElementById('cm-update-modal');
+  if(modal){
+    modal.classList.add('on');
+    document.body.style.overflow = 'hidden';
+    setTimeout(function(){ var inp = document.getElementById('cm-update-set'); if(inp) inp.focus(); }, 60);
+  }
 }
 
 
@@ -9644,9 +9693,23 @@ function fxSetLeftover(){
 var _origConfirmCMUpdate = window.confirmCMUpdate;
 window.confirmCMUpdate = function(){
   if(!window._fxLeftoverMode){ if(typeof _origConfirmCMUpdate==='function') _origConfirmCMUpdate(); return; }
-  var amt = parseFloat(document.getElementById('cm-update-amt').value)||0;
-  var setTo = document.getElementById('cm-update-set').value;
+  var amtRaw = document.getElementById('cm-update-amt').value.trim();
+  var amt = amtRaw === '' ? 0 : parseFloat(amtRaw);
+  var setTo = (document.getElementById('cm-update-set').value||'').trim();
   var setVal = setTo!==''?parseFloat(setTo):null;
+  /* Reject partial/invalid input */
+  if(amtRaw !== '' && (isNaN(amt) || amt < 0)){
+    var _inp = document.getElementById('cm-update-amt');
+    if(_inp && typeof shakeEl==='function') shakeEl(_inp);
+    if(typeof toast==='function') toast('Invalid amount');
+    return;
+  }
+  if(setTo !== '' && (isNaN(setVal) || setVal < 0)){
+    var _inp2 = document.getElementById('cm-update-set');
+    if(_inp2 && typeof shakeEl==='function') shakeEl(_inp2);
+    if(typeof toast==='function') toast('Invalid amount');
+    return;
+  }
   if(!amt && setVal===null){ if(typeof toast==='function') toast('Enter an amount'); return; }
   var f = getF();
 
@@ -9904,8 +9967,11 @@ function fnxEditTx(id){
    SETTINGS MODAL (simplified)
 ══════════════════════════════════════════════════ */
 function fnxOpenEdit(){
+  _ensureModalsOnBody();
   fnxRenderEditModal();
-  document.getElementById('fnx-edit-modal').classList.add('on');
+  var _m = document.getElementById('fnx-edit-modal');
+  if(!_m) return;
+  _m.classList.add('on');
   document.body.style.overflow='hidden';
 }
 function fnxCloseEdit(){
@@ -10603,10 +10669,12 @@ window.finMonthNav = function(delta){
       }
       /* Ball-ball collision: use spatial grid on mobile (idle + excited), O(n^2) on desktop */
       if(_isMobile){
-          /* Spatial grid hash — pre-allocated flat arrays, zero GC per frame */
+          /* Spatial grid hash — pre-allocated flat arrays, zero GC per frame.
+             cols/rows computed from cell size so right edge can't escape. */
           var _gcell = 20;
           var _goff_x = GX - 170, _goff_y = GY - 195;
-          var _gcols = 17, _grows = 20;
+          var _gcols = Math.ceil(340 / _gcell);
+          var _grows = Math.ceil(400 / _gcell);
           var _gtotal = _gcols * _grows;
           /* Lazy-init persistent grid buffers */
           if(!_gridCounts){ _gridCounts = new Int16Array(_gtotal); _gridCells = new Int16Array(_gtotal * 12); }
@@ -11538,8 +11606,7 @@ window.finMonthNav = function(delta){
 /* === iOS PATCH — Bowl crank + reward image upload === */
 (function(){
 
-  /* 1. Crank — pointerup delegation. Fires on iOS Safari even when parent has touch-action:pan-y */
-  var _crankBusy = false;
+  /* 1. Crank — pointerup delegation. Lock is owned by bowlManualDraw (_bowlCrankBusy). */
   document.addEventListener('pointerup', function(e){
     var el = e.target;
     var btn = null;
@@ -11548,10 +11615,7 @@ window.finMonthNav = function(delta){
       el = el.parentElement;
     }
     if(!btn) return;
-
-    if(btn.disabled || _crankBusy) return;
-    _crankBusy = true;
-    setTimeout(function(){ _crankBusy = false; }, 900);
+    if(btn.disabled) return;
     try{
       var ac = window._getSharedAudioCtx ? window._getSharedAudioCtx()
              : (window._getAudioCtx ? window._getAudioCtx() : null);

@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-21-vault-coins-v39-maple-5lobe-p25'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-23-elev1'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -810,8 +810,14 @@ textarea.big:focus{border-bottom-color:var(--a2)}
 .modal-btns{display:flex;gap:9px;margin-top:18px}
 
 
-.toast{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%) translateY(10px);background:var(--nav-bg);backdrop-filter:blur(22px);border:1px solid var(--bdr);border-radius:99px;padding:11px 24px;font-family:var(--font-ui);font-size:13px;font-weight:600;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,.35);z-index:999;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;white-space:nowrap}
-.toast.on{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%) translateY(16px) scale(.94);background:var(--nav-bg);backdrop-filter:blur(22px);border:1px solid var(--bdr);border-radius:14px;padding:11px 22px;font-family:var(--font-ui);font-size:13px;font-weight:600;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,.35);z-index:999;opacity:0;pointer-events:none;transition:opacity .26s cubic-bezier(.34,1.3,.64,1),transform .26s cubic-bezier(.34,1.3,.64,1),border-color .3s;white-space:nowrap;overflow:hidden;max-width:88vw}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0) scale(1);pointer-events:auto}
+.toast.t-ok{border-color:rgba(74,222,128,.5);box-shadow:0 8px 32px rgba(0,0,0,.35),0 0 0 1px rgba(74,222,128,.12)}
+.toast.t-err{border-color:rgba(255,100,100,.5);box-shadow:0 8px 32px rgba(0,0,0,.35),0 0 0 1px rgba(255,100,100,.12)}
+.toast-bar{position:absolute;bottom:0;left:0;height:2px;background:var(--a2);border-radius:0 0 14px 14px;animation:toast-drain var(--toast-dur,2400ms) linear forwards}
+.toast.t-ok .toast-bar{background:var(--green)}
+.toast.t-err .toast-bar{background:var(--red)}
+@keyframes toast-drain{from{width:100%}to{width:0%}}
 
 
 .fin-strip::-webkit-scrollbar{display:none}
@@ -1066,6 +1072,8 @@ button,a,[role="button"],.hc-main,.hc-chk,.tab,.bn-tab,.epd-habit,.wk-day{-webki
 
 
 @keyframes tickPop{0%{transform:scale(0) rotate(-20deg);opacity:0}60%{transform:scale(1.25) rotate(4deg);opacity:1}100%{transform:scale(1) rotate(0deg);opacity:1}}
+@keyframes hm-today-pulse{0%,100%{box-shadow:0 0 0 0 rgba(126,200,255,.42)}55%{box-shadow:0 0 0 3.5px rgba(126,200,255,.0)}}
+@keyframes fnx-tx-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 .hc.done .hc-chk::after{content:'';position:absolute;inset:-6px;border-radius:50%;background:rgba(77,141,255,.18);animation:chkRipple .45s ease-out both;pointer-events:none}
 @keyframes chkRipple{from{opacity:1;transform:scale(.5)}to{opacity:0;transform:scale(1.8)}}
 
@@ -1178,18 +1186,22 @@ textarea.auto-grow{overflow:hidden;resize:none}
 .epd-date-input{flex:1;background:rgba(255,255,255,.09);border:1px solid var(--bdr);border-radius:var(--rs);color:#fff;font-family:var(--font-ui);font-size:13px;font-weight:600;padding:9px 13px;outline:none;transition:border-color .2s;color-scheme:dark;text-align:center}
 .epd-date-input:focus{border-color:rgba(126,200,255,.55)}
 
-.epd-habits-list{display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
-.epd-habit-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(127,178,255,.15);border-radius:6px;padding:10px 13px;cursor:pointer;transition:all .2s;user-select:none;-webkit-tap-highlight-color:transparent;min-height:52px}
-.epd-habit-row:hover{background:rgba(255,255,255,.1);border-color:rgba(127,178,255,.35)}
+.epd-habits-list{display:flex;flex-direction:column;gap:0;margin-bottom:4px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.12);border-radius:14px;overflow:hidden;backdrop-filter:blur(12px)}
+.epd-habit-row{display:flex;align-items:center;gap:14px;background:transparent;border:none;border-bottom:1px solid rgba(127,178,255,.1);border-radius:0;padding:13px 16px;cursor:pointer;transition:background .15s ease;user-select:none;-webkit-tap-highlight-color:transparent;min-height:58px}
+.epd-habit-row:hover{background:rgba(255,255,255,.04)}
+.epd-habits-list .epd-habit-row:last-child{border-bottom:none}
+.epd-habits-list .epd-habit-row:first-child{border-radius:14px 14px 0 0}
+.epd-habits-list .epd-habit-row:last-child{border-radius:0 0 14px 14px}
+.epd-habits-list .epd-habit-row:only-child{border-radius:14px}
 
-.epd-habit-row.tier-1{background:rgba(168,196,240,.1);border-color:rgba(168,196,240,.35)}
-.epd-habit-row.tier-2{background:rgba(77,141,255,.14);border-color:rgba(107,182,255,.5)}
-.epd-habit-row.tier-3{background:rgba(255,217,125,.1);border-color:rgba(255,217,125,.45)}
+.epd-habit-row.tier-1{background:rgba(168,196,240,.05)}
+.epd-habit-row.tier-2{background:rgba(77,141,255,.07)}
+.epd-habit-row.tier-3{background:rgba(255,217,125,.05)}
 
-.epd-tier-chk{width:36px;height:36px;border-radius:6px;border:2px solid rgba(127,178,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .22s;font-size:15px;font-weight:900;background:rgba(255,255,255,.04)}
-.epd-habit-row.tier-1 .epd-tier-chk{background:rgba(168,196,240,.2);border-color:rgba(168,196,240,.6);color:var(--sec)}
-.epd-habit-row.tier-2 .epd-tier-chk{background:linear-gradient(135deg,rgba(77,141,255,.4),rgba(107,182,255,.35));border-color:var(--a2);color:#fff;box-shadow:0 0 10px rgba(126,200,255,.2)}
-.epd-habit-row.tier-3 .epd-tier-chk{background:linear-gradient(135deg,rgba(255,217,125,.35),rgba(255,180,50,.25));border-color:var(--goldbdr);color:var(--gold);box-shadow:0 0 10px rgba(255,217,125,.2)}
+.epd-tier-chk{width:28px;height:28px;border-radius:50%;border:2px solid rgba(127,178,255,.42);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .25s cubic-bezier(.34,1.4,.64,1);font-size:12px;font-weight:900;background:transparent;color:#fff}
+.epd-habit-row.tier-1 .epd-tier-chk{background:rgba(168,196,240,.4);border-color:rgba(168,196,240,.75);color:#fff}
+.epd-habit-row.tier-2 .epd-tier-chk{background:var(--a1);border-color:var(--a1);color:#fff;box-shadow:0 0 0 4px rgba(77,141,255,.18)}
+.epd-habit-row.tier-3 .epd-tier-chk{background:linear-gradient(135deg,#FFD97D,#ffaa00);border-color:#FFD97D;color:#1a0f00;box-shadow:0 0 0 4px rgba(255,217,125,.2)}
 .epd-habit-info{flex:1;min-width:0}
 .epd-habit-top{display:flex;align-items:center;gap:6px}
 .epd-tier-label{font-family:var(--font-ui);font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
@@ -1512,6 +1524,7 @@ backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid r
 .fnx-tx{display:flex;align-items:center;gap:12px;padding:11px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(127,178,255,.12);border-radius:10px;margin-bottom:5px;cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent}
 .fnx-tx:hover{background:rgba(255,255,255,.07);border-color:rgba(126,200,255,.25)}
 .fnx-tx:active{transform:scale(.98);background:rgba(77,141,255,.12);border-color:rgba(126,200,255,.35)}
+.fnx-tx{animation:fnx-tx-in .22s ease-out both}
 .fnx-tx-icon{width:36px;height:36px;border-radius:9px;background:rgba(126,200,255,.12);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;border:1px solid rgba(126,200,255,.18)}
 .fnx-tx.income .fnx-tx-icon{background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.25)}
 .fnx-tx-info{flex:1;min-width:0}
@@ -3248,13 +3261,24 @@ function shakeEl(el){ el.classList.remove('shake'); void el.offsetWidth; el.clas
 let _toastTimer=null,_toastHasUndo=false;
 function toast(msg){
   const t=$id('toast');
-  /* Don't override an active undo toast with a plain message */
   if(_toastHasUndo && t.innerHTML.indexOf('Undo')>-1 && msg.indexOf('Undo')===-1) return;
   _toastHasUndo=(msg.indexOf&&msg.indexOf('Undo')>-1);
   clearTimeout(_toastTimer);
-  t.textContent=msg; t.classList.add('on');
+  var _isOk  = msg.indexOf('\u2713')>-1 || msg.indexOf('\u2714')>-1 || msg.indexOf('done')>-1 || msg.indexOf('Done')>-1;
+  var _isErr = /error|fail|Error|Fail/.test(msg);
+  t.classList.remove('t-ok','t-err');
+  if(_isOk) t.classList.add('t-ok');
+  else if(_isErr) t.classList.add('t-err');
+  var _dur = _toastHasUndo ? 5000 : 2400;
+  t.style.setProperty('--toast-dur', _dur + 'ms');
+  if(_toastHasUndo){
+    t.classList.add('on');
+  } else {
+    t.innerHTML = '<span style="position:relative;z-index:1">' + msg + '</span><div class="toast-bar"></div>';
+    t.classList.add('on');
+  }
   if(!_toastHasUndo){
-    _toastTimer=setTimeout(function(){ t.classList.remove('on'); setTimeout(function(){ if(!_toastHasUndo) t.textContent=''; },400); },2400);
+    _toastTimer=setTimeout(function(){ t.classList.remove('on'); setTimeout(function(){ if(!_toastHasUndo) t.innerHTML=''; },400); },_dur);
   }
 }
 function openModal(id){
@@ -4198,6 +4222,7 @@ function buildHeatmap(){
         var _a1=getComputedStyle(document.documentElement).getPropertyValue('--a2').trim();
         cell.style.outline='1.5px solid '+(_a1||'rgba(107,182,255,.7)');
         cell.style.outlineOffset='-1px';
+        cell.style.animation='hm-today-pulse 1.8s ease-in-out infinite';
         cell.title='Today: '+day.n+'/'+getStepsForDay(day.date).length+' habits';
       } else if(cellPass2){
         var _hmA1=getComputedStyle(document.documentElement).getPropertyValue('--a1').trim();
@@ -4645,19 +4670,25 @@ function epdLoad(){
 }
 
 function _epdHabitHTML(st, tier){
-  const tierClass = tier > 0 ? ' tier-'+tier : '';
-  const tierSymbol = tier===1?'①':tier===2?'②':tier===3?'③':'';
-  const tierLabel = tier===1?'Bare Min':tier===2?'Done Right':tier===3?'Exceeded':'';
-  return '<div class="epd-habit-row'+tierClass+'" id="epd-h'+st+'" onclick="epdCycleTier(\''+st+'\')">'
-    +'<div class="epd-tier-chk">'+tierSymbol+'</div>'
-    +'<div class="epd-habit-info">'
-      +'<div class="epd-habit-top">'
-        +'<span class="epd-badge">'+st+'</span>'
-        +' <span class="epd-name">'+STEP_NAMES[st]+'</span>'
-      +'</div>'
-      +(tierLabel?'<div class="epd-tier-label">'+tierLabel+'</div>':'')
-    +'</div>'
-    +'</div>';
+  var tierClass = tier > 0 ? ' tier-'+tier : '';
+  var tierLabel = tier===1?'Bare Min':tier===2?'Done Right':tier===3?'Exceeded':'';
+  var isDone = tier > 0;
+  /* Round circle tick matching hc-chk style */
+  var chkInner = isDone ? '<span style="font-size:11px;font-weight:900">✓</span>' : '';
+  /* Action hint from NH_MAP */
+  var _nh = (typeof NH_MAP !== 'undefined') ? NH_MAP[st] : null;
+  var actionTxt = _nh ? (_nh.min || _nh.m || '') : '';
+  /* Inline tier pill */
+  var pillBg = tier===1 ? 'background:rgba(168,196,240,.15);color:rgba(200,220,255,.85)'
+             : tier===2 ? 'background:rgba(77,141,255,.22);color:var(--a2)'
+             : tier===3 ? 'background:rgba(255,217,125,.18);color:var(--gold)' : '';
+  var tierPill = tierLabel
+    ? '<span style="display:inline-block;font-family:var(--font-ui);font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:1px 7px;border-radius:99px;margin-left:7px;'+pillBg+'">'+tierLabel+'</span>'
+    : '';
+  var nameStyle = 'font-family:var(--font-ui);font-size:0.9375rem;font-weight:600;letter-spacing:-.2px;'
+    + (isDone ? 'opacity:.38;text-decoration:line-through;text-decoration-color:rgba(255,255,255,.25);text-decoration-thickness:1px' : 'color:#fff');
+  var actionStyle = 'font-size:0.72rem;color:rgba(184,207,245,'+(isDone?'.28':'.5')+');line-height:1.45;margin-top:3px';
+  return '<div class="epd-habit-row'+tierClass+'" id="epd-h'+st+'" onclick="epdCycleTier(\''+st+'\')" style="-webkit-tap-highlight-color:transparent;touch-action:manipulation"><div class="epd-tier-chk">'+chkInner+'</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center"><span style="'+nameStyle+'">'+STEP_NAMES[st]+'</span>'+tierPill+'</div>'+(actionTxt?'<div style="'+actionStyle+'">'+actionTxt+'</div>':'')+'</div></div>';
 }
 
 function _epdScoreHTML(dayData, daySteps){
@@ -4686,19 +4717,14 @@ function epdCycleTier(st){
   let next = current >= 3 ? 0 : current + 1;
   epdState.data[st] = next > 0 ? next : false;
 
-  // Update the card HTML in-place
+  // Swap card HTML in-place via outerHTML
   let el = document.getElementById('epd-h'+st);
   if(!el) return;
-  el.className = 'epd-habit-row' + (next > 0 ? ' tier-'+next : '');
-  const chk = el.querySelector('.epd-tier-chk');
-  if(chk) chk.textContent = next===1?'①':next===2?'②':next===3?'③':'';
-  const lbl = el.querySelector('.epd-tier-label');
-  const newLbl = next===1?'Bare Min':next===2?'Done Right':next===3?'Exceeded':'';
-  if(lbl){ lbl.textContent = newLbl; }
-  else if(newLbl){
-    const info = el.querySelector('.epd-habit-info');
-    if(info){ let d=document.createElement('div'); d.className='epd-tier-label'; d.textContent=newLbl; info.appendChild(d); }
-  }
+  var _newHtml = _epdHabitHTML(st, next);
+  var _tmp = document.createElement('div');
+  _tmp.innerHTML = _newHtml;
+  var _newEl = _tmp.firstChild;
+  el.parentNode.replaceChild(_newEl, el);
 
   // Recompute score strip
   const strip = document.getElementById('epd-score-strip');
@@ -6522,9 +6548,14 @@ function dismissComeback(){
 function _updateStreakBadges(cur, best, s){
   const scb=document.getElementById('streak-cur-badge');
   const sbb=document.getElementById('streak-best-badge');
-  if(scb) scb.textContent=cur+(cur===1?' day':' days');
+  const stile=scb&&scb.closest('.streak-tile');
+  if(scb){
+    scb.textContent = cur + (cur===1?' day':' days') + (cur>=7?' 🔥':'');
+    scb.style.color = cur >= 21 ? '#FFD97D' : cur >= 7 ? '#fb923c' : '#fff';
+    scb.style.textShadow = cur >= 7 ? '0 0 18px rgba(251,146,60,.55)' : '';
+    if(stile) stile.style.borderColor = cur >= 7 ? 'rgba(251,146,60,.35)' : '';
+  }
   if(sbb) sbb.textContent=best+(best===1?' day':' days');
-
 }
 
 applyDaySchedule();
@@ -8630,7 +8661,15 @@ function fxRenderHero(f, mk, stats){
   if(lbl) lbl.textContent = d.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 
   const numEl = document.getElementById('fx-free-num');
-  if(numEl) fxAnimNum(numEl, current);
+  if(numEl){
+    fxAnimNum(numEl, current);
+    var _pctLeft = leftover > 0 ? current / leftover : 1;
+    var _numColor = _pctLeft > 0.50 ? '#4ade80' : _pctLeft > 0.25 ? '#FFD97D' : '#FF8B8B';
+    var _numGlow  = _pctLeft > 0.50 ? 'rgba(74,222,128,.35)' : _pctLeft > 0.25 ? 'rgba(255,217,125,.35)' : 'rgba(255,100,100,.35)';
+    numEl.style.transition = 'color .6s ease, text-shadow .6s ease';
+    numEl.style.color = _numColor;
+    numEl.style.textShadow = '0 4px 30px ' + _numGlow;
+  }
 
   /* ═══ DAILY BUDGET HERO — the one number that matters ═══ */
   var dailyEl = document.getElementById('fx-daily-budget');

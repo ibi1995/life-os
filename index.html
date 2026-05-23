@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-23-elev1'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-24-v56b'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -41,6 +41,7 @@
         localStorage.setItem('lifeOS', JSON.stringify(_d));
       }
     } catch(e){}
+    /* IMPORTANT: never wipe lifeOS_theme on build bump — user's colour choice must survive updates */
     /* Nuke all caches */
     if(typeof caches !== 'undefined' && caches.keys){
       caches.keys().then(function(keys){
@@ -56,6 +57,8 @@
             /* Only reload once — guard against loops */
             if(!sessionStorage.getItem('lifeOS_reloaded_for_build')){
               sessionStorage.setItem('lifeOS_reloaded_for_build','1');
+              /* Stash theme so it survives the reload even if localStorage flushes late */
+              try{var _t=localStorage.getItem('lifeOS_theme');if(_t)sessionStorage.setItem('lifeOS_theme_bak',_t);}catch(e){}
               location.reload();
             }
           });
@@ -101,9 +104,9 @@ button:focus-visible,.tab:focus-visible,.bn-tab:focus-visible{border-radius:6px}
 
 
 /* ═══ TIME-AWARE STYLING ═══ */
-body.time-night .nav{background:hsla(210,80%,10%,.95)}
-body.time-night::after{background:linear-gradient(150deg,hsl(210,80%,9%) 0%,hsl(210,75%,15%) 45%,hsl(210,70%,22%) 100%)}
-body.time-evening .nav{background:hsla(210,65%,12%,.92)}
+body.time-night .nav{background:var(--nav-bg)}
+body.time-night::after{background:linear-gradient(150deg,var(--bg1) 0%,var(--bg2) 45%,var(--bg3) 100%)}
+body.time-evening .nav{background:var(--nav-bg)}
 
 /* ═══ ACCESSIBILITY: Responsive font scaling ═══ */
 html{font-size:clamp(14px, 3.6vw, 17px)}
@@ -1940,7 +1943,7 @@ backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid r
           <span style="font-family:var(--font-ui);font-size:11px;color:var(--muted)">﷼</span>
           <span id="fx-daily-num" style="font-family:var(--font-ui);font-size:32px;font-weight:900;color:#4ade80;letter-spacing:-1px;line-height:1">0</span>
         </div>
-        <div id="fx-daily-sub" style="font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--font-ui)">per day</div>
+        <div id="fx-daily-sub" style="font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--font-ui)" onclick="fxEditSalaryDate()">per day</div>
       </div>
       <div class="fx-hero-row">
         <div class="fx-hero-stat">
@@ -4605,45 +4608,62 @@ function epdLoad(){
   const daySteps = getStepsForDay(epdDate);
   const dow = epdDate.getDay();
 
-  epdState = { key: key, data: Object.assign({}, dayData), steps: daySteps };
+  /* For EPD editing, use full weekday habit set on Fri/Sat so user can
+     retroactively mark any habit done — not just the reduced schedule.
+     Eid stays restricted to essentials. */
+  var epdSteps;
+  if(isEidDay(epdDate)){
+    epdSteps = daySteps;
+  } else if(dow === 5 || dow === 6){
+    /* Merge: start with full weekday set, add any Fri/Sat-specific steps not already in it */
+    epdSteps = STEPS_WEEK.slice();
+    daySteps.forEach(function(st){ if(epdSteps.indexOf(st) === -1) epdSteps.push(st); });
+    /* Also add weekend-specific steps Q, R if applicable */
+    ['Q','R'].forEach(function(st){ if(epdSteps.indexOf(st)===-1) epdSteps.push(st); });
+  } else {
+    epdSteps = daySteps;
+  }
 
-  // Build phase groups — always filter from daySteps (already correct for Eid/Fri/Sat/Weekday)
+  epdState = { key: key, data: Object.assign({}, dayData), steps: epdSteps, normalSteps: daySteps };
+
+  // Build phase groups — always filter from epdSteps
   let phases;
   if(isEidDay(epdDate)){
     // Eid: show only the 6 essentials as one group
     phases = [
-      { label:'🌙 Eid Essentials', steps: daySteps }
+      { label:'🌙 Eid Essentials', steps: epdSteps }
     ];
   } else if(dow === 5){
     phases = [
-      { label:'☀️ Morning', steps: daySteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
-      { label:'🌆 Evening', steps: daySteps.filter(function(st){ return ['H','K'].indexOf(st)>-1; }) },
-      { label:'🌙 Night',   steps: daySteps.filter(function(st){ return ['N','O'].indexOf(st)>-1; }) }
+      { label:'☀️ Morning', steps: epdSteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
+      { label:'💼 Mid-Day', steps: epdSteps.filter(function(st){ return ['F','G','Q'].indexOf(st)>-1; }) },
+      { label:'🌆 Evening', steps: epdSteps.filter(function(st){ return ['S','T','U','V','W','I','H','K'].indexOf(st)>-1; }) },
+      { label:'🌙 Night',   steps: epdSteps.filter(function(st){ return ['N','O','M','X','R'].indexOf(st)>-1; }) }
     ].filter(function(ph){ return ph.steps.length > 0; });
   } else if(dow === 6){
     phases = [
-      { label:'☀️ Morning', steps: daySteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
-      { label:'🌤️ Mid-Day',  steps: daySteps.filter(function(st){ return ['F','G','Q'].indexOf(st)>-1; }) },
-      { label:'🌆 Evening', steps: daySteps.filter(function(st){ return ['I','H','K'].indexOf(st)>-1; }) },
-      { label:'🌙 Night',   steps: daySteps.filter(function(st){ return ['N','O','R'].indexOf(st)>-1; }) }
+      { label:'☀️ Morning', steps: epdSteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
+      { label:'🌤️ Mid-Day',  steps: epdSteps.filter(function(st){ return ['F','G','Q'].indexOf(st)>-1; }) },
+      { label:'🌆 Evening', steps: epdSteps.filter(function(st){ return ['S','T','U','V','W','I','H','K'].indexOf(st)>-1; }) },
+      { label:'🌙 Night',   steps: epdSteps.filter(function(st){ return ['N','O','M','X','R'].indexOf(st)>-1; }) }
     ].filter(function(ph){ return ph.steps.length > 0; });
   } else {
-    // Regular weekday — filter daySteps (never hardcode, so any future schedule changes are respected)
+    // Regular weekday — filter epdSteps
     phases = [
-      { label:'☀️ Morning', steps: daySteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
-      { label:'💼 Office',  steps: daySteps.filter(function(st){ return ['F','G'].indexOf(st)>-1; }) },
-      { label:'🌆 Evening', steps: daySteps.filter(function(st){ return ['S','T','U','V','W','I','H','K'].indexOf(st)>-1; }) },
-      { label:'🌙 Night',   steps: daySteps.filter(function(st){ return ['N','O'].indexOf(st)>-1; }) }
+      { label:'☀️ Morning', steps: epdSteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
+      { label:'💼 Office',  steps: epdSteps.filter(function(st){ return ['F','G'].indexOf(st)>-1; }) },
+      { label:'🌆 Evening', steps: epdSteps.filter(function(st){ return ['S','T','U','V','W','I','H','K'].indexOf(st)>-1; }) },
+      { label:'🌙 Night',   steps: epdSteps.filter(function(st){ return ['N','O','M','X'].indexOf(st)>-1; }) }
     ].filter(function(ph){ return ph.steps.length > 0; });
   }
 
   let html = '';
   const dayLabel = epdDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short',year:'numeric'});
   let dayTypeBadge = '';
-  if(isEidDay(epdDate)) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">🌙 EID · '+daySteps.length+' habits</span>';
-  else if(dow===5) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">🎁 FRIDAY · 1.5× XP BONUS · '+daySteps.length+' habits</span>';
-  else if(dow===6) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">🎁 SATURDAY · 1.5× XP BONUS · '+daySteps.length+' habits</span>';
-  else dayTypeBadge = '<span style="display:inline-block;background:rgba(77,141,255,.1);color:var(--a2);border:1px solid rgba(77,141,255,.2);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">WEEKDAY · '+daySteps.length+' habits</span>';
+  if(isEidDay(epdDate)) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">🌙 EID · '+epdSteps.length+' habits</span>';
+  else if(dow===5) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">🎁 FRIDAY · 1.5× XP BONUS · '+epdSteps.length+' habits</span>';
+  else if(dow===6) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">🎁 SATURDAY · 1.5× XP BONUS · '+epdSteps.length+' habits</span>';
+  else dayTypeBadge = '<span style="display:inline-block;background:rgba(77,141,255,.1);color:var(--a2);border:1px solid rgba(77,141,255,.2);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">WEEKDAY · '+epdSteps.length+' habits</span>';
   html += '<div style="font-family:var(--font-ui);font-size:12px;font-weight:700;color:var(--a2);text-align:center;margin-bottom:12px;letter-spacing:.3px">'+dayLabel+' '+dayTypeBadge+'</div>';
 
   phases.forEach(function(ph){
@@ -4653,13 +4673,14 @@ function epdLoad(){
     ph.steps.forEach(function(st){
       let val = dayData[st];
       const tier = (val===1||val===2||val===3) ? val : (val ? 2 : 0); // migrate boolean true → tier 2
-      html += _epdHabitHTML(st, tier);
+      var isBonus = epdState.normalSteps && epdState.normalSteps.indexOf(st) === -1;
+      html += _epdHabitHTML(st, tier, isBonus);
     });
     html += '</div>';
   });
 
   // Score strip
-  html += _epdScoreHTML(dayData, daySteps);
+  html += _epdScoreHTML(dayData, epdSteps);
 
   document.getElementById('epd-body').innerHTML = html;
   document.getElementById('epd-btns').style.display = 'grid';
@@ -4669,7 +4690,7 @@ function epdLoad(){
   if(modal) modal.scrollTop = 0;
 }
 
-function _epdHabitHTML(st, tier){
+function _epdHabitHTML(st, tier, isBonus){
   var tierClass = tier > 0 ? ' tier-'+tier : '';
   var tierLabel = tier===1?'Bare Min':tier===2?'Done Right':tier===3?'Exceeded':'';
   var isDone = tier > 0;
@@ -4685,10 +4706,14 @@ function _epdHabitHTML(st, tier){
   var tierPill = tierLabel
     ? '<span style="display:inline-block;font-family:var(--font-ui);font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:1px 7px;border-radius:99px;margin-left:7px;'+pillBg+'">'+tierLabel+'</span>'
     : '';
+  /* Bonus badge for habits outside the normal Fri/Sat schedule */
+  var bonusBadge = isBonus
+    ? '<span style="display:inline-block;font-family:var(--font-ui);font-size:8px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:1px 6px;border-radius:99px;margin-left:5px;background:rgba(255,217,125,.1);color:rgba(255,217,125,.5);border:1px solid rgba(255,217,125,.15)">bonus</span>'
+    : '';
   var nameStyle = 'font-family:var(--font-ui);font-size:0.9375rem;font-weight:600;letter-spacing:-.2px;'
     + (isDone ? 'opacity:.38;text-decoration:line-through;text-decoration-color:rgba(255,255,255,.25);text-decoration-thickness:1px' : 'color:#fff');
   var actionStyle = 'font-size:0.72rem;color:rgba(184,207,245,'+(isDone?'.28':'.5')+');line-height:1.45;margin-top:3px';
-  return '<div class="epd-habit-row'+tierClass+'" id="epd-h'+st+'" onclick="epdCycleTier(\''+st+'\')" style="-webkit-tap-highlight-color:transparent;touch-action:manipulation"><div class="epd-tier-chk">'+chkInner+'</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center"><span style="'+nameStyle+'">'+STEP_NAMES[st]+'</span>'+tierPill+'</div>'+(actionTxt?'<div style="'+actionStyle+'">'+actionTxt+'</div>':'')+'</div></div>';
+  return '<div class="epd-habit-row'+tierClass+'" id="epd-h'+st+'" onclick="epdCycleTier(\''+st+'\')" style="-webkit-tap-highlight-color:transparent;touch-action:manipulation"><div class="epd-tier-chk">'+chkInner+'</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;flex-wrap:wrap"><span style="'+nameStyle+'">'+STEP_NAMES[st]+'</span>'+tierPill+bonusBadge+'</div>'+(actionTxt?'<div style="'+actionStyle+'">'+actionTxt+'</div>':'')+'</div></div>';
 }
 
 function _epdScoreHTML(dayData, daySteps){
@@ -4720,7 +4745,8 @@ function epdCycleTier(st){
   // Swap card HTML in-place via outerHTML
   let el = document.getElementById('epd-h'+st);
   if(!el) return;
-  var _newHtml = _epdHabitHTML(st, next);
+  var _isBonus = epdState.normalSteps && epdState.normalSteps.indexOf(st) === -1;
+  var _newHtml = _epdHabitHTML(st, next, _isBonus);
   var _tmp = document.createElement('div');
   _tmp.innerHTML = _newHtml;
   var _newEl = _tmp.firstChild;
@@ -4730,7 +4756,7 @@ function epdCycleTier(st){
   const strip = document.getElementById('epd-score-strip');
   if(strip){
     const tmp = document.createElement('div');
-    tmp.innerHTML = _epdScoreHTML(epdState.data, epdState.steps || STEPS);
+    tmp.innerHTML = _epdScoreHTML(epdState.data, epdState.steps);
     const newStrip = tmp.querySelector('.epd-score-strip');
     if(newStrip) strip.parentNode.replaceChild(newStrip, strip);
   }
@@ -6112,7 +6138,7 @@ function _applyToneCSS(hue){
   /* 2. hue-rotate on self-contained blue containers (no semantic color children) */
   css += '#bowl-machine-canvas{filter:hue-rotate(var(--hue-shift,0deg)) drop-shadow(0 8px 24px rgba(8,24,80,.45))!important}'
        + '.tc-cabinet{filter:hue-rotate(var(--hue-shift,0deg))!important}'
-       + '.fx-vial-canvas{filter:hue-rotate(var(--hue-shift,0deg))!important}'
+       + '.fx-vial-canvas{filter:hue-rotate(var(--hue-shift,0deg)) drop-shadow(0 12px 32px rgba(5,15,60,.4)) drop-shadow(0 2px 6px rgba(0,0,0,.3))!important}'
        + '.fx-hero-mesh{filter:hue-rotate(var(--hue-shift,0deg))!important}'
        + '.rest-timer-bar{filter:hue-rotate(var(--hue-shift,0deg))!important}'
        + '#bowl-challenge-area{filter:hue-rotate(var(--hue-shift,0deg))!important}';
@@ -6290,7 +6316,15 @@ function setTheme(hue, btn){
 }
 
 function initTheme(){
-  let saved = parseInt(localStorage.getItem('lifeOS_theme')) || 210;
+  let raw = localStorage.getItem('lifeOS_theme');
+  /* Recover from cache-bust reload that may have flushed localStorage before write completed */
+  if((raw === null || raw === '') && sessionStorage.getItem('lifeOS_theme_bak')){
+    raw = sessionStorage.getItem('lifeOS_theme_bak');
+    try{ localStorage.setItem('lifeOS_theme', raw); }catch(e){}
+  }
+  try{ sessionStorage.removeItem('lifeOS_theme_bak'); }catch(e){}
+  let saved = (raw !== null && raw !== '') ? parseInt(raw) : 210;
+  if(isNaN(saved)) saved = 210;
   applyTheme(saved);
   /* Mark active swatch */
   document.querySelectorAll('.theme-sw').forEach(function(b){
@@ -7676,6 +7710,8 @@ function bowlShowDayDetail(dateKey){
         h+='<span style="color:'+tierColors[t]+'">'+tierLabels[t]+'</span> · +'+td.pts+' pts</button>';
       });
     }
+    /* Switch challenge — lets user pick a different challenge for this past day */
+    h+='<button onclick="bowlSwitchPastChallenge(\''+dateKey+'\');bowlCloseDayDetail()" style="width:100%;margin-top:8px;padding:10px;background:rgba(255,217,125,.08);border:1px solid rgba(255,217,125,.25);border-radius:8px;color:var(--gold);font-family:var(--font-ui);font-size:11px;font-weight:700;cursor:pointer;min-height:40px">↺ Switch challenge — pick a different one</button>';
   } else {
     /* Today, pending */
     h+='<div style="text-align:center;padding:8px;color:var(--gold);font-size:11px">Pending — pick a tier on the main page</div>';
@@ -7739,7 +7775,24 @@ function bowlRetroComplete(dateKey, tier){
   if(typeof updateXPStrip==='function') updateXPStrip();
   var tierLabels={easy:'Easy',medium:'Medium',hard:'Hard'};
   toast('✓ '+tierLabels[tier]+' marked complete for '+dateKey+' (+'+dd.pts+' pts)');
+  /* Award trophy ball for retroactive completions */
+  try{ tcAwardBallForDate(dateKey, tier, theme); }catch(e){}
   renderBowl();
+}
+
+/* Switch challenge for a past uncompleted day — removes the draw and opens the missed day modal */
+function bowlSwitchPastChallenge(dateKey){
+  var b=getBowl();
+  var dd=b.dailyDraws.find(function(x){ return x.date===dateKey; });
+  if(!dd){ bowlShowMissedDayModal(dateKey); return; }
+  if(dd.chosenTier){ toast('Already completed — undo first to switch.'); return; }
+  /* Remember original theme so missed-day modal can highlight it */
+  window._bowlSwitchOrigTheme = dd.themeId || null;
+  /* Remove the existing draw so user can pick freely */
+  b.dailyDraws=b.dailyDraws.filter(function(x){ return x.date!==dateKey; });
+  setBowl(b);
+  toast('Draw cleared — pick a new challenge.');
+  bowlShowMissedDayModal(dateKey);
 }
 
 /* ── Toggle history range 14 ↔ 30 days ── */
@@ -7782,9 +7835,13 @@ function bowlShowMissedDayModal(dateKey){
   h+='<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">1 · Pick a challenge</div>';
   h+='<div id="missed-challenge-list" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;margin-bottom:14px">';
   activeLib.forEach(function(ball){
-    h+='<button onclick="bowlMissedSelectBall(\''+ball.id+'\')" id="missed-ball-'+ball.id+'" style="display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;background:rgba(18,38,80,.6);border:1px solid rgba(107,182,255,.18);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:12px;font-weight:700;cursor:pointer;text-align:left;transition:border .15s;min-height:40px">';
+    var isOrig = (window._bowlSwitchOrigTheme && ball.id === window._bowlSwitchOrigTheme);
+    var origBadge = isOrig ? '<span style="font-size:9px;color:rgba(255,217,125,.7);margin-left:auto;white-space:nowrap">prev draw</span>' : '';
+    var origBdr = isOrig ? 'border-color:rgba(255,217,125,.35)' : '';
+    h+='<button onclick="bowlMissedSelectBall(\''+ball.id+'\')" id="missed-ball-'+ball.id+'" style="display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;background:rgba(18,38,80,.6);border:1px solid rgba(107,182,255,.18);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:12px;font-weight:700;cursor:pointer;text-align:left;transition:border .15s;min-height:40px;'+origBdr+'">';
     h+='<span style="font-size:17px">'+ball.icon+'</span>';
     h+='<span>'+ball.name+'</span>';
+    h+=origBadge;
     h+='</button>';
   });
   h+='</div>';
@@ -7888,7 +7945,10 @@ function bowlBackfillComplete(tier){
   if(typeof updateXPStrip==='function') updateXPStrip();
   var tierLabels={easy:'Easy',medium:'Medium',hard:'Hard'};
   toast('✓ '+ball.name+' — '+tierLabels[tier]+' logged for '+_missedDayKey+' (+'+tierData.pts+' pts)');
+  /* Award trophy ball for backfilled completions */
+  try{ tcAwardBallForDate(_missedDayKey, tier, ball); }catch(e){}
   _missedDayKey=null; _missedThemeId=null;
+  window._bowlSwitchOrigTheme = null;
   bowlCloseDayDetail();
   renderBowl();
 }
@@ -8304,6 +8364,37 @@ function tcAwardBall(tier, theme){
   tcRender(true); /* true = animate new ball */
 }
 
+/* ── Award a ball for a specific date (retroactive / backfill completions) ── */
+function tcAwardBallForDate(dateKey, tier, theme){
+  var tc = tcGetCase();
+
+  /* Don't double-add */
+  var existing = tc.balls.find(function(b){ return b.dateKey === dateKey; });
+  if(existing) return;
+
+  tc.balls.push({
+    dateKey: dateKey,
+    tier: tier,
+    tone: theme ? theme.tone : 'blueberry',
+    icon: theme ? theme.icon : '🎯',
+    ballName: theme ? theme.name : ''
+  });
+
+  /* Sort balls by date so trophy case stays chronological */
+  tc.balls.sort(function(a, b){ return a.dateKey < b.dateKey ? -1 : a.dateKey > b.dateKey ? 1 : 0; });
+
+  var liveStreak = tcComputeStreak();
+  if(liveStreak > (tc.bestStreak || 0)) tc.bestStreak = liveStreak;
+
+  /* Grace period: suppress tcCheckStreak shatter for 2.5s so the user
+     sees the new ball before any streak-break shatter fires */
+  window._tcRetroGrace = true;
+  setTimeout(function(){ window._tcRetroGrace = false; }, 2500);
+
+  tcSaveCase(tc);
+  tcRender(true);
+}
+
 /* ── Undo removes today's ball from the case ── */
 function tcUndoBall(dateKey){
   var tc = tcGetCase();
@@ -8319,6 +8410,11 @@ function tcUndoBall(dateKey){
 function tcCheckStreak(){
   var tc = tcGetCase();
   if(!tc.balls || tc.balls.length === 0) return;
+
+  /* Skip shatter check briefly after retroactive additions to avoid
+     destroying balls the user just added — feels terrible as UX.
+     The flag is set in tcAwardBallForDate and cleared after 2s. */
+  if(window._tcRetroGrace) return;
 
   var liveStreak = tcComputeStreak();
   /* If we have balls but live streak is 0, the streak is broken */
@@ -8675,15 +8771,37 @@ function fxRenderHero(f, mk, stats){
   var dailyEl = document.getElementById('fx-daily-budget');
   if(dailyEl && fnxIsCurMonth(mk)){
     var now = new Date();
-    var daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
-    var daysLeft = daysInMonth - now.getDate() + 1;
+    var daysLeft;
+    var salaryDateStr = '';
+    /* Check for manual salary date override */
+    var salaryDateRaw = fxGetSalaryDate(mk);
+    if(salaryDateRaw){
+      /* Salary received on day X each month. Budget must last until next payday
+         (same day next month). daysLeft = days from today to next payday, inclusive. */
+      var today = now.getDate();
+      if(today < salaryDateRaw){
+        /* Salary hasn't arrived yet this month — next payday is still this month */
+        daysLeft = salaryDateRaw - today;
+        salaryDateStr = ' · salary expected day ' + salaryDateRaw;
+      } else {
+        /* Salary received — next payday is salary day of next month */
+        var nextPayday = new Date(now.getFullYear(), now.getMonth()+1, salaryDateRaw);
+        var msPerDay = 24*60*60*1000;
+        var todayMidnight = new Date(now.getFullYear(), now.getMonth(), today);
+        daysLeft = Math.round((nextPayday - todayMidnight) / msPerDay) + 1;
+        salaryDateStr = ' · paid day ' + salaryDateRaw;
+      }
+    } else {
+      var daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+      daysLeft = daysInMonth - now.getDate() + 1;
+    }
     var remaining = Math.max(0, current);
     var dailyBudget = daysLeft > 0 ? Math.round(remaining / daysLeft) : 0;
     dailyEl.style.display = '';
     var dailyNumEl = document.getElementById('fx-daily-num');
     var dailySubEl = document.getElementById('fx-daily-sub');
     if(dailyNumEl) fxAnimNum(dailyNumEl, dailyBudget);
-    if(dailySubEl) dailySubEl.textContent = 'per day · ' + daysLeft + ' days left';
+    if(dailySubEl) dailySubEl.innerHTML = 'per day · ' + daysLeft + ' days left' + salaryDateStr + ' <span style="font-size:9px;opacity:.6;text-decoration:underline;cursor:pointer">✎</span>';
     /* Color coding */
     if(dailyNumEl){
       dailyNumEl.style.color = dailyBudget > 100 ? '#4ade80' : dailyBudget > 50 ? '#FFD97D' : '#FF8B8B';
@@ -10118,6 +10236,98 @@ window.fnxCloseVdp = function(){
 function fnxJumpMonth(mk){
   _finViewMonth = mk; window._finCurMonth = mk; fnxRender();
   if(navigator.vibrate) navigator.vibrate(8);
+}
+
+/* ══════════════════════════════════════════════════
+   SALARY DATE OVERRIDE
+   Stores per-month salary received dates so daily budget
+   calculates from actual salary date, not calendar assumptions.
+   Stored in lifeOS state under finance.salaryDates = { '2026-05': 21, ... }
+══════════════════════════════════════════════════ */
+function fxGetSalaryDate(mk){
+  var s = gs();
+  if(!s.finance || !s.finance.salaryDates) return null;
+  return s.finance.salaryDates[mk] || null;
+}
+function fxSetSalaryDate(mk, day){
+  var s = gs();
+  if(!s.finance) s.finance = {};
+  if(!s.finance.salaryDates) s.finance.salaryDates = {};
+  if(day) s.finance.salaryDates[mk] = day;
+  else delete s.finance.salaryDates[mk];
+  ss(s, true);
+}
+function fxEditSalaryDate(){
+  var mk = typeof fnxCurMonth === 'function' ? fnxCurMonth() : null;
+  if(!mk) return;
+  var existing = fxGetSalaryDate(mk);
+  var now = new Date();
+  var defaultVal = existing || now.getDate();
+  /* Simple prompt-based date picker — month/year from mk */
+  var parts = mk.split('-');
+  var yyyy = parts[0];
+  var mm = parts[1];
+  var daysInMonth = new Date(+yyyy, +mm, 0).getDate();
+
+  /* Build a small modal */
+  var bg = document.getElementById('fx-salary-date-bg');
+  var modal = document.getElementById('fx-salary-date-modal');
+  if(!bg){
+    bg = document.createElement('div');
+    bg.id = 'fx-salary-date-bg';
+    bg.className = 'bowl-modal-bg';
+    bg.onclick = function(){ bg.classList.remove('on'); modal.classList.remove('on'); document.body.style.overflow=''; };
+    document.body.appendChild(bg);
+    modal = document.createElement('div');
+    modal.id = 'fx-salary-date-modal';
+    modal.className = 'bowl-modal';
+    modal.style.maxHeight = '60dvh';
+    document.body.appendChild(modal);
+  }
+  var h = '<div style="padding:18px 16px 20px">';
+  h += '<div style="font-family:var(--font-ui);font-size:15px;font-weight:800;color:#fff;margin-bottom:4px;letter-spacing:-.2px">Salary Date</div>';
+  h += '<div style="font-size:11px;color:var(--muted);margin-bottom:14px">Day you receive salary. Budget = remaining ÷ days until next payday.</div>';
+  h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">';
+  h += '<input type="number" id="fx-salary-day-input" min="1" max="'+daysInMonth+'" value="'+defaultVal+'" style="flex:1;background:rgba(255,255,255,.09);border:1px solid var(--bdr);border-radius:6px;color:#fff;font-family:var(--font-ui);font-size:18px;font-weight:700;padding:10px 14px;outline:none;text-align:center;color-scheme:dark;min-height:44px"/>';
+  h += '<span style="font-family:var(--font-ui);font-size:12px;color:var(--muted)">'+mm+'/'+yyyy+'</span>';
+  h += '</div>';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+  h += '<button onclick="fxSaveSalaryDate()" style="background:linear-gradient(135deg,var(--a1),#3a7aff);border:none;border-radius:6px;color:#fff;font-family:var(--font-ui);font-size:13px;font-weight:700;padding:12px;cursor:pointer;min-height:44px">Save</button>';
+  h += '<button onclick="fxClearSalaryDate()" style="background:rgba(255,255,255,.09);border:1px solid var(--bdr);border-radius:6px;color:var(--muted);font-family:var(--font-ui);font-size:13px;font-weight:600;padding:12px;cursor:pointer;min-height:44px">Clear / Auto</button>';
+  h += '</div>';
+  h += '</div>';
+  modal.innerHTML = h;
+  bg.classList.add('on');
+  modal.classList.add('on');
+  document.body.style.overflow = 'hidden';
+}
+function fxSaveSalaryDate(){
+  var mk = typeof fnxCurMonth === 'function' ? fnxCurMonth() : null;
+  if(!mk) return;
+  var inp = document.getElementById('fx-salary-day-input');
+  var day = inp ? parseInt(inp.value) : 0;
+  if(!day || day < 1 || day > 31){ toast('Invalid day'); return; }
+  fxSetSalaryDate(mk, day);
+  toast('✓ Salary date set to day '+day);
+  /* Close modal */
+  var bg = document.getElementById('fx-salary-date-bg');
+  var modal = document.getElementById('fx-salary-date-modal');
+  if(bg) bg.classList.remove('on');
+  if(modal) modal.classList.remove('on');
+  document.body.style.overflow = '';
+  if(typeof renderFinance === 'function') renderFinance();
+}
+function fxClearSalaryDate(){
+  var mk = typeof fnxCurMonth === 'function' ? fnxCurMonth() : null;
+  if(!mk) return;
+  fxSetSalaryDate(mk, null);
+  toast('Salary date cleared — using calendar month');
+  var bg = document.getElementById('fx-salary-date-bg');
+  var modal = document.getElementById('fx-salary-date-modal');
+  if(bg) bg.classList.remove('on');
+  if(modal) modal.classList.remove('on');
+  document.body.style.overflow = '';
+  if(typeof renderFinance === 'function') renderFinance();
 }
 
 /* ══════════════════════════════════════════════════

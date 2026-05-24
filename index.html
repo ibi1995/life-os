@@ -9775,9 +9775,9 @@ function _fxDrawCashStack(ctx, W, H, t, state){
   /* ─── GEOMETRY ─── */
   var cx=W*0.5;
   var baseY=H*0.86;
-  var baseRx=W*0.47;                     // wider, more prominent coins (Pixar polish pass)
+  var baseRx=W*0.495;                    // pushed to canvas edge — max magnificence on mobile
   var baseRy=baseRx*0.28;
-  var coinH=baseRy*0.92;                 // slightly thicker — beefier presence
+  var coinH=baseRy*0.95;                 // thicker too — fills the stack with presence
   var coinSpacing=coinH*1.10;
 
   /* Specular phase — slow drift, shared across coins */
@@ -9901,13 +9901,13 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       var brightA=opts.brightA!=null?opts.brightA:0.65;
       ctx.save();
       ctx.translate(0.5*depth,0.4*depth);
-      ctx.strokeStyle='rgba(3,10,25,'+(darkA*opacityScale)+')';
+      ctx.strokeStyle='rgba(5,12,25,'+(darkA*opacityScale)+')';
       ctx.lineWidth=darkW;ctx.lineJoin='round';ctx.lineCap='round';
       buildPath();ctx.stroke();
       ctx.restore();
       ctx.save();
       ctx.translate(-0.4*depth,-0.5*depth);
-      ctx.strokeStyle='rgba(195,230,255,'+(brightA*opacityScale)+')';
+      ctx.strokeStyle='rgba(208,218,232,'+(brightA*opacityScale)+')';
       ctx.lineWidth=brightW;ctx.lineJoin='round';ctx.lineCap='round';
       buildPath();ctx.stroke();
       ctx.restore();
@@ -9916,11 +9916,11 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       opts=opts||{};
       var depth=opts.depth||1;
       ctx.save();ctx.translate(0.5*depth,0.4*depth);
-      ctx.fillStyle='rgba(3,10,25,'+(darkA*opacityScale)+')';
+      ctx.fillStyle='rgba(5,12,25,'+(darkA*opacityScale)+')';
       buildPath();ctx.fill();
       ctx.restore();
       ctx.save();ctx.translate(-0.4*depth,-0.5*depth);
-      ctx.fillStyle='rgba(195,230,255,'+(brightA*opacityScale)+')';
+      ctx.fillStyle='rgba(208,218,232,'+(brightA*opacityScale)+')';
       buildPath();ctx.fill();
       ctx.restore();
     }
@@ -10002,7 +10002,10 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       ctx.closePath();
     }
 
-    /* ─── LEAF FILL ─── Polished mirror catching sky — multi-stop for depth */
+    /* ─── LEAF FILL ─── Same satin metal as the field — depth comes from
+       the emboss strokes, NOT a contrasting fill. Real coins don't have a
+       differently-colored leaf, the engraving just catches light differently
+       because the surface angle changed. */
     ctx.save();
     pathLeaf();
     ctx.clip();
@@ -10010,26 +10013,20 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       _cx - leafR*0.4, _cy - leafR*ratio*0.9,
       _cx + leafR*0.4, _cy + leafR*ratio*0.9
     );
-    leafFill.addColorStop(0.00,'rgba(238,250,255,'+(0.92*opacityScale)+')');
-    leafFill.addColorStop(0.22,'rgba(195,225,250,'+(0.85*opacityScale)+')');
-    leafFill.addColorStop(0.50,'rgba(130,180,232,'+(0.75*opacityScale)+')');
-    leafFill.addColorStop(0.78,'rgba(60,105,170,'+(0.80*opacityScale)+')');
-    leafFill.addColorStop(1.00,'rgba(22,48,100,'+(0.90*opacityScale)+')');
+    leafFill.addColorStop(0.00,'rgba(195,208,225,'+(0.62*opacityScale)+')');
+    leafFill.addColorStop(0.40,'rgba(160,178,205,'+(0.55*opacityScale)+')');
+    leafFill.addColorStop(0.80,'rgba(95,115,148,'+(0.55*opacityScale)+')');
+    leafFill.addColorStop(1.00,'rgba(60,78,108,'+(0.65*opacityScale)+')');
     ctx.fillStyle=leafFill;
     ctx.fillRect(_cx - leafR*1.1, _cy - leafR*ratio*1.1, leafR*2.2, leafR*ratio*2.2);
-
-    /* Subtle iridescent shift — faint cyan-violet wash off-axis. Catches the
-       eye the way Pixar materials do, without breaking the silver read. */
-    var irisGrad=ctx.createLinearGradient(
-      _cx - leafR*0.5, _cy + leafR*ratio*0.2,
-      _cx + leafR*0.5, _cy - leafR*ratio*0.2
-    );
-    irisGrad.addColorStop(0.00,'rgba(150,210,255,'+(0.18*opacityScale)+')');
-    irisGrad.addColorStop(0.45,'rgba(220,225,255,'+(0.06*opacityScale)+')');
-    irisGrad.addColorStop(0.85,'rgba(190,170,235,'+(0.12*opacityScale)+')');
-    irisGrad.addColorStop(1.00,'rgba(150,210,255,0)');
-    ctx.fillStyle=irisGrad;
-    ctx.fillRect(_cx - leafR*1.1, _cy - leafR*ratio*1.1, leafR*2.2, leafR*ratio*2.2);
+    /* Inherit the same micro-texture as the field */
+    var leafNoise=getNoisePattern();
+    if(leafNoise){
+      ctx.globalAlpha=0.30*opacityScale;
+      ctx.globalCompositeOperation='overlay';
+      ctx.fillStyle=leafNoise;
+      ctx.fillRect(_cx - leafR*1.1, _cy - leafR*ratio*1.1, leafR*2.2, leafR*ratio*2.2);
+    }
     ctx.restore();
 
     /* ─── LEAF OUTLINE ─── Deepest strike — the leaf anchors the coin */
@@ -10110,14 +10107,26 @@ function _fxDrawCashStack(ctx, W, H, t, state){
   /* ─── FROSTED FIELD NOISE PATTERN (lazy-cached on state) ─── */
   function getNoisePattern(){
     if(state._noisePattern) return state._noisePattern;
+    /* Satin micro-surface: layered fine grain + faint horizontal scratch streaks.
+       Real bullion has tooling marks from the polishing wheel — directional, not isotropic. */
     var nC=document.createElement('canvas');
-    nC.width=64;nC.height=64;
+    nC.width=128;nC.height=128;
     var nx=nC.getContext('2d');
-    var imd=nx.createImageData(64,64);
+    var imd=nx.createImageData(128,128);
     var d=imd.data;
+    /* Layer 1: fine isotropic grain */
     for(var i=0;i<d.length;i+=4){
-      var v=Math.random()*255|0;
-      d[i]=v;d[i+1]=v;d[i+2]=v;d[i+3]=28; /* very low alpha */
+      var v=180+(Math.random()*75|0);   /* mid-grey base, not pure noise */
+      d[i]=v;d[i+1]=v;d[i+2]=v;d[i+3]=22;
+    }
+    /* Layer 2: faint horizontal micro-streaks (polishing direction) */
+    for(var y=0;y<128;y++){
+      var streakBias=(Math.random()-0.5)*12;
+      for(var x=0;x<128;x++){
+        var off=(y*128+x)*4;
+        d[off]=Math.max(0,Math.min(255,d[off]+streakBias));
+        d[off+1]=d[off];d[off+2]=d[off];
+      }
     }
     nx.putImageData(imd,0,0);
     state._noisePattern=ctx.createPattern(nC,'repeat');
@@ -10147,13 +10156,13 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     arcBottom(_cx,cyTop+_h,rx,ry,false);
     ctx.closePath();
     var bandGrad=ctx.createLinearGradient(_cx-rx,0,_cx+rx,0);
-    bandGrad.addColorStop(0.00,'#070f22');
-    bandGrad.addColorStop(0.15,'#1d3358');
-    bandGrad.addColorStop(0.42,'#6896cc');
-    bandGrad.addColorStop(0.50,'#8cb6e0');
-    bandGrad.addColorStop(0.58,'#6896cc');
-    bandGrad.addColorStop(0.85,'#1d3358');
-    bandGrad.addColorStop(1.00,'#070f22');
+    bandGrad.addColorStop(0.00,'#0a1124');
+    bandGrad.addColorStop(0.15,'#222e48');
+    bandGrad.addColorStop(0.42,'#5e7090');
+    bandGrad.addColorStop(0.50,'#7c8ea8');
+    bandGrad.addColorStop(0.58,'#5e7090');
+    bandGrad.addColorStop(0.85,'#222e48');
+    bandGrad.addColorStop(1.00,'#0a1124');
     ctx.fillStyle=bandGrad;ctx.fill();
 
     /* Vertical light/shadow gradient on band */
@@ -10212,9 +10221,13 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       if(alpha<0.04) continue;
       if(ri%2===0){
         var b=0.30+facing*0.45+specBoost*0.55+glintBoost;
-        ctx.strokeStyle='rgba('+Math.round(120+b*135)+','+Math.round(165+b*90)+','+Math.round(200+b*55)+','+alpha+')';
+        /* Desaturated cool silver — R≈G≈B with slight cool bias for satin look */
+        var rCh=Math.round(140+b*100);
+        var gCh=Math.round(150+b*98);
+        var bCh=Math.round(165+b*88);
+        ctx.strokeStyle='rgba('+rCh+','+gCh+','+bCh+','+alpha+')';
       } else {
-        ctx.strokeStyle='rgba(5,12,28,'+(alpha*0.85)+')';
+        ctx.strokeStyle='rgba(8,14,28,'+(alpha*0.85)+')';
       }
       ctx.lineWidth=(facing>0.65||glintBoost>0.5)?1.0:0.7;
       ctx.beginPath();
@@ -10229,90 +10242,95 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     arcBottom(_cx,cyTop,rx,ry,true);
     ctx.stroke();
 
-    /* ─── TOP FACE ─── Pixar-grade rendered metal */
-    var topGrad=ctx.createRadialGradient(_cx-rx*0.32,cyTop-ry*0.65,0,_cx,cyTop,rx*1.18);
-    topGrad.addColorStop(0.00,'#cee0f4');
-    topGrad.addColorStop(0.15,'#9fc1e4');
-    topGrad.addColorStop(0.35,'#6c9cd0');
-    topGrad.addColorStop(0.60,'#2d4f80');
-    topGrad.addColorStop(0.82,'#102444');
-    topGrad.addColorStop(1.00,'#04091a');
+    /* ─── TOP FACE ─── Bullion satin: cool-blue silver, low contrast fill.
+       Real satin has a much flatter response than mirror — light scatters across
+       the surface instead of concentrating in a single highlight. */
+    var topGrad=ctx.createRadialGradient(_cx-rx*0.18,cyTop-ry*0.35,rx*0.1,_cx,cyTop+ry*0.15,rx*1.15);
+    topGrad.addColorStop(0.00,'#a8b8cc');  /* cool silver mid */
+    topGrad.addColorStop(0.30,'#8da0b8');
+    topGrad.addColorStop(0.55,'#6478a0');
+    topGrad.addColorStop(0.80,'#384d70');  /* dark blue-grey shadow side */
+    topGrad.addColorStop(1.00,'#1a2440');
     ctx.fillStyle=topGrad;
     ellipsePath(_cx,cyTop,rx,ry);
     ctx.fill();
 
-    /* Pixar key-light: bright soft blob in upper-left quadrant — the "studio light" */
+    /* Diffuse highlight BAND across upper third — satin doesn't have a hot
+       spot, it has a soft scattered band perpendicular to the polish direction. */
     ctx.save();
     ellipsePath(_cx,cyTop,rx,ry);
     ctx.clip();
-    var keyX=_cx-rx*0.38, keyY=cyTop-ry*0.55;
-    var keyGrad=ctx.createRadialGradient(keyX,keyY,0,keyX,keyY,rx*0.62);
-    keyGrad.addColorStop(0.00,'rgba(255,255,255,'+(0.32*opacityScale)+')');
-    keyGrad.addColorStop(0.35,'rgba(220,238,255,'+(0.16*opacityScale)+')');
-    keyGrad.addColorStop(1.00,'rgba(180,215,255,0)');
-    ctx.fillStyle=keyGrad;
+    var bandGradT=ctx.createLinearGradient(0,cyTop-ry*0.85,0,cyTop+ry*0.2);
+    bandGradT.addColorStop(0.00,'rgba(220,228,242,0)');
+    bandGradT.addColorStop(0.35,'rgba(220,228,242,'+(0.20*opacityScale)+')');
+    bandGradT.addColorStop(0.55,'rgba(200,212,228,'+(0.10*opacityScale)+')');
+    bandGradT.addColorStop(1.00,'rgba(180,196,216,0)');
+    ctx.fillStyle=bandGradT;
     ctx.fillRect(_cx-rx,cyTop-ry,rx*2,ry*2);
     ctx.restore();
 
-    /* Chamfered outer bevel — bright inner ring just inside the rim, sells the
-       3D depth so the coin reads as a forged disc, not a printed circle. */
+    /* Subtle inner shadow at the bevel edge — sells the depth without a hot ring */
     ctx.save();
     ellipsePath(_cx,cyTop,rx,ry);
     ctx.clip();
-    var bevelGrad=ctx.createRadialGradient(_cx,cyTop,rx*0.84,_cx,cyTop,rx*1.02);
-    bevelGrad.addColorStop(0.00,'rgba(180,215,250,0)');
-    bevelGrad.addColorStop(0.45,'rgba(200,228,255,'+(0.22*opacityScale)+')');
-    bevelGrad.addColorStop(0.78,'rgba(150,190,235,'+(0.10*opacityScale)+')');
-    bevelGrad.addColorStop(1.00,'rgba(40,75,130,'+(0.45*opacityScale)+')');
+    var bevelGrad=ctx.createRadialGradient(_cx,cyTop,rx*0.85,_cx,cyTop,rx*1.00);
+    bevelGrad.addColorStop(0.00,'rgba(20,30,55,0)');
+    bevelGrad.addColorStop(0.70,'rgba(20,30,55,'+(0.18*opacityScale)+')');
+    bevelGrad.addColorStop(1.00,'rgba(8,15,32,'+(0.55*opacityScale)+')');
     ctx.fillStyle=bevelGrad;
     ctx.fillRect(_cx-rx,cyTop-ry,rx*2,ry*2);
     ctx.restore();
 
-    /* Brushed metal concentric arcs */
+    /* Horizontal brush streaks — satin polish goes in ONE direction.
+       Concentric arcs read as lathed mirror; horizontal lines read as bullion. */
     ctx.save();
     ellipsePath(_cx,cyTop,rx,ry);
     ctx.clip();
-    var arcN=18;
-    for(var ai=0;ai<arcN;ai++){
-      var rr=(ai+0.5)/arcN;
-      var ax=rx*rr,ay=ry*rr;
-      var aa=(0.038+Math.sin(ai*1.91)*0.024)*opacityScale;
-      ctx.strokeStyle='rgba(190,225,255,'+aa+')';
-      ctx.lineWidth=0.5;
+    var streakCount=24;
+    for(var si=0;si<streakCount;si++){
+      var sy=cyTop-ry+ (si/streakCount)*ry*2;
+      /* Pseudo-random brightness per streak — uses idx so each coin is unique but stable */
+      var seed=Math.sin(si*7.91 + idx*2.13)*0.5+0.5;
+      var sa=(0.02 + seed*0.045)*opacityScale;
+      ctx.strokeStyle='rgba(210,222,238,'+sa+')';
+      ctx.lineWidth=0.6;
       ctx.beginPath();
-      ctx.ellipse(_cx,cyTop,ax,ay,0,0,Math.PI*2);
+      ctx.moveTo(_cx-rx*0.98, sy);
+      ctx.lineTo(_cx+rx*0.98, sy);
       ctx.stroke();
     }
 
-    /* Anisotropic horizontal streak */
-    var streakY=cyTop+Math.sin(specPhase+idx*0.2)*ry*0.35;
-    var streakGrad=ctx.createLinearGradient(0,streakY-ry*0.25,0,streakY+ry*0.25);
-    streakGrad.addColorStop(0,'rgba(255,255,255,0)');
-    streakGrad.addColorStop(0.5,'rgba(220,240,255,'+(0.22*opacityScale)+')');
-    streakGrad.addColorStop(1,'rgba(255,255,255,0)');
+    /* Wider, softer scattered highlight band — satin doesn't reflect, it diffuses.
+       Position drifts slowly with specPhase so the surface feels alive when tilted. */
+    var streakY=cyTop-ry*0.15 + Math.sin(specPhase+idx*0.2)*ry*0.15;
+    var streakGrad=ctx.createLinearGradient(0,streakY-ry*0.55,0,streakY+ry*0.55);
+    streakGrad.addColorStop(0.00,'rgba(225,232,245,0)');
+    streakGrad.addColorStop(0.50,'rgba(225,232,245,'+(0.14*opacityScale)+')');
+    streakGrad.addColorStop(1.00,'rgba(225,232,245,0)');
     ctx.fillStyle=streakGrad;
-    ctx.fillRect(_cx-rx,streakY-ry*0.25,rx*2,ry*0.5);
+    ctx.fillRect(_cx-rx,streakY-ry*0.55,rx*2,ry*1.1);
     ctx.restore();
 
-    /* Engraved inner ring — crisp emboss for jewelry-grade detail */
-    ctx.strokeStyle='rgba(6,18,40,'+(0.92*opacityScale)+')';
-    ctx.lineWidth=1.1;
+    /* Engraved inner ring — slightly softer than mirror version (satin loses some crisp) */
+    ctx.strokeStyle='rgba(8,18,38,'+(0.78*opacityScale)+')';
+    ctx.lineWidth=1.0;
     ellipsePath(_cx,cyTop,rx*0.78,ry*0.78);
     ctx.stroke();
-    ctx.strokeStyle='rgba(200,232,255,'+(0.55*opacityScale)+')';
-    ctx.lineWidth=0.8;
-    ellipsePath(_cx+0.4,cyTop-0.4,rx*0.78,ry*0.78);
+    ctx.strokeStyle='rgba(195,210,230,'+(0.32*opacityScale)+')';
+    ctx.lineWidth=0.7;
+    ellipsePath(_cx+0.3,cyTop-0.3,rx*0.78,ry*0.78);
     ctx.stroke();
 
-    /* ─── FROSTED FIELD (inside engraved inner ring, behind emblem) ───
-       Dual-finish contrast: field is matte-noise, emblem stays mirror-polished. */
+    /* ─── SATIN MICRO-TEXTURE ─── Cover the WHOLE face — satin has visible
+       polish marks edge-to-edge, not just in the field. */
     if(ry>14){
       ctx.save();
-      ellipsePath(_cx,cyTop,rx*0.77,ry*0.77);
+      ellipsePath(_cx,cyTop,rx*0.99,ry*0.99);
       ctx.clip();
       var noisePat=getNoisePattern();
       if(noisePat){
-        ctx.globalAlpha=0.55*opacityScale;
+        ctx.globalAlpha=0.42*opacityScale;
+        ctx.globalCompositeOperation='overlay';  /* sits in the metal, not on top */
         ctx.fillStyle=noisePat;
         ctx.fillRect(_cx-rx,cyTop-ry,rx*2,ry*2);
       }
@@ -10327,54 +10345,54 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       drawEmbossedMark(_cx,cyTop,rx*0.78,ry*0.78,opacityScale,isFilledCoin,tilt);
     }
 
-    /* ─── SPECULAR SWEEP ─── */
+    /* ─── DIFFUSE SHEEN ─── Satin equivalent of specular sweep. Lower alpha,
+       softer falloff. On tilt (inspect mode) it shifts but never gets mirror-bright. */
     ctx.save();
     ellipsePath(_cx,cyTop,rx,ry);
     ctx.clip();
     var sweepX, sweepY;
     if(tilt){
-      /* Inspect mode: highlight tracks the finger */
-      sweepX = _cx + tilt.tx * rx * 0.85;
-      sweepY = cyTop + tilt.ty * ry * 0.85 - ry * 0.25;
+      sweepX = _cx + tilt.tx * rx * 0.75;
+      sweepY = cyTop + tilt.ty * ry * 0.75 - ry * 0.20;
     } else {
-      sweepX = _cx + Math.cos(t*0.75+idx*0.15) * rx * 0.45;
-      sweepY = cyTop - ry * 0.55;
+      sweepX = _cx + Math.cos(t*0.75+idx*0.15) * rx * 0.35;
+      sweepY = cyTop - ry * 0.45;
     }
-    var sweep=ctx.createRadialGradient(sweepX,sweepY,0,sweepX,sweepY,rx*1.3);
-    sweep.addColorStop(0,'rgba(255,255,255,'+(0.75*opacityScale)+')');
-    sweep.addColorStop(0.20,'rgba(220,240,255,'+(0.40*opacityScale)+')');
-    sweep.addColorStop(0.55,'rgba(160,205,250,'+(0.10*opacityScale)+')');
-    sweep.addColorStop(1,'rgba(140,190,240,0)');
+    var sweep=ctx.createRadialGradient(sweepX,sweepY,0,sweepX,sweepY,rx*1.15);
+    sweep.addColorStop(0.00,'rgba(225,232,245,'+(0.22*opacityScale)+')');
+    sweep.addColorStop(0.30,'rgba(200,215,235,'+(0.12*opacityScale)+')');
+    sweep.addColorStop(0.70,'rgba(170,190,215,'+(0.04*opacityScale)+')');
+    sweep.addColorStop(1.00,'rgba(150,175,200,0)');
     ctx.fillStyle=sweep;
     ctx.fillRect(_cx-rx,cyTop-ry,rx*2,ry*2);
 
-    /* Orbiting sun glint — only during the drop arc; settled coins go still */
+    /* Soft orbiting glint during drop only — much weaker for satin */
     if(mintAnim<1){
       var glintAng=(t*0.6+idx*0.9)%(Math.PI*2);
       var glintVisible=Math.max(0,-Math.sin(glintAng));
       if(glintVisible>0.1){
         var glintX=_cx+rx*0.82*Math.cos(glintAng);
         var glintY=cyTop+ry*0.82*Math.sin(glintAng);
-        var glint=ctx.createRadialGradient(glintX,glintY,0,glintX,glintY,rx*0.18);
-        glint.addColorStop(0,'rgba(255,255,255,'+(glintVisible*0.95*opacityScale)+')');
-        glint.addColorStop(0.3,'rgba(220,240,255,'+(glintVisible*0.45*opacityScale)+')');
-        glint.addColorStop(1,'rgba(220,240,255,0)');
+        var glint=ctx.createRadialGradient(glintX,glintY,0,glintX,glintY,rx*0.22);
+        glint.addColorStop(0,'rgba(235,242,255,'+(glintVisible*0.50*opacityScale)+')');
+        glint.addColorStop(0.4,'rgba(210,222,240,'+(glintVisible*0.20*opacityScale)+')');
+        glint.addColorStop(1,'rgba(210,222,240,0)');
         ctx.fillStyle=glint;
-        ctx.fillRect(glintX-rx*0.2,glintY-rx*0.2,rx*0.4,rx*0.4);
+        ctx.fillRect(glintX-rx*0.24,glintY-rx*0.24,rx*0.48,rx*0.48);
       }
     }
     ctx.restore();
 
-    /* Top rim highlight — dual pass for crisp chamfered bevel definition */
-    ctx.strokeStyle='rgba(2,8,22,'+(0.65*opacityScale)+')';
-    ctx.lineWidth=1.4;
+    /* Top rim — softer than mirror. Satin rims aren't hot, they're warm-grey */
+    ctx.strokeStyle='rgba(4,12,28,'+(0.70*opacityScale)+')';
+    ctx.lineWidth=1.3;
     ctx.beginPath();
     arcTop(_cx,cyTop,rx,ry);
     ctx.stroke();
-    ctx.strokeStyle='rgba(235,247,255,'+(0.92*opacityScale)+')';
-    ctx.lineWidth=1.0;
+    ctx.strokeStyle='rgba(200,212,232,'+(0.62*opacityScale)+')';
+    ctx.lineWidth=0.9;
     ctx.beginPath();
-    arcTop(_cx,cyTop-0.4,rx*0.997,ry*0.997);
+    arcTop(_cx,cyTop-0.3,rx*0.997,ry*0.997);
     ctx.stroke();
 
     /* (Breathing rim glow removed — settled coins are still metal, not pacemakers.) */
@@ -10520,7 +10538,7 @@ function _fxDrawCashStack(ctx, W, H, t, state){
         var homeX = cx + (b.xOff || 0);
 
         /* Lifted position — centered, large, face-on */
-        var liftedRx = Math.min(W * 0.46, H * 0.24);
+        var liftedRx = Math.min(W * 0.48, H * 0.26);
         var targetX = cx;
         var targetYTop = H * 0.34;
         var targetRx = liftedRx;
@@ -13018,7 +13036,7 @@ window.finMonthNav = function(delta){
       var COIN_MAX = 15;
       var baseRx = g.billW / 2;
       var baseRy = baseRx * 0.28;
-      var coinH = baseRy * 0.92;  /* keep in sync with render in gumball loop */
+      var coinH = baseRy * 0.95;  /* keep in sync with render in gumball loop */
       for(var i = g.visN - 1; i >= 0; i--){
         var persp = 1 - (i / COIN_MAX) * 0.06;
         var rx = baseRx * persp;

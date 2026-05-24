@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-24-v56b'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-24-v57b'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -3836,9 +3836,29 @@ function renderFinStrip(){
   const txSpend=monthTx.reduce(function(a,t){ return t.type==='expense'?a+t.amount:a; },0);
   const remaining=Math.max(0, leftover-txSpend);
   const _dn=new Date();
-  const daysInMonth=new Date(_dn.getFullYear(),_dn.getMonth()+1,0).getDate();
-  const daysLeft=daysInMonth-_dn.getDate()+1;
-  const dailyBudget=daysLeft>0?Math.round(remaining/daysLeft):0;
+  /* Use salary-date aware daysLeft — mirrors fxRenderHero logic */
+  var _stripDaysLeft;
+  var _stripSalaryDate = (function(){
+    try{ var _mk=_dn.getFullYear()+'-'+String(_dn.getMonth()+1).padStart(2,'0');
+      return typeof fxGetSalaryDate==='function'?fxGetSalaryDate(_mk):null; }catch(e){return null;}
+  })();
+  if(_stripSalaryDate){
+    var _td=_dn.getDate();
+    if(_td < _stripSalaryDate){
+      _stripDaysLeft = _stripSalaryDate - _td + 1;
+    } else {
+      var _np=new Date(_dn.getFullYear(),_dn.getMonth()+1,_stripSalaryDate);
+      _stripDaysLeft = Math.round((_np - new Date(_dn.getFullYear(),_dn.getMonth(),_td))/(24*60*60*1000))+1;
+    }
+  } else {
+    var daysInMonth=new Date(_dn.getFullYear(),_dn.getMonth()+1,0).getDate();
+    _stripDaysLeft = daysInMonth-_dn.getDate()+1;
+  }
+  const daysLeft=_stripDaysLeft;
+  /* Strip uses leftoverCurrent if set, matching hero card */
+  var _stripF=getF();
+  var _stripRemaining=(_stripF.leftoverCurrent!==undefined)?Math.max(0,_stripF.leftoverCurrent):Math.max(0,leftover-txSpend);
+  const dailyBudget=daysLeft>0?Math.round(_stripRemaining/daysLeft):0;
   const eg=(f.goals||[]).find(function(g){return (g.name||'').toLowerCase().indexOf('emergency')>-1});
   const savedAmt=eg?(eg.saved||0):0;
   const savingsTarget=eg?(eg.target||0):0;
@@ -5097,7 +5117,9 @@ function rwCheckStreakIntegrity(){
     /* Wipe pts — reset level start to today, clear habit bonus flags */
     rw.active.levelStartDate=todayKey2;
     rw.active.dailyStreak=0;
-    rw.active.wipeDate=todayKey2;
+    /* Set wipeDate to yesterday so today's bonus isn't blocked on the wipe day itself */
+    var _wipePrev=new Date(today); _wipePrev.setDate(_wipePrev.getDate()-1);
+    rw.active.wipeDate=localKey(_wipePrev);
     setReward(rw);
     /* Clear habitBonus flags — they are now all pre-wipe so block retroactive grants */
     var b2=getBowl();
@@ -8337,7 +8359,7 @@ function tcBallSVG(tone, icon, sizePx, shadeSeed){
     +'</svg>';
 }
 
-/* ── Award a ball on completion ── */
+/* ── Award a ball on completion (today) ── */
 function tcAwardBall(tier, theme){
   var tc = tcGetCase();
   var todayStr = localKey(today);
@@ -8346,18 +8368,27 @@ function tcAwardBall(tier, theme){
   var existing = tc.balls.find(function(b){ return b.dateKey === todayStr; });
   if(existing) return;
 
-  /* Check if streak is still alive (i.e., no miss yesterday etc.) */
-  var liveStreak = tcComputeStreak();
-
-  /* If streak is alive, push ball. Otherwise it will have been shattered already. */
-  tc.balls.push({
-    dateKey: todayStr,
-    tier: tier,
-    tone: theme ? theme.tone : 'blueberry',
-    icon: theme ? theme.icon : '🎯',
-    ballName: theme ? theme.name : ''
+  /* Rebuild from dailyDraws to recover any balls lost to erroneous shatters,
+     then add today's ball on top — single source of truth. */
+  var b = getBowl();
+  var draws = b.dailyDraws || [];
+  var rebuilt = [];
+  draws.forEach(function(draw){
+    if(!draw.chosenTier || draw.chosenTier === 'skipped') return;
+    if(draw.date > todayStr) return;
+    var drawTheme = bowlGetLibBall(draw.themeId);
+    rebuilt.push({
+      dateKey: draw.date,
+      tier: draw.chosenTier,
+      tone: drawTheme ? drawTheme.tone : 'blueberry',
+      icon: drawTheme ? drawTheme.icon : '🎯',
+      ballName: drawTheme ? drawTheme.name : ''
+    });
   });
+  rebuilt.sort(function(a, b2){ return a.dateKey < b2.dateKey ? -1 : a.dateKey > b2.dateKey ? 1 : 0; });
+  tc.balls = rebuilt;
 
+  var liveStreak = tcComputeStreak();
   if(liveStreak > (tc.bestStreak || 0)) tc.bestStreak = liveStreak;
 
   tcSaveCase(tc);
@@ -8367,29 +8398,39 @@ function tcAwardBall(tier, theme){
 /* ── Award a ball for a specific date (retroactive / backfill completions) ── */
 function tcAwardBallForDate(dateKey, tier, theme){
   var tc = tcGetCase();
+  var b = getBowl();
+  var draws = b.dailyDraws || [];
 
-  /* Don't double-add */
-  var existing = tc.balls.find(function(b){ return b.dateKey === dateKey; });
-  if(existing) return;
-
-  tc.balls.push({
-    dateKey: dateKey,
-    tier: tier,
-    tone: theme ? theme.tone : 'blueberry',
-    icon: theme ? theme.icon : '🎯',
-    ballName: theme ? theme.name : ''
+  /* Rebuild trophy case from all completed draws — this recovers balls that
+     were wiped by an erroneous shatter when the user retroactively completes
+     a missed day. We re-derive the full set from dailyDraws as ground truth. */
+  var todayStr = localKey(today);
+  var rebuilt = [];
+  draws.forEach(function(draw){
+    if(!draw.chosenTier || draw.chosenTier === 'skipped') return;
+    if(draw.date > todayStr) return;
+    /* Look up theme for this draw */
+    var drawTheme = bowlGetLibBall(draw.themeId);
+    rebuilt.push({
+      dateKey: draw.date,
+      tier: draw.chosenTier,
+      tone: drawTheme ? drawTheme.tone : 'blueberry',
+      icon: drawTheme ? drawTheme.icon : '🎯',
+      ballName: drawTheme ? drawTheme.name : ''
+    });
   });
+  /* Sort chronologically */
+  rebuilt.sort(function(a, b2){ return a.dateKey < b2.dateKey ? -1 : a.dateKey > b2.dateKey ? 1 : 0; });
 
-  /* Sort balls by date so trophy case stays chronological */
-  tc.balls.sort(function(a, b){ return a.dateKey < b.dateKey ? -1 : a.dateKey > b.dateKey ? 1 : 0; });
+  tc.balls = rebuilt;
 
   var liveStreak = tcComputeStreak();
   if(liveStreak > (tc.bestStreak || 0)) tc.bestStreak = liveStreak;
 
-  /* Grace period: suppress tcCheckStreak shatter for 2.5s so the user
-     sees the new ball before any streak-break shatter fires */
+  /* Grace period: suppress tcCheckStreak shatter for 3s so the user
+     sees the rebuilt balls before any streak-break shatter fires */
   window._tcRetroGrace = true;
-  setTimeout(function(){ window._tcRetroGrace = false; }, 2500);
+  setTimeout(function(){ window._tcRetroGrace = false; }, 3000);
 
   tcSaveCase(tc);
   tcRender(true);
@@ -8416,9 +8457,34 @@ function tcCheckStreak(){
      The flag is set in tcAwardBallForDate and cleared after 2s. */
   if(window._tcRetroGrace) return;
 
+  /* Cross-check: verify each stored ball actually has a completed draw.
+     A ball should only be shattered if its date has NO completed draw in dailyDraws.
+     This prevents retroactive completions from being lost — if the user marks a
+     missed day complete after the fact, the ball survives instead of getting wiped
+     on the next renderBowl call before the retroactive award fires. */
+  var b = getBowl();
+  var draws = b.dailyDraws || [];
+  var todayStr = localKey(today);
+
+  /* Audit existing balls — remove any whose draw is genuinely incomplete (past day, no tier) */
+  var ballsBefore = tc.balls.length;
+  tc.balls = tc.balls.filter(function(ball){
+    /* Today's ball: keep it regardless (today isn't over) */
+    if(ball.dateKey === todayStr) return true;
+    /* Past ball: keep if draw exists AND is completed (non-skipped) */
+    var draw = draws.find(function(d){ return d.date === ball.dateKey; });
+    return draw && draw.chosenTier && draw.chosenTier !== 'skipped';
+  });
+
+  if(tc.balls.length !== ballsBefore){
+    /* Some orphaned balls were pruned — save, but don't mass-shatter the whole case */
+    tcSaveCase(tc);
+    tcRender(false);
+  }
+
   var liveStreak = tcComputeStreak();
-  /* If we have balls but live streak is 0, the streak is broken */
-  if(liveStreak === 0){
+  /* Only shatter the remaining (all-valid) balls if live streak truly hit 0 */
+  if(liveStreak === 0 && tc.balls.length > 0){
     tcShatterAll(tc);
   }
 }
@@ -8552,8 +8618,39 @@ function tcRender(animateNew){
       try{ tcCheckStreak(); tcRender(false); }catch(e){}
     };
   }
-  /* Boot render after a short delay */
-  setTimeout(function(){ try{ tcCheckStreak(); tcRender(false); }catch(e){} }, 1200);
+  /* Boot render + self-heal: if tc.balls is empty but dailyDraws has completed
+     entries, rebuild the trophy case from scratch (recovers from past shatters) */
+  setTimeout(function(){
+    try{
+      var tc = tcGetCase();
+      var b = getBowl();
+      var draws = b.dailyDraws || [];
+      var todayStr = localKey(today);
+      var hasCompleted = draws.some(function(d){ return d.chosenTier && d.chosenTier !== 'skipped' && d.date <= todayStr; });
+      if(tc.balls.length === 0 && hasCompleted){
+        /* Rebuild silently */
+        var rebuilt = [];
+        draws.forEach(function(draw){
+          if(!draw.chosenTier || draw.chosenTier === 'skipped') return;
+          if(draw.date > todayStr) return;
+          var drawTheme = bowlGetLibBall(draw.themeId);
+          rebuilt.push({
+            dateKey: draw.date,
+            tier: draw.chosenTier,
+            tone: drawTheme ? drawTheme.tone : 'blueberry',
+            icon: drawTheme ? drawTheme.icon : '🎯',
+            ballName: drawTheme ? drawTheme.name : ''
+          });
+        });
+        rebuilt.sort(function(a, b2){ return a.dateKey < b2.dateKey ? -1 : a.dateKey > b2.dateKey ? 1 : 0; });
+        tc.balls = rebuilt;
+        var liveStreak = tcComputeStreak();
+        if(liveStreak > (tc.bestStreak || 0)) tc.bestStreak = liveStreak;
+        tcSaveCase(tc);
+      }
+      tcCheckStreak(); tcRender(false);
+    }catch(e){}
+  }, 1200);
 })();
 
 (function(){
@@ -8778,16 +8875,16 @@ function fxRenderHero(f, mk, stats){
     if(salaryDateRaw){
       /* Salary received on day X each month. Budget must last until next payday
          (same day next month). daysLeft = days from today to next payday, inclusive. */
-      var today = now.getDate();
-      if(today < salaryDateRaw){
+      var _todayDayNum = now.getDate();
+      if(_todayDayNum < salaryDateRaw){
         /* Salary hasn't arrived yet this month — next payday is still this month */
-        daysLeft = salaryDateRaw - today;
+        daysLeft = salaryDateRaw - _todayDayNum + 1;
         salaryDateStr = ' · salary expected day ' + salaryDateRaw;
       } else {
         /* Salary received — next payday is salary day of next month */
         var nextPayday = new Date(now.getFullYear(), now.getMonth()+1, salaryDateRaw);
         var msPerDay = 24*60*60*1000;
-        var todayMidnight = new Date(now.getFullYear(), now.getMonth(), today);
+        var todayMidnight = new Date(now.getFullYear(), now.getMonth(), _todayDayNum);
         daysLeft = Math.round((nextPayday - todayMidnight) / msPerDay) + 1;
         salaryDateStr = ' · paid day ' + salaryDateRaw;
       }
@@ -11712,9 +11809,9 @@ window.finMonthNav = function(delta){
         var todayKey2 = localKey(today);
         var tmrwKey = localKey(new Date(today.getTime()+86400000));
         var yday = localKey(new Date(today.getTime()-86400000));
-        var cdIds = b.draws
+        var cdIds = (b.dailyDraws||[])
           .filter(function(d){ return d.date===todayKey2||d.date===yday||d.date===tmrwKey; })
-          .map(function(d){ return d.ballId; });
+          .map(function(d){ return d.themeId; });
         var lib = b.library.filter(function(x){ return !x.deleted; });
         syncBalls(lib, cdIds);
       } catch(e){}

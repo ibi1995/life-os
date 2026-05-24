@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-24-v58'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-24-v59'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -4303,32 +4303,51 @@ function importData(e){
     try{
       let d=JSON.parse(ev.target.result);
       /* ── Sanitize bowl on import ──
-         Always runs regardless of whether backup has a bowl key.
-         1. Ensure bowl object exists (backups without bowl get a clean one).
-         2. Always wipe the bowl library so it resets to current BOWL_DEFAULT_LIBRARY defaults.
-         3. Strip dailyDraws entries whose themeId no longer exists in the default library
-            (old backups have stale IDs that break renderBowl and silently block the crank).
-         4. Always remove today's draw so the crank works fresh after import. */
+         1. Ensure bowl object exists.
+         2. Wipe library so getBowl() repopulates from BOWL_DEFAULT_LIBRARY.
+         3. Keep ALL historical dailyDraws — completed draws for deleted themes
+            are valid history. Only strip today's draw so crank works fresh.
+         4. Rebuild trophyCase from dailyDraws (backup's trophy case may be stale).
+         5. Clean up inline reward imageData to avoid localStorage bloat. */
       if(!d.bowl){
-        /* Backup had no bowl — inject a clean stub so the block below always runs */
         d.bowl = { dailyDraws: [], draws: [], tripleDraws: [], rerollsByCycle: {} };
       }
+      /* Capture backup library before wiping (needed to look up deleted themes in draws) */
+      var backupLib = d.bowl.library ? d.bowl.library.slice() : [];
       /* Wipe library — getBowl() will repopulate from BOWL_DEFAULT_LIBRARY */
       delete d.bowl.library;
       delete d.bowl._themeLibMigrated;
-      /* Get valid IDs from current default library */
-      var validIds = (typeof BOWL_DEFAULT_LIBRARY !== 'undefined')
-        ? BOWL_DEFAULT_LIBRARY.map(function(x){ return x.id; })
-        : [];
       var todayStr = localKey(today);
       if(!d.bowl.dailyDraws) d.bowl.dailyDraws = [];
+      /* Only strip today's draw so the crank works immediately after import.
+         Historical draws for deleted themes are kept — they're valid completions. */
       d.bowl.dailyDraws = d.bowl.dailyDraws.filter(function(dr){
-        /* Remove today's draw (so crank works immediately after import) */
-        if(dr.date === todayStr) return false;
-        /* Remove draws referencing IDs that don't exist in current library */
-        if(validIds.length && validIds.indexOf(dr.themeId) === -1) return false;
-        return true;
+        return dr.date !== todayStr;
       });
+      /* ── Rebuild trophy case from dailyDraws ──
+         The backup's trophyCase may be stale/partial. Derive it fresh from
+         the ground truth: all completed (non-skipped) draws up to today. */
+      var defaultLib = (typeof BOWL_DEFAULT_LIBRARY !== 'undefined') ? BOWL_DEFAULT_LIBRARY : [];
+      var rebuilt = [];
+      d.bowl.dailyDraws.forEach(function(draw){
+        if(!draw.chosenTier || draw.chosenTier === 'skipped') return;
+        if(draw.date > todayStr) return;
+        /* Look up theme from default library first, then backup library */
+        var theme = defaultLib.find(function(x){ return x.id === draw.themeId; })
+                 || backupLib.find(function(x){ return x.id === draw.themeId; });
+        rebuilt.push({
+          dateKey: draw.date,
+          tier: draw.chosenTier,
+          tone: theme ? theme.tone : 'blueberry',
+          icon: theme ? theme.icon : '🎯',
+          ballName: theme ? theme.name : (draw.themeId || '')
+        });
+      });
+      rebuilt.sort(function(a, b){ return a.dateKey < b.dateKey ? -1 : a.dateKey > b.dateKey ? 1 : 0; });
+      if(!d.bowl.trophyCase) d.bowl.trophyCase = { balls:[], bestStreak:0 };
+      var oldBest = d.bowl.trophyCase.bestStreak || 0;
+      d.bowl.trophyCase.balls = rebuilt;
+      if(rebuilt.length > oldBest) d.bowl.trophyCase.bestStreak = rebuilt.length;
       /* Restore satellite data (reward image) if present in backup.
          Fallback: older backups stored image inline in reward.active.imageData. */
       try{
@@ -4337,6 +4356,13 @@ function importData(e){
           delete d._satellite_rwImg;
         } else if(d.reward && d.reward.active && d.reward.active.imageData){
           localStorage.setItem('lifeOS_rwImg', d.reward.active.imageData);
+        }
+      }catch(e){}
+      /* Strip inline imageData from reward.active to save localStorage space
+         (it's now in the satellite key lifeOS_rwImg) */
+      try{
+        if(d.reward && d.reward.active && d.reward.active.imageData){
+          delete d.reward.active.imageData;
         }
       }catch(e){}
       _stateCache=null;
@@ -8378,7 +8404,7 @@ function tcAwardBall(tier, theme){
       tier: draw.chosenTier,
       tone: drawTheme ? drawTheme.tone : 'blueberry',
       icon: drawTheme ? drawTheme.icon : '🎯',
-      ballName: drawTheme ? drawTheme.name : ''
+      ballName: drawTheme ? drawTheme.name : (draw.themeId || '')
     });
   });
   rebuilt.sort(function(a, b2){ return a.dateKey < b2.dateKey ? -1 : a.dateKey > b2.dateKey ? 1 : 0; });
@@ -8412,7 +8438,7 @@ function tcAwardBallForDate(dateKey, tier, theme){
       tier: draw.chosenTier,
       tone: drawTheme ? drawTheme.tone : 'blueberry',
       icon: drawTheme ? drawTheme.icon : '🎯',
-      ballName: drawTheme ? drawTheme.name : ''
+      ballName: drawTheme ? drawTheme.name : (draw.themeId || '')
     });
   });
   /* Sort chronologically */
@@ -8614,16 +8640,17 @@ function tcRender(animateNew){
       try{ tcCheckStreak(); tcRender(false); }catch(e){}
     };
   }
-  /* Boot render + self-heal: if tc.balls is empty but dailyDraws has completed
-     entries, rebuild the trophy case from scratch (recovers from past shatters) */
+  /* Boot render + self-heal: rebuild trophy case if it doesn't match
+     the number of completed draws (catches stale imports, partial shatters, etc) */
   setTimeout(function(){
     try{
       var tc = tcGetCase();
       var b = getBowl();
       var draws = b.dailyDraws || [];
       var todayStr = localKey(today);
-      var hasCompleted = draws.some(function(d){ return d.chosenTier && d.chosenTier !== 'skipped' && d.date <= todayStr; });
-      if(tc.balls.length === 0 && hasCompleted){
+      /* Count completed draws up to today */
+      var completedDraws = draws.filter(function(d){ return d.chosenTier && d.chosenTier !== 'skipped' && d.date <= todayStr; });
+      if(tc.balls.length !== completedDraws.length && completedDraws.length > 0){
         /* Rebuild silently */
         var rebuilt = [];
         draws.forEach(function(draw){
@@ -8635,7 +8662,7 @@ function tcRender(animateNew){
             tier: draw.chosenTier,
             tone: drawTheme ? drawTheme.tone : 'blueberry',
             icon: drawTheme ? drawTheme.icon : '🎯',
-            ballName: drawTheme ? drawTheme.name : ''
+            ballName: drawTheme ? drawTheme.name : (draw.themeId || '')
           });
         });
         rebuilt.sort(function(a, b2){ return a.dateKey < b2.dateKey ? -1 : a.dateKey > b2.dateKey ? 1 : 0; });

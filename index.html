@@ -191,7 +191,30 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bowl-crank-btn:hover{background:linear-gradient(135deg,rgba(255,217,125,.22),rgba(255,190,80,.14));box-shadow:0 6px 28px rgba(255,217,125,.18),inset 0 1px 0 rgba(255,255,255,.08)}
 .bowl-crank-btn:active{transform:scale(.96)}
 
-@keyframes crankPulse{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+/* v62: crank press has a tiny anticipation dip then ease — feels mechanical not just pulsing */
+@keyframes crankPulse{
+  0%  {transform:scale(1)}
+  18% {transform:scale(.985)}
+  55% {transform:scale(1.055)}
+  100%{transform:scale(1)}
+}
+/* v62: morph-in handoff — softer blur (3→0), no overshoot wobble, smoother ride */
+@keyframes bowlCardMorphIn{
+  0%  {opacity:0;transform:translate3d(0,-8px,0) scale(.94);filter:blur(3px)}
+  40% {opacity:.92;filter:blur(.6px)}
+  72% {opacity:1;transform:translate3d(0,.5px,0) scale(1.008);filter:blur(0)}
+  100%{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}
+}
+.bowl-card-morph-in{animation:bowlCardMorphIn .58s cubic-bezier(.22,1,.36,1) both;will-change:transform,opacity,filter;transform:translateZ(0)}
+/* v62: lock body scroll briefly during dispense so iOS rubber-band doesn't break the handoff */
+body.bowl-anim-lock{overflow:hidden;touch-action:none}
+/* v62: machine pulse during shake — slower, deeper, with a hint of warmth at peak */
+@keyframes bowlMachinePulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(107,182,255,0)}
+  45%   {box-shadow:0 0 36px 3px rgba(107,182,255,.16),0 0 14px 1px rgba(180,220,255,.10)}
+  60%   {box-shadow:0 0 44px 5px rgba(127,182,255,.22),0 0 18px 2px rgba(200,230,255,.12)}
+}
+.bowl-machine-wrap.is-drawing{animation:bowlMachinePulse 1.6s ease-in-out infinite}
 .bowl-crank-btn:disabled{opacity:.3;cursor:not-allowed;box-shadow:none;filter:grayscale(0.6)}
 .bowl-crank-btn.drawing{opacity:1!important;filter:none!important;background:linear-gradient(135deg,rgba(255,217,125,.22),rgba(255,190,80,.14))!important;animation:crankPulse 1s ease-in-out infinite!important}
 .bowl-crank-btn.drawing .crank-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,217,125,.3);border-top-color:var(--gold);border-radius:50%;animation:ptr-spin .6s linear infinite;vertical-align:middle}
@@ -201,6 +224,29 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bowl-reroll-btn:hover{background:rgba(255,217,125,.18)}
 .bowl-reroll-btn:active{transform:scale(.96)}
 .bowl-reroll-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* v61: replay-animation button — chrome/glass, mono-blue to match design language */
+.bowl-replay-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:linear-gradient(135deg,rgba(127,178,255,.10),rgba(77,141,255,.05));
+  border:1px solid rgba(127,178,255,.28);
+  border-radius:50px;
+  color:rgba(200,225,255,.9);
+  font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:.3px;
+  padding:7px 14px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  min-height:44px;
+  transition:transform .14s,background .18s,box-shadow .18s,border-color .18s;
+  box-shadow:0 2px 10px rgba(77,141,255,.08),inset 0 1px 0 rgba(255,255,255,.04);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+}
+.bowl-replay-btn:hover{background:linear-gradient(135deg,rgba(127,178,255,.18),rgba(77,141,255,.10));border-color:rgba(127,178,255,.45);box-shadow:0 3px 14px rgba(77,141,255,.18)}
+.bowl-replay-btn:active{transform:scale(.96)}
+.bowl-replay-btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.35)}
+.bowl-replay-btn svg{flex-shrink:0;transition:transform .3s cubic-bezier(.16,1,.3,1)}
+.bowl-replay-btn:not(:disabled):hover svg{transform:rotate(-22deg)}
+.bowl-replay-btn.replaying svg{animation:replaySpin 1s linear infinite}
+@keyframes replaySpin{from{transform:rotate(0)}to{transform:rotate(-360deg)}}
 .bowl-progress{background:rgba(255,255,255,.04);border:1px solid rgba(127,178,255,.18);border-radius:8px;padding:12px 14px;margin-bottom:10px}
 .bowl-progress-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
 .bowl-progress-lbl{font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
@@ -5985,33 +6031,80 @@ function _playAllHabitsDone(){
    GUMBALL MACHINE SOUNDS
 ════════════════════════════════════════════ */
 
-/* ── Crank click: 3 mechanical ratchet snaps ── */
+/* ── v62: Crank — mechanical pull → ratchet → spring engage → low engage thunk ──
+   Anatomy:
+     0–20ms:  initial release click (sharp transient)
+     30–110ms: ratchet ticks (3 short metallic snaps with falling pitch)
+     150–340ms: spring whir (rising-then-falling pure tone, like coil tension)
+     200–280ms: engage thunk (low triangle, the satisfying "kerchunk") */
 function _playGumballCrank(){
   if(!_soundEnabled) return;
   window._ensureAudioReady(function(actx){
-    var now = actx.currentTime + 0.02;
-    [0, 0.09, 0.175].forEach(function(offset, ci){
+    var dest = (window._gbAudioDest && window._gbAudioDest()) || actx.destination;
+    var now = actx.currentTime + 0.015;
+
+    /* (1) Sharp release click */
+    try{
+      var clkLen = Math.floor(actx.sampleRate * 0.012);
+      var clkBuf = actx.createBuffer(1, clkLen, actx.sampleRate);
+      var cd = clkBuf.getChannelData(0);
+      for(var i=0;i<clkLen;i++) cd[i] = (Math.random()*2-1) * Math.pow(1-i/clkLen, 3.2);
+      var clkSrc = actx.createBufferSource(); clkSrc.buffer = clkBuf;
+      var clkHp = actx.createBiquadFilter(); clkHp.type='highpass'; clkHp.frequency.value=2400;
+      var clkG = actx.createGain();
+      clkG.gain.setValueAtTime(0.42, now); clkG.gain.exponentialRampToValueAtTime(0.0001, now+0.015);
+      clkSrc.connect(clkHp); clkHp.connect(clkG); clkG.connect(dest); clkSrc.start(now);
+    }catch(e){}
+
+    /* (2) Three ratchet ticks — falling pitch, shorter spacing for mechanical urgency */
+    [0.030, 0.068, 0.108].forEach(function(offset, ci){
       var t = now + offset;
-      var len = Math.floor(actx.sampleRate * 0.018);
+      var len = Math.floor(actx.sampleRate * 0.014);
       var buf = actx.createBuffer(1, len, actx.sampleRate);
       var d = buf.getChannelData(0);
-      for(var i=0; i<len; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/len, 2.8) * 0.7;
+      for(var i=0; i<len; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/len, 3.0) * 0.65;
       var src = actx.createBufferSource(); src.buffer = buf;
-      var bp = actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=700+ci*80; bp.Q.value=1.2;
+      var bp = actx.createBiquadFilter(); bp.type='bandpass';
+      bp.frequency.value = 1200 - ci*180;   /* falling pitch */
+      bp.Q.value = 3.4;
       var g = actx.createGain();
-      g.gain.setValueAtTime(0.55, t);
-      g.gain.exponentialRampToValueAtTime(0.0001, t+0.018);
-      src.connect(bp); bp.connect(g); g.connect(actx.destination); src.start(t);
-      var o = actx.createOscillator(); var og = actx.createGain();
-      o.type='sine'; o.frequency.setValueAtTime(140-ci*15, t); o.frequency.exponentialRampToValueAtTime(70, t+0.06);
-      og.gain.setValueAtTime(0.18, t); og.gain.exponentialRampToValueAtTime(0.0001, t+0.07);
-      o.connect(og); og.connect(actx.destination); o.start(t); o.stop(t+0.08);
+      g.gain.setValueAtTime(0.46 - ci*0.06, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.016);
+      src.connect(bp); bp.connect(g); g.connect(dest); src.start(t);
+      /* Mechanical metallic ring under each tick */
+      var ring = actx.createOscillator(); var rg = actx.createGain();
+      ring.type='triangle';
+      ring.frequency.setValueAtTime(820 - ci*120, t);
+      ring.frequency.exponentialRampToValueAtTime(420 - ci*60, t+0.05);
+      rg.gain.setValueAtTime(0.10, t);
+      rg.gain.exponentialRampToValueAtTime(0.0001, t+0.06);
+      ring.connect(rg); rg.connect(dest); ring.start(t); ring.stop(t+0.065);
     });
-    var sp = actx.createOscillator(); var sg = actx.createGain();
-    sp.type='sine'; sp.frequency.setValueAtTime(380, now+0.22); sp.frequency.exponentialRampToValueAtTime(210, now+0.48);
-    sg.gain.setValueAtTime(0.0001, now+0.22); sg.gain.linearRampToValueAtTime(0.12, now+0.224);
-    sg.gain.exponentialRampToValueAtTime(0.0001, now+0.48);
-    sp.connect(sg); sg.connect(actx.destination); sp.start(now+0.22); sp.stop(now+0.5);
+
+    /* (3) Spring whir — coil tension rising then releasing (150→340ms) */
+    var sp = actx.createOscillator(); var spg = actx.createGain();
+    sp.type='sawtooth';
+    sp.frequency.setValueAtTime(180, now+0.150);
+    sp.frequency.exponentialRampToValueAtTime(310, now+0.240);
+    sp.frequency.exponentialRampToValueAtTime(140, now+0.340);
+    /* Low-pass to soften the saw — sounds like a wound spring not a buzz */
+    var spLp = actx.createBiquadFilter(); spLp.type='lowpass'; spLp.frequency.value=900; spLp.Q.value=0.7;
+    spg.gain.setValueAtTime(0.0001, now+0.150);
+    spg.gain.linearRampToValueAtTime(0.085, now+0.190);
+    spg.gain.linearRampToValueAtTime(0.060, now+0.260);
+    spg.gain.exponentialRampToValueAtTime(0.0001, now+0.345);
+    sp.connect(spLp); spLp.connect(spg); spg.connect(dest);
+    sp.start(now+0.150); sp.stop(now+0.355);
+
+    /* (4) Engage thunk — low triangle, the kerchunk satisfaction at moment of engagement */
+    var th = actx.createOscillator(); var thg = actx.createGain();
+    th.type='triangle';
+    th.frequency.setValueAtTime(115, now+0.205);
+    th.frequency.exponentialRampToValueAtTime(58, now+0.295);
+    thg.gain.setValueAtTime(0.32, now+0.205);
+    thg.gain.exponentialRampToValueAtTime(0.0001, now+0.300);
+    th.connect(thg); thg.connect(dest);
+    th.start(now+0.205); th.stop(now+0.305);
   });
 }
 
@@ -6030,28 +6123,193 @@ function _stopBallSound(){
 /* Pre-baked noise buffer for ball clanks (created once) */
 var _ballClankBuf = null;
 
-/* ── Dispense sound: the reveal moment pop+chime ── */
+/* ── v62: Dispense reveal — magical chord (pop + harmonic chime + warm thud) ──
+   Routed through master compressor for unified dynamics with clanks. */
 function _playBowlDispense(){
   if(!_soundEnabled) return;
   window._ensureAudioReady(function(ctx){
-    var now=ctx.currentTime+0.01;
-    /* Pop — sine burst rising */
-    var o1=ctx.createOscillator(),g1=ctx.createGain();
-    o1.type='sine';o1.frequency.setValueAtTime(440,now);o1.frequency.exponentialRampToValueAtTime(1100,now+0.06);
-    g1.gain.setValueAtTime(0.3,now);g1.gain.exponentialRampToValueAtTime(0.0001,now+0.15);
-    o1.connect(g1);g1.connect(ctx.destination);o1.start(now);o1.stop(now+0.16);
-    /* Chime — triangle overtone for sparkle */
-    var o2=ctx.createOscillator(),g2=ctx.createGain();
-    o2.type='triangle';o2.frequency.setValueAtTime(1320,now+0.04);o2.frequency.exponentialRampToValueAtTime(880,now+0.3);
-    g2.gain.setValueAtTime(0.1,now+0.04);g2.gain.exponentialRampToValueAtTime(0.0001,now+0.5);
-    o2.connect(g2);g2.connect(ctx.destination);o2.start(now+0.04);o2.stop(now+0.52);
-    /* Thud — low noise for tactile weight */
-    var buf=ctx.createBuffer(1,ctx.sampleRate*0.06,ctx.sampleRate);
-    var d=buf.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/(d.length*0.15));
-    var ns=ctx.createBufferSource(),gn=ctx.createGain(),lp=ctx.createBiquadFilter();
-    ns.buffer=buf;lp.type='lowpass';lp.frequency.value=300;
-    gn.gain.setValueAtTime(0.18,now);gn.gain.exponentialRampToValueAtTime(0.0001,now+0.12);
-    ns.connect(lp);lp.connect(gn);gn.connect(ctx.destination);ns.start(now);
+    var dest = (window._gbAudioDest && window._gbAudioDest()) || ctx.destination;
+    var now = ctx.currentTime + 0.01;
+    /* (1) Pop — sine burst with quick rise, body of the reveal */
+    var o1 = ctx.createOscillator(), g1 = ctx.createGain();
+    o1.type = 'sine';
+    o1.frequency.setValueAtTime(420, now);
+    o1.frequency.exponentialRampToValueAtTime(1180, now+0.055);
+    g1.gain.setValueAtTime(0.32, now);
+    g1.gain.exponentialRampToValueAtTime(0.0001, now+0.16);
+    o1.connect(g1); g1.connect(dest); o1.start(now); o1.stop(now+0.17);
+    /* (2) Harmonic chord — 3 tones in a perfect fifth + octave for magical feel */
+    var chord = [1320, 1980, 2640];  /* fundamental + 5th + octave */
+    chord.forEach(function(f, ci){
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(f, now+0.05);
+      o.frequency.exponentialRampToValueAtTime(f*0.66, now+0.32);
+      var peak = ci === 0 ? 0.085 : ci === 1 ? 0.055 : 0.035;
+      g.gain.setValueAtTime(peak, now+0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, now+0.55+ci*0.04);
+      o.connect(g); g.connect(dest); o.start(now+0.05); o.stop(now+0.6);
+    });
+    /* (3) Warm low thud — tactile weight under the chord */
+    var buf = ctx.createBuffer(1, ctx.sampleRate*0.06, ctx.sampleRate);
+    var d = buf.getChannelData(0);
+    for(var i=0;i<d.length;i++) d[i] = (Math.random()*2-1) * Math.exp(-i/(d.length*0.15));
+    var ns = ctx.createBufferSource(), gn = ctx.createGain(), lp = ctx.createBiquadFilter();
+    ns.buffer = buf; lp.type='lowpass'; lp.frequency.value=280;
+    gn.gain.setValueAtTime(0.16, now); gn.gain.exponentialRampToValueAtTime(0.0001, now+0.12);
+    ns.connect(lp); lp.connect(gn); gn.connect(dest); ns.start(now);
+  });
+}
+
+/* ── v62: Slot flap clack — quick metallic plate impact (distinct from steel ball clanks).
+   open=true → sharper, slightly higher.  open=false → softer tick. */
+function _playSlotFlap(open){
+  if(!_soundEnabled) return;
+  window._ensureAudioReady(function(ctx){
+    var dest = (window._gbAudioDest && window._gbAudioDest()) || ctx.destination;
+    var now = ctx.currentTime + 0.005;
+    /* Noise transient — short, bandpass'd to a "plate" frequency */
+    try{
+      var len = Math.floor(ctx.sampleRate * 0.022);
+      var b = ctx.createBuffer(1, len, ctx.sampleRate);
+      var d = b.getChannelData(0);
+      for(var i=0;i<len;i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/len, 3.6);
+      var src = ctx.createBufferSource(); src.buffer = b;
+      var bp = ctx.createBiquadFilter(); bp.type='bandpass';
+      bp.frequency.value = open ? 1850 : 1450;
+      bp.Q.value = 4.8;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(open ? 0.38 : 0.22, now);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + (open ? 0.028 : 0.022));
+      src.connect(bp); bp.connect(g); g.connect(dest); src.start(now);
+    }catch(e){}
+    /* Metallic ring tone — short, dies fast (~30ms) */
+    var o = ctx.createOscillator(); var og = ctx.createGain();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(open ? 1280 : 940, now);
+    o.frequency.exponentialRampToValueAtTime(open ? 720 : 540, now+0.04);
+    og.gain.setValueAtTime(open ? 0.14 : 0.085, now);
+    og.gain.exponentialRampToValueAtTime(0.0001, now + (open ? 0.045 : 0.035));
+    o.connect(og); og.connect(dest); o.start(now); o.stop(now + (open ? 0.05 : 0.04));
+  });
+}
+
+/* ── v62: Vapor whoosh — soft pneumatic hiss at slot exit. Brief, airy, ~120ms. ── */
+function _playVaporWhoosh(){
+  if(!_soundEnabled) return;
+  window._ensureAudioReady(function(ctx){
+    var dest = (window._gbAudioDest && window._gbAudioDest()) || ctx.destination;
+    var now = ctx.currentTime + 0.005;
+    try{
+      var len = Math.floor(ctx.sampleRate * 0.16);
+      var b = ctx.createBuffer(1, len, ctx.sampleRate);
+      var d = b.getChannelData(0);
+      /* Envelope: quick attack, longer release — like a steam puff */
+      for(var i=0;i<len;i++){
+        var p = i/len;
+        var env = p < 0.12 ? p / 0.12 : Math.pow(1 - (p-0.12)/0.88, 1.8);
+        d[i] = (Math.random()*2-1) * env;
+      }
+      var src = ctx.createBufferSource(); src.buffer = b;
+      /* Sweep highpass downward to mimic pressure release */
+      var hp = ctx.createBiquadFilter(); hp.type='highpass';
+      hp.frequency.setValueAtTime(2800, now);
+      hp.frequency.exponentialRampToValueAtTime(800, now+0.14);
+      hp.Q.value = 0.6;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0.18, now);
+      g.gain.linearRampToValueAtTime(0.001, now+0.16);
+      src.connect(hp); hp.connect(g); g.connect(dest); src.start(now);
+    }catch(e){}
+  });
+}
+
+/* ── v62: Tray tonk — woody/plastic landing, not metallic. Replaces clank for tray-land moment. ── */
+function _playTrayTonk(intensity){
+  if(!_soundEnabled) return;
+  intensity = Math.min(1, Math.max(0.1, intensity || 0.7));
+  window._ensureAudioReady(function(ctx){
+    var dest = (window._gbAudioDest && window._gbAudioDest()) || ctx.destination;
+    var now = ctx.currentTime + 0.005;
+    /* Low body — sine/triangle thump at ~140Hz settling to 70Hz */
+    var b = ctx.createOscillator(); var bg = ctx.createGain();
+    b.type = 'sine';
+    b.frequency.setValueAtTime(155, now);
+    b.frequency.exponentialRampToValueAtTime(72, now+0.08);
+    bg.gain.setValueAtTime(intensity * 0.42, now);
+    bg.gain.exponentialRampToValueAtTime(0.0001, now+0.13);
+    b.connect(bg); bg.connect(dest); b.start(now); b.stop(now+0.14);
+    /* Wooden click on impact — bandpass'd noise around 2.4kHz */
+    try{
+      var len = Math.floor(ctx.sampleRate * 0.018);
+      var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      var d = buf.getChannelData(0);
+      for(var i=0;i<len;i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/len, 3.8);
+      var src = ctx.createBufferSource(); src.buffer = buf;
+      var bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2400; bp.Q.value=3.2;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(intensity * 0.22, now);
+      g.gain.exponentialRampToValueAtTime(0.0001, now+0.022);
+      src.connect(bp); bp.connect(g); g.connect(dest); src.start(now);
+    }catch(e){}
+    /* Tiny secondary bounce — quieter, 40ms after main */
+    var b2 = ctx.createOscillator(); var b2g = ctx.createGain();
+    b2.type = 'sine';
+    b2.frequency.setValueAtTime(130, now+0.045);
+    b2.frequency.exponentialRampToValueAtTime(80, now+0.10);
+    b2g.gain.setValueAtTime(intensity * 0.10, now+0.045);
+    b2g.gain.exponentialRampToValueAtTime(0.0001, now+0.11);
+    b2.connect(b2g); b2g.connect(dest); b2.start(now+0.045); b2.stop(now+0.12);
+  });
+}
+
+/* ── v62: Morph shimmer — magical transformation chord during ball→card morph.
+   Soft, sparkly, dreamy. Fires once at morph start (1100ms into dispense). ── */
+function _playMorphShimmer(){
+  if(!_soundEnabled) return;
+  window._ensureAudioReady(function(ctx){
+    var dest = (window._gbAudioDest && window._gbAudioDest()) || ctx.destination;
+    var now = ctx.currentTime + 0.01;
+    /* Master gain envelope for the whole chord — slow attack, gentle decay */
+    var master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.linearRampToValueAtTime(0.18, now+0.08);
+    master.gain.linearRampToValueAtTime(0.14, now+0.40);
+    master.gain.exponentialRampToValueAtTime(0.0001, now+0.75);
+    master.connect(dest);
+    /* Three sparkly partials — high register, slight detune for shimmer */
+    var partials = [
+      {f: 1760, type: 'sine',     wob: 0.6},
+      {f: 2350, type: 'triangle', wob: 1.1},
+      {f: 3520, type: 'sine',     wob: 0.9}
+    ];
+    partials.forEach(function(p, pi){
+      var o = ctx.createOscillator(); var g = ctx.createGain();
+      o.type = p.type;
+      /* Tiny detune wobble for "alive" feel */
+      o.frequency.setValueAtTime(p.f, now);
+      o.frequency.linearRampToValueAtTime(p.f * 1.012, now+0.18);
+      o.frequency.linearRampToValueAtTime(p.f * 0.998, now+0.38);
+      o.frequency.linearRampToValueAtTime(p.f * 1.004, now+0.60);
+      var peak = pi === 0 ? 1.0 : pi === 1 ? 0.55 : 0.32;
+      g.gain.setValueAtTime(peak, now);
+      o.connect(g); g.connect(master); o.start(now); o.stop(now+0.78);
+    });
+    /* Soft airy noise underneath — gives the chord body without being harsh */
+    try{
+      var len = Math.floor(ctx.sampleRate * 0.55);
+      var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      var d = buf.getChannelData(0);
+      for(var i=0;i<len;i++){
+        var p = i/len;
+        var env = p < 0.1 ? p/0.1 : Math.pow(1-(p-0.1)/0.9, 1.4);
+        d[i] = (Math.random()*2-1) * env * 0.55;
+      }
+      var src = ctx.createBufferSource(); src.buffer = buf;
+      var hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=3200; hp.Q.value=0.6;
+      var ng = ctx.createGain(); ng.gain.value = 0.22;
+      src.connect(hp); hp.connect(ng); ng.connect(master); src.start(now);
+    }catch(e){}
   });
 }
 
@@ -6059,6 +6317,8 @@ function _playOneBallClank(actx, intensity){
   /* Real steel ball impact: sharp noise transient + ring(s) */
   var now = Math.max(actx.currentTime + 0.01, 0.03);
   var _mob = /iPhone|Android|Mobile/i.test(navigator.userAgent);
+  /* v62: route through master compressor for unified dynamics with other gumball sounds */
+  var dest = (window._gbAudioDest && window._gbAudioDest()) || actx.destination;
 
   /* Create noise buffer once and reuse */
   if(!_ballClankBuf){
@@ -6074,7 +6334,7 @@ function _playOneBallClank(actx, intensity){
     var src = actx.createBufferSource(); src.buffer = _ballClankBuf;
     var hp = actx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=2200;
     var tg = actx.createGain(); tg.gain.value = intensity * 0.5;
-    src.connect(hp); hp.connect(tg); tg.connect(actx.destination); src.start(now);
+    src.connect(hp); hp.connect(tg); tg.connect(dest); src.start(now);
   }
 
   /* Ring 1 — primary metallic tone ~3.2kHz, dies in ~30ms */
@@ -6083,7 +6343,7 @@ function _playOneBallClank(actx, intensity){
   o1.type='sine'; o1.frequency.value=f1;
   g1.gain.setValueAtTime(intensity*0.22, now);
   g1.gain.exponentialRampToValueAtTime(0.0001, now+0.032);
-  o1.connect(g1); g1.connect(actx.destination); o1.start(now); o1.stop(now+0.035);
+  o1.connect(g1); g1.connect(dest); o1.start(now); o1.stop(now+0.035);
 
   /* Ring 2 — secondary harmonic — skip on mobile to halve node count */
   if(!_mob){
@@ -6092,7 +6352,7 @@ function _playOneBallClank(actx, intensity){
     o2.type='sine'; o2.frequency.value=f2;
     g2.gain.setValueAtTime(intensity*0.12, now);
     g2.gain.exponentialRampToValueAtTime(0.0001, now+0.018);
-    o2.connect(g2); g2.connect(actx.destination); o2.start(now); o2.stop(now+0.022);
+    o2.connect(g2); g2.connect(dest); o2.start(now); o2.stop(now+0.022);
   }
 }
 
@@ -6111,37 +6371,42 @@ function _playBallsShaking(durationMs){
     if(!actx || !_soundEnabled){ _stopBallSound(); return; }
     if(actx.state === 'suspended') actx.resume();
 
-    /* Smooth intensity curve: ramps up, peaks in middle, tapers off */
+    /* v62: Intensity curve REALIGNED with physics + re-kicks for unified crescendo.
+       Three curves used to peak at different moments — now they all peak at ~65-75% and
+       drop sharply into the last 600ms so the chosen-ball halo build-up has sonic space. */
     var prog = elapsed / dur;
     var intensity;
-    if(prog < 0.15){
-      /* Ramp up — builds anticipation */
-      intensity = 0.2 + prog * 4.0;
-    } else if(prog < 0.65){
-      /* Peak shaking — full energy */
-      intensity = 0.75 + Math.random() * 0.25;
-    } else if(prog < 0.85){
-      /* Settling down */
-      intensity = 0.55 - (prog - 0.65) * 2.0 + Math.random() * 0.15;
+    if(prog < 0.18){
+      /* Wind-up: gentle ramp from rest — slow start, builds energy */
+      intensity = 0.22 + Math.pow(prog / 0.18, 1.4) * 0.55;
+    } else if(prog < 0.55){
+      /* Rising boil: full chaos with random texture */
+      intensity = 0.70 + (prog - 0.18) / 0.37 * 0.20 + Math.random() * 0.10;
+    } else if(prog < 0.78){
+      /* Peak crescendo: aligns with physics peak (0.7-1.0) */
+      intensity = 0.92 + Math.random() * 0.08;
     } else {
-      /* Final taper */
-      intensity = 0.15 + Math.random() * 0.08;
+      /* Hush before reveal: sharp drop, last 22% (~660ms of 3000) — gives halo + chord space */
+      var hushP = (prog - 0.78) / 0.22;     /* 0 → 1 */
+      var hushEase = 1 - Math.pow(1 - hushP, 2);   /* easeOutQuad */
+      intensity = 0.85 - hushEase * 0.78;   /* 0.85 → 0.07 */
     }
 
-    _playOneBallClank(actx, Math.max(0.08, intensity));
+    _playOneBallClank(actx, Math.max(0.06, intensity));
 
-    /* Faster clanks during peak, slower at edges.
-       Mobile: ~2× wider intervals to stay under iOS audio node budget. */
+    /* v62: Clank density also reshaped — densest during 18-78%, sparser in last 22% (hush) */
     var _mob = /iPhone|Android|Mobile/i.test(navigator.userAgent);
     var nextMs;
-    if(prog < 0.15){
-      nextMs = _mob ? 120 + Math.random() * 50 : 70 + Math.random() * 40;
-    } else if(prog < 0.65){
-      nextMs = _mob ? 70 + Math.random() * 40 : 35 + Math.random() * 30;
-    } else if(prog < 0.85){
-      nextMs = _mob ? 100 + Math.random() * 50 : 60 + Math.random() * 45;
+    if(prog < 0.18){
+      nextMs = _mob ? 110 + Math.random() * 45 : 65 + Math.random() * 35;
+    } else if(prog < 0.55){
+      nextMs = _mob ? 75 + Math.random() * 35 : 38 + Math.random() * 28;
+    } else if(prog < 0.78){
+      /* Peak density — tightest clanks during the climax */
+      nextMs = _mob ? 65 + Math.random() * 30 : 32 + Math.random() * 22;
     } else {
-      nextMs = _mob ? 160 + Math.random() * 80 : 110 + Math.random() * 70;
+      /* Hush: sparse, widening — matches the audio fade */
+      nextMs = _mob ? 180 + Math.random() * 120 : 130 + Math.random() * 90;
     }
 
     _ballSoundInterval = setTimeout(scheduleNext, nextMs);
@@ -7196,9 +7461,6 @@ function bowlManualDraw(){
   var sp = btn && btn.querySelector('span');
   if(btn){ btn.disabled = true; btn.classList.add('drawing'); }
   if(sp) sp.innerHTML = '<span class="crank-spinner"></span> Drawing…';
-  /* Anticipation text sequence */
-  setTimeout(function(){ if(sp) sp.textContent = 'Shaking…'; }, 1200);
-  setTimeout(function(){ if(sp) sp.textContent = 'Almost…'; }, 2800);
   if(hint) hint.textContent = 'Rolling…';
 
   /* Play crank sound + haptic */
@@ -7207,26 +7469,139 @@ function bowlManualDraw(){
 
   /* Resume canvas animation if available */
   try{ if(typeof window._gbResume==='function') window._gbResume(); }catch(e){}
-  try{ if(typeof window._gbSetExcited==='function') window._gbSetExcited(theme.id, 4200, function(){}); }catch(e){}
+  /* v61: pass theme tone color so the dispensed ball matches the card (visual handoff harmony) */
+  var _toneCol = (window._gbToneColor && theme.tone) ? window._gbToneColor(theme.tone) : null;
+  /* v60: shake reduced to 3000ms — total flow is shake(3000) + dispense(2200) = 5200ms */
+  try{ if(typeof window._gbSetExcited==='function') window._gbSetExcited(theme.id, 3000, function(){}, _toneCol); }catch(e){}
+  /* v61: pulse the machine wrap + lock body scroll so iOS rubber-band can't break the handoff */
+  try{
+    var _mw = document.getElementById('bowl-machine-wrap');
+    if(_mw) _mw.classList.add('is-drawing');
+    document.body.classList.add('bowl-anim-lock');
+  }catch(e){}
 
   /* Start shaking sound — extended anticipation before reveal */
   setTimeout(function(){
-    try{ if(typeof _playBallsShaking==='function') _playBallsShaking(3800); }catch(e){}
+    try{ if(typeof _playBallsShaking==='function') _playBallsShaking(2900); }catch(e){}
   }, 100);
 
-  /* Show challenge card AFTER full anticipation build (excited runs 4200ms) */
+  /* v60: Update anticipation copy timing to match shorter shake */
+  setTimeout(function(){ if(sp) sp.textContent = 'Shaking…'; }, 800);
+  setTimeout(function(){ if(sp) sp.textContent = 'Dispensing…'; }, 3000);
+  setTimeout(function(){ if(sp) sp.textContent = 'Almost…'; }, 4400);
+
+  /* v60: Show challenge card during morph fade-out (1900ms into dispense = 4900ms total)
+     so DOM card fades in just as canvas morph rect fades out — seamless handoff */
   setTimeout(function(){
     /* Force cache bust before render so iOS stale-read bug does not hide the card */
     _stateCache = null;
     var _crankBtn2=document.getElementById('bowl-crank-btn');
     if(_crankBtn2) _crankBtn2.classList.remove('drawing');
+    /* Mark for fade-in animation */
+    var _ca = document.getElementById('bowl-challenge-area');
+    if(_ca) _ca.classList.add('bowl-card-morph-in');
     renderBowl();
     _triggerHaptic('heavy');
-    /* SPARK 1: Dispense sound — the reveal moment */
-    try{ _playBowlDispense(); }catch(e){}
+    /* Clear class after animation completes */
+    setTimeout(function(){
+      var _ca2 = document.getElementById('bowl-challenge-area');
+      if(_ca2) _ca2.classList.remove('bowl-card-morph-in');
+      /* v61: release scroll lock + machine pulse once everything has settled */
+      try{
+        var _mw2 = document.getElementById('bowl-machine-wrap');
+        if(_mw2) _mw2.classList.remove('is-drawing');
+        document.body.classList.remove('bowl-anim-lock');
+      }catch(e){}
+    }, 700);
     _bowlCrankBusy = false;
-  }, 3800);
+  }, 4900);
 }
+
+/* v61: Replay the draw animation — same theme, no state mutation, pure visual */
+var _bowlReplayBusy = false;
+function bowlReplayAnimation(){
+  if(_bowlReplayBusy || _bowlCrankBusy) return;
+
+  /* Audio unlock on the user gesture */
+  try{
+    var _acR = _getAudioCtx();
+    if(_acR && _acR.state==='suspended') _acR.resume().catch(function(){});
+  }catch(e){}
+
+  /* Need an existing draw to replay */
+  var todayKey3 = localKey(today);
+  var dd = bowlFindDailyDraw(todayKey3);
+  if(!dd){ toast('Nothing to replay yet — pull the crank first'); return; }
+
+  var theme = bowlGetLibBall(dd.themeId);
+  if(!theme){ toast('Challenge theme missing'); return; }
+
+  _bowlReplayBusy = true;
+  _bowlCrankBusy = true; /* share the same lock so the page can't double-fire */
+
+  /* Visual feedback on the replay button itself */
+  var rbtn = document.getElementById('bowl-replay-btn');
+  if(rbtn){
+    rbtn.disabled = true;
+    rbtn.classList.add('replaying');
+    var rlbl = rbtn.querySelector('.replay-lbl');
+    if(rlbl) rlbl.textContent = 'Replaying…';
+  }
+
+  /* Fade out the existing card while the shake builds */
+  var _ca = document.getElementById('bowl-challenge-area');
+  if(_ca){
+    _ca.style.transition = 'opacity .35s cubic-bezier(.16,1,.3,1), transform .35s cubic-bezier(.16,1,.3,1), filter .35s';
+    _ca.style.opacity = '0';
+    _ca.style.transform = 'translate3d(0,-6px,0) scale(.97)';
+    _ca.style.filter = 'blur(2px)';
+  }
+
+  /* Haptic + crank sound + machine pulse + scroll lock — same as fresh draw */
+  _triggerHaptic('crank');
+  try{ if(typeof _playGumballCrank==='function') _playGumballCrank(); }catch(e){}
+  try{
+    var _mwR = document.getElementById('bowl-machine-wrap');
+    if(_mwR) _mwR.classList.add('is-drawing');
+    document.body.classList.add('bowl-anim-lock');
+  }catch(e){}
+
+  /* Same canvas choreography: shake 3000ms → dispense 2200ms */
+  try{ if(typeof window._gbResume==='function') window._gbResume(); }catch(e){}
+  var _toneColR = (window._gbToneColor && theme.tone) ? window._gbToneColor(theme.tone) : null;
+  try{ if(typeof window._gbSetExcited==='function') window._gbSetExcited(theme.id, 3000, function(){}, _toneColR); }catch(e){}
+
+  setTimeout(function(){
+    try{ if(typeof _playBallsShaking==='function') _playBallsShaking(2900); }catch(e){}
+  }, 100);
+
+  /* At 4900ms, re-show the card with the morph-in (identical to fresh draw) */
+  setTimeout(function(){
+    /* Clear the inline fade-out styles before applying morph-in */
+    if(_ca){
+      _ca.style.transition = '';
+      _ca.style.opacity = '';
+      _ca.style.transform = '';
+      _ca.style.filter = '';
+      _ca.classList.add('bowl-card-morph-in');
+    }
+    _stateCache = null;
+    renderBowl();
+    _triggerHaptic('heavy');
+    setTimeout(function(){
+      var _ca2 = document.getElementById('bowl-challenge-area');
+      if(_ca2) _ca2.classList.remove('bowl-card-morph-in');
+      try{
+        var _mwR2 = document.getElementById('bowl-machine-wrap');
+        if(_mwR2) _mwR2.classList.remove('is-drawing');
+        document.body.classList.remove('bowl-anim-lock');
+      }catch(e){}
+      _bowlReplayBusy = false;
+      _bowlCrankBusy = false;
+    }, 700);
+  }, 4900);
+}
+window.bowlReplayAnimation = bowlReplayAnimation;
 
 /* Resume both canvas loops before any Bowl animation */
 function _bowlAnimResume(){
@@ -7516,7 +7891,8 @@ function renderBowl(){
     }
     if(crankHint){
       if(dd.chosenTier){
-        crankHint.textContent='Done for today. Come back tomorrow for a new challenge.';
+        /* v61: even after picking a tier, allow replaying the animation */
+        crankHint.innerHTML='<div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap"><span style="font-family:var(--font-ui);font-size:11px;color:var(--muted);padding:4px 4px">Done for today.</span><button class="bowl-replay-btn" id="bowl-replay-btn" onclick="bowlReplayAnimation()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg><span class="replay-lbl">Replay animation</span></button></div>';
       } else {
         var rerollsLeft2=2-(dd.rerolls||0);
         var _hintH='<div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap">';
@@ -7525,6 +7901,7 @@ function renderBowl(){
         } else {
           _hintH+='<span style="font-family:var(--font-ui);font-size:11px;color:var(--muted);padding:4px 8px">No rerolls left — pick below</span>';
         }
+        _hintH+='<button class="bowl-replay-btn" id="bowl-replay-btn" onclick="bowlReplayAnimation()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg><span class="replay-lbl">Replay</span></button>';
         _hintH+='<button class="bowl-reroll-btn" style="background:rgba(255,100,100,.08);border-color:rgba(255,100,100,.25);color:rgba(255,130,120,.85)" onclick="bowlSkipToday()">Skip today</button>';
         _hintH+='</div>';
         crankHint.innerHTML=_hintH;
@@ -10753,6 +11130,9 @@ window.finMonthNav = function(delta){
   function _dest(){
     return _compressor || (_ac ? _ac.destination : null);
   }
+  /* v62: expose master destination so external gumball sounds (crank/dispense/tray/flap/shimmer)
+     all route through the same limiter — prevents clipping when stacked, unified dynamics */
+  window._gbAudioDest = function(){ _getAC(); return _dest(); };
 
   document.addEventListener('touchstart', function(){ _getAC(); }, {once:true, passive:true});
   document.addEventListener('click',      function(){ _getAC(); }, {once:true});
@@ -10911,12 +11291,32 @@ window.finMonthNav = function(delta){
   var _dispenseStart = 0;
   var _chosenBallIdx = -1;
   var _glowPhase = 0;
+  /* ── v60: full dispense choreography ── */
+  /* Total duration 2200ms, broken into phases:
+     0-200:    slot flap clanks open
+     200-900:  chosen ball travels down neck (curve trajectory)
+     900-1100: ball exits slot, vapor puff, lands in tray with bounce
+     1100-1900: ball morphs into card-shaped rect (color bleeds)
+     1900-2200: morph rect fades out as DOM card fades in (handoff)
+     2000-2200: slot flap clanks shut */
+  var _DISPENSE_TOTAL = 2200;
+  var _chosenBallColor = null; /* {hi,mid,base,sh} captured at dispense start */
+  var _chosenBallStartX = 0;
+  var _chosenBallStartY = 0;
+  var _chosenBallStartR = 0;
+  var _slotOpenProg = 0;       /* 0..1, current flap open amount */
+  var _vaporPuffStart = -1;    /* timestamp of vapor puff fire */
+  var _trayThudFired = false;
+  var _slotClankFired = false;
+  var _slotCloseFired = false; /* v62: phase-5 flap-close sound trigger */
+  var _morphCardFired = false;
   var _lastLoopT = 0;
   var _simTime = 0;
   var _shakeActive = false;
   var _shakeStart = 0;
   var _shakeOffX = 0;  /* Mobile canvas-space shake offset */
   var _shakeOffY = 0;
+  var _rumbleHushScheduled = false;  /* v62: pre-reveal rumble fade flag (reset each shake) */
 
   /* ── Pre-allocated sort buffer (avoids slice() every frame) ── */
   var _sortBuf = null;
@@ -10977,6 +11377,17 @@ window.finMonthNav = function(delta){
     /* Framerate-independent damping: raise to dtScale power */
     var dampFactor = dtScale === 1 ? damping : Math.pow(damping, dtScale);
 
+    /* v62: Pre-reveal chosen-ball settling — in the last 400ms of shake, apply extra damping
+       to JUST the chosen ball so its halo build-up anchors to a near-stationary point.
+       Other balls still chaos. Settle calc done once per frame, used inside the per-ball loop. */
+    var _chosenSettleStrength = 0;
+    if(isExcited && _excitedEnd > 0 && _chosenBallIdx >= 0){
+      var _msTillReveal = _excitedEnd - t;
+      if(_msTillReveal < 400 && _msTillReveal > 0){
+        _chosenSettleStrength = 1 - (_msTillReveal / 400);  /* 0 → 1 over last 400ms */
+      }
+    }
+
     for(var i=0; i<_balls.length; i++){
       var b = _balls[i];
       if(_dispensing && i === _chosenBallIdx) continue;
@@ -10995,6 +11406,18 @@ window.finMonthNav = function(delta){
         var ph = b.phase;
         b.vx += (Math.sin(_simTime*1.8 + ph)*0.006 + Math.sin(_simTime*2.8 + ph*0.7)*0.003) * dtScale;
         b.vy += (Math.cos(_simTime*2.0 + ph*1.4)*0.004 + Math.cos(_simTime*2.4 + ph*1.1)*0.002) * dtScale;
+      }
+      /* v62: chosen-ball pre-reveal settling — extra damping + drift toward globe center
+         so the building halo anchors to a calm point. Effect ramps up over last 400ms. */
+      if(isExcited && i === _chosenBallIdx && _chosenSettleStrength > 0){
+        /* Extra damping: stronger as we approach reveal */
+        var settleDamp = 1 - _chosenSettleStrength * 0.18;  /* 1.0 → 0.82 */
+        b.vx *= settleDamp;
+        b.vy *= settleDamp;
+        /* Soft pull toward globe center — keeps ball visible, not lost at the edge */
+        var pullF = 0.012 * _chosenSettleStrength;
+        b.vx += (GX - b.x) * pullF * dtScale;
+        b.vy += (GY - b.y) * pullF * dtScale;
       }
       /* Velocity dead-zone: kill micro-jitter from collision settling */
       if(!isExcited){
@@ -11123,25 +11546,148 @@ window.finMonthNav = function(delta){
 
     }
 
-    /* Dispense: chosen ball floats up to center of globe, then fades out */
+    /* ── v62: Multi-phase dispense choreography (refined) ──
+       Replaces old "float to globe center then fade" logic.
+       Trajectory: globe interior → neck → slot exit → tray (with squash) → morph.
+       v62 changes over v60:
+         • Anticipation hold at neck top (180ms pause before drop accelerates)
+         • Squash-and-stretch on chosen ball at tray impact (Pixar fundamental)
+         • Slot flap uses dedicated metallic-plate sound, not ball-clank
+         • Vapor exit uses pneumatic whoosh, not ball-clank
+         • Tray landing uses warm woody tonk, not metallic clank
+         • Morph start has its own shimmer chord */
     if(_dispensing && _chosenBallIdx>=0 && _chosenBallIdx<_balls.length){
       var cb = _balls[_chosenBallIdx];
       var elapsed = t - _dispenseStart;
-      if(elapsed <= 1000){
-        /* Phase 1: float up */
-        var prog = Math.min(1, elapsed / 1000);
-        prog = prog*prog*(3-2*prog);
-        var targetY = GY - GR * 0.52;
-        cb.y = GY + 14 + (targetY - GY - 14)*prog;
-        cb.x += (GX - cb.x)*0.10;
+
+      /* Geometry anchors (must match the static draw — keep in sync if you move things) */
+      var _neckTopY = GY + GR * 0.55;        /* Where neck visually starts inside globe */
+      var _slotCenterY = GY + GR + 2 + 14 + 16 + 4.5;  /* dispenser slot center: colY+colH+slotY+slH/2 */
+      var _trayCenterY = GY + GR + 2 + 14 + 50 + 14;   /* below dispenser body, in tray zone */
+
+      /* Reset squash/stretch each phase entry (will be set in tray phase) */
+      if(cb._sqsh === undefined){ cb._sqsh = 1; cb._strch = 1; }
+
+      /* Phase 1: slot flap opens (0 → 200ms). Ball stays in globe, gently floats toward neck */
+      if(elapsed <= 200){
+        var p1 = elapsed / 200;
+        /* v62: elastic-out easing for the flap — overshoots slightly then settles, like spring */
+        var _eo = 1 - Math.pow(1 - p1, 3);
+        var _elastic = _eo + Math.sin(p1 * Math.PI * 3) * (1 - p1) * 0.08;
+        _slotOpenProg = Math.min(1.05, _elastic);
+        if(!_slotClankFired){
+          _slotClankFired = true;
+          /* v62: dedicated metallic flap clack — sharper than ball-clank */
+          try{ if(typeof _playSlotFlap === 'function') _playSlotFlap(true); else _playClank(0.6); }catch(e){}
+        }
+        /* Gently drift toward neck center, hold near globe bottom */
+        cb.x += (GX - cb.x) * 0.20;
+        cb.y += (_neckTopY - cb.y) * 0.18;
+        cb.vx *= 0.5; cb.vy *= 0.5;
         cb._dispAlpha = 1;
         cb._dispScale = 1;
-      } else {
-        /* Phase 2: shrink + fade out over 1s */
-        var fadeElapsed = elapsed - 1000;
-        var fadeProg = Math.min(1, fadeElapsed / 1000);
-        cb._dispAlpha = 1 - fadeProg;
-        cb._dispScale = 1 - fadeProg * 0.6;
+        cb._sqsh = 1; cb._strch = 1;
+      }
+      /* Phase 2a (v62): anticipation hold at neck top (200 → 380ms)
+         Ball settles at neck entry, charges up before the drop. Pixar anticipation. */
+      else if(elapsed <= 380){
+        _slotOpenProg = 1;
+        var pH = (elapsed - 200) / 180;
+        /* Subtle "loading" stretch — vertical 0.96, horizontal 1.04 — like compressed spring */
+        var compressP = Math.sin(pH * Math.PI);
+        cb._sqsh = 1 - compressP * 0.04;      /* vertical squish */
+        cb._strch = 1 + compressP * 0.05;     /* horizontal widen */
+        cb.x = GX;
+        cb.y = _neckTopY;
+        cb._dispAlpha = 1;
+        cb._dispScale = 1;
+      }
+      /* Phase 2b: drop through neck (380 → 900ms) — accelerating, with vertical stretch */
+      else if(elapsed <= 900){
+        _slotOpenProg = 1;
+        var p2 = (elapsed - 380) / 520;
+        var p2e = p2 * p2;  /* accelerate (gravity feel) */
+        cb.x = GX + Math.sin(p2 * Math.PI * 2.2) * 1.6;  /* damped wobble — more visible */
+        cb.y = _neckTopY + (_slotCenterY - _neckTopY) * p2e;
+        cb._dispAlpha = 1;
+        cb._dispScale = 1;
+        /* v62: vertical stretch as it accelerates (motion blur substitute) */
+        cb._strch = 1 - p2 * 0.10;      /* narrower as it falls */
+        cb._sqsh = 1 + p2 * 0.10;       /* taller as it falls */
+        /* Slightly shrink while passing through narrow neck */
+        cb._dispScale = 1 - 0.10 * Math.sin(p2 * Math.PI);
+      }
+      /* Phase 3: exit + tray bounce (900 → 1100ms) */
+      else if(elapsed <= 1100){
+        _slotOpenProg = 1;
+        var p3 = (elapsed - 900) / 200;
+        /* Fire vapor whoosh at exit moment — v62 uses dedicated pneumatic sound */
+        if(_vaporPuffStart < 0){
+          _vaporPuffStart = t;
+          try{ if(typeof _playVaporWhoosh === 'function') _playVaporWhoosh(); else _playClank(0.45); }catch(e){}
+        }
+        /* Travel from slot to tray with bounce ease */
+        var bounceP = p3 < 0.7 ? (p3 / 0.7) : 1 - (p3 - 0.7) / 0.3 * 0.18;
+        cb.x = GX;
+        cb.y = _slotCenterY + (_trayCenterY - _slotCenterY) * bounceP;
+        cb._dispScale = 1;
+        cb._dispAlpha = 1;
+        /* v62: squash on impact — at p3 ~= 0.5 (touchdown), ball squishes horizontally */
+        if(p3 > 0.48 && p3 < 0.85){
+          var sqProg = Math.sin((p3 - 0.48) / 0.37 * Math.PI);  /* 0 → 1 → 0 */
+          cb._sqsh  = 1 - sqProg * 0.28;      /* vertical → 0.72 */
+          cb._strch = 1 + sqProg * 0.22;      /* horizontal → 1.22 */
+        } else {
+          /* Pre-impact: tiny anticipation stretch (taller, thinner) */
+          if(p3 <= 0.48){
+            cb._sqsh = 1 + p3 * 0.10;
+            cb._strch = 1 - p3 * 0.06;
+          } else {
+            /* Post-impact recovery */
+            cb._sqsh = 1; cb._strch = 1;
+          }
+        }
+        if(p3 > 0.5 && !_trayThudFired){
+          _trayThudFired = true;
+          /* v62: dedicated warm tonk for tray landing — woody, not metallic */
+          try{ if(typeof _playTrayTonk === 'function') _playTrayTonk(0.72); else _playOneBallClank(_getAudioCtx(), 0.7); }catch(e){}
+          /* Tiny screen shake on landing */
+          _shakeOffX = (Math.random()-0.5) * 3;
+          _shakeOffY = (Math.random()-0.5) * 3;
+        }
+        /* Decay shake offsets so landing shake settles in ~150ms */
+        if(_trayThudFired){
+          _shakeOffX *= 0.78;
+          _shakeOffY *= 0.78;
+          if(Math.abs(_shakeOffX) < 0.05) _shakeOffX = 0;
+          if(Math.abs(_shakeOffY) < 0.05) _shakeOffY = 0;
+        }
+      }
+      /* Phase 4: morph into card rect (1100 → 1900ms) — ball stretches into card shape */
+      else if(elapsed <= 1900){
+        _slotOpenProg = 1;
+        cb.x = GX;
+        cb.y = _trayCenterY;
+        /* Morph rect handled separately in drawMachine; hide the ball sphere */
+        cb._dispAlpha = 0;
+        cb._sqsh = 1; cb._strch = 1;
+        if(!_morphCardFired){
+          _morphCardFired = true;
+          /* v62: shimmer chord layered with dispense pop for magical transformation feel */
+          try{ if(typeof _playMorphShimmer === 'function') _playMorphShimmer(); }catch(e){}
+          try{ _playBowlDispense(); }catch(e){}
+        }
+      }
+      /* Phase 5: slot closes + morph rect fades (1900 → 2200ms) */
+      else {
+        var p5 = (elapsed - 1900) / 300;
+        _slotOpenProg = 1 - p5 * p5;
+        cb._dispAlpha = 0;
+        /* v62: play softer flap-close tick at start of phase 5 */
+        if(!_slotCloseFired){
+          _slotCloseFired = true;
+          try{ if(typeof _playSlotFlap === 'function') _playSlotFlap(false); }catch(e){}
+        }
       }
     }
   }
@@ -11149,7 +11695,8 @@ window.finMonthNav = function(delta){
   /* ── Draw a single ball with refined shading ── */
   /* Mobile: skip contact shadow, clip-specular, secondary sparkle, rim light.
      Use a single radial gradient body + one unclipped specular arc = 2 draw ops.
-     Desktop: full 6-op shading path preserved. */
+     Desktop: full 6-op shading path preserved.
+     v62: supports squash/stretch via _sqsh (y-scale) and _strch (x-scale) for Pixar landing feel. */
   function drawBall(b, dimmed){
     var x=b.x, y=b.y, r=b.r, col=b.col;
     var dispAlpha = (b._dispAlpha !== undefined) ? b._dispAlpha : 1;
@@ -11157,6 +11704,21 @@ window.finMonthNav = function(delta){
     if(dispAlpha <= 0.01) return;
     r = r * dispScale;
     ctx.globalAlpha = (dimmed ? 0.28 : 1) * dispAlpha;
+
+    /* v62: squash & stretch — when active, draw as ellipse instead of circle.
+       Fast path: when both are exactly 1, do nothing different. */
+    var sqsh  = (b._sqsh  !== undefined) ? b._sqsh  : 1;
+    var strch = (b._strch !== undefined) ? b._strch : 1;
+    var deformed = (sqsh !== 1 || strch !== 1);
+
+    if(deformed){
+      /* Apply non-uniform scale around ball center. Translate + scale + translate back.
+         This deforms the gradients too — natural soft squash since they're radial. */
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(strch, sqsh);
+      ctx.translate(-x, -y);
+    }
 
     if(_isMobile){
       /* ── MOBILE FAST PATH: body gradient + one specular dot ── */
@@ -11191,6 +11753,8 @@ window.finMonthNav = function(delta){
         ctx.restore();
       }
     }
+
+    if(deformed){ ctx.restore(); }
     ctx.globalAlpha=1;
   }
 
@@ -11203,6 +11767,30 @@ window.finMonthNav = function(delta){
     ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
     ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
     ctx.closePath();
+  }
+
+  /* ── v60: Color blend helper for morph rect (handles hex + rgba strings) ── */
+  function _parseCol(c){
+    if(!c) return [0,0,0,1];
+    if(c.charAt(0) === '#'){
+      var h = c.substring(1);
+      if(h.length === 3) h = h.charAt(0)+h.charAt(0)+h.charAt(1)+h.charAt(1)+h.charAt(2)+h.charAt(2);
+      return [parseInt(h.substring(0,2),16), parseInt(h.substring(2,4),16), parseInt(h.substring(4,6),16), 1];
+    }
+    var m = c.match(/rgba?\(([^)]+)\)/);
+    if(m){
+      var parts = m[1].split(',').map(function(s){ return parseFloat(s); });
+      return [parts[0]||0, parts[1]||0, parts[2]||0, parts.length>3 ? parts[3] : 1];
+    }
+    return [0,0,0,1];
+  }
+  function _blendCol(a, b, t){
+    var pa = _parseCol(a), pb = _parseCol(b);
+    var r = Math.round(pa[0] + (pb[0]-pa[0])*t);
+    var g = Math.round(pa[1] + (pb[1]-pa[1])*t);
+    var bl = Math.round(pa[2] + (pb[2]-pa[2])*t);
+    var al = pa[3] + (pb[3]-pa[3])*t;
+    return 'rgba('+r+','+g+','+bl+','+al.toFixed(3)+')';
   }
 
   /* ── Pre-baked static machine chrome ── */
@@ -11518,6 +12106,22 @@ window.finMonthNav = function(delta){
     ctx.drawImage(_machineBgUnder, 0, 0);
     ctx.restore();
 
+    /* ── v62: Idle ambient breathing — only when at rest, very subtle pulse on the halo ──
+       Adds "alive" feel between draws without distracting from the static chrome. */
+    if(!_excited && !_dispensing){
+      var breathe = 0.5 + 0.5 * Math.sin(_simTime * 0.6);  /* 0..1, ~10s period */
+      var bAlpha = 0.04 + breathe * 0.06;                  /* 0.04 → 0.10 */
+      ctx.save();
+      ctx.globalAlpha = bAlpha;
+      var bG = ctx.createRadialGradient(GX, GY, GR * 0.5, GX, GY, GR * 1.55);
+      bG.addColorStop(0, 'rgba(120,180,255,0.55)');
+      bG.addColorStop(0.5, 'rgba(80,140,240,0.20)');
+      bG.addColorStop(1, 'rgba(40,90,200,0)');
+      ctx.beginPath(); ctx.arc(GX, GY, GR * 1.55, 0, Math.PI*2);
+      ctx.fillStyle = bG; ctx.fill();
+      ctx.restore();
+    }
+
     /* ── BALLS (clipped to globe) ── */
     ctx.save();
     ctx.beginPath(); ctx.arc(GX,GY,GR-3,0,Math.PI*2); ctx.clip();
@@ -11531,16 +12135,46 @@ window.finMonthNav = function(delta){
       if(isChosen) continue;
       drawBall(b, false);
     }
-    if(_dispensing && _chosenBallIdx>=0 && _chosenBallIdx<_balls.length){
-      var cb2=_balls[_chosenBallIdx];
-      var pProg = Math.min(1,(t-_dispenseStart)/500);
-      ctx.save();
-      ctx.globalAlpha = pProg * 0.65;
-      var glow=ctx.createRadialGradient(cb2.x,cb2.y,0,cb2.x,cb2.y,cb2.r*3.2);
-      glow.addColorStop(0,'rgba(160,220,255,0.90)'); glow.addColorStop(0.4,'rgba(100,180,255,0.30)'); glow.addColorStop(1,'rgba(60,140,255,0)');
-      ctx.beginPath(); ctx.arc(cb2.x,cb2.y,cb2.r*3.2,0,Math.PI*2); ctx.fillStyle=glow; ctx.fill();
-      ctx.restore();
-      drawBall(cb2, false);
+    /* v62: chosen-ball halo — TWO phases:
+       (A) Pre-dispense build-up during last 600ms of shake — anchors viewer eye to the "winner"
+           so the reveal feels predestined, not random. Halo grows from 0 → 0.55, ball stays
+           continuous through phase boundary into dispense phase 1.
+       (B) Phase 1 (slot opening, 0–200ms after dispense start) — halo peaks at 0.65,
+           handoff from build-up. */
+    if(_chosenBallIdx>=0 && _chosenBallIdx<_balls.length){
+      var cb2 = _balls[_chosenBallIdx];
+      var haloAlpha = 0;
+      if(_excited && _excitedEnd > 0){
+        /* (A) Last 600ms of shake → build-up */
+        var msToEnd = _excitedEnd - t;
+        if(msToEnd <= 600 && msToEnd >= 0){
+          var buildP = 1 - (msToEnd / 600);  /* 0 → 1 over last 600ms */
+          /* easeInQuad — slow start, accelerating into reveal */
+          haloAlpha = buildP * buildP * 0.55;
+        }
+      } else if(_dispensing){
+        var _dElapsed = t - _dispenseStart;
+        if(_dElapsed <= 200){
+          var pProg = Math.min(1, _dElapsed / 200);
+          haloAlpha = 0.55 + pProg * 0.10;  /* continuous from 0.55 → 0.65 */
+        }
+      }
+      if(haloAlpha > 0.01){
+        ctx.save();
+        ctx.globalAlpha = haloAlpha;
+        /* Slow pulse on top of the build so it feels alive, not just a steady glow */
+        var pulse = 0.85 + 0.15 * Math.sin(_simTime * 8.5);
+        var hr = cb2.r * (2.8 + 0.4 * pulse);
+        var glow = ctx.createRadialGradient(cb2.x, cb2.y, 0, cb2.x, cb2.y, hr);
+        glow.addColorStop(0,   'rgba(170,225,255,0.92)');
+        glow.addColorStop(0.35,'rgba(110,185,255,0.34)');
+        glow.addColorStop(1,   'rgba(60,140,255,0)');
+        ctx.beginPath(); ctx.arc(cb2.x, cb2.y, hr, 0, Math.PI*2);
+        ctx.fillStyle = glow; ctx.fill();
+        ctx.restore();
+        /* Redraw the chosen ball on top of its own halo so it sits in front */
+        drawBall(cb2, false);
+      }
     }
     ctx.restore();
 
@@ -11548,6 +12182,165 @@ window.finMonthNav = function(delta){
     ctx.save(); ctx.setTransform(1,0,0,1,0,0);
     ctx.drawImage(_machineBgOver, 0, 0);
     ctx.restore();
+
+    /* ── v60: Slot flap overlay (animated open/close, paints over baked slot) ── */
+    if(_dispensing && _slotOpenProg > 0.001){
+      var colY_s = GY+GR+2, colH_s = 14;
+      var dbY_s = colY_s + colH_s - 1;
+      var slW_s = 54, slH_s = 9;
+      var slX_s = GX - slW_s/2, slY_s = dbY_s + 16;
+      /* Repaint slot interior as deeper void (since flaps are opening) */
+      var voidDepth = _slotOpenProg;
+      rr(slX_s, slY_s, slW_s, slH_s, 4.5);
+      ctx.fillStyle = 'rgba(0,0,0,' + (0.55 + voidDepth * 0.40) + ')';
+      ctx.fill();
+      /* Inner glow when fully open */
+      if(_slotOpenProg > 0.3){
+        var slotGlow = ctx.createRadialGradient(GX, slY_s + slH_s/2, 1, GX, slY_s + slH_s/2, slW_s * 0.45);
+        slotGlow.addColorStop(0, 'rgba(80,150,255,' + (0.18 * _slotOpenProg) + ')');
+        slotGlow.addColorStop(1, 'rgba(0,0,0,0)');
+        rr(slX_s, slY_s, slW_s, slH_s, 4.5);
+        ctx.fillStyle = slotGlow; ctx.fill();
+      }
+      /* Two flap halves rotating outward — drawn as parallelograms (cheap, no transform) */
+      var flapW = slW_s / 2;
+      var flapH = slH_s + 1;
+      /* v62: clamp angle since _slotOpenProg can briefly exceed 1.0 due to elastic overshoot */
+      var flapAng = Math.min(1.0, _slotOpenProg) * 0.8;  /* radians, ~46° max */
+      /* Left flap: rotates around its right edge (slot center) */
+      ctx.save();
+      ctx.translate(GX, slY_s);
+      ctx.rotate(flapAng);
+      var lfg = ctx.createLinearGradient(-flapW, 0, 0, flapH);
+      lfg.addColorStop(0, '#1a2e4a'); lfg.addColorStop(0.5, '#0e1c30'); lfg.addColorStop(1, '#040a14');
+      rr(-flapW, 0, flapW, flapH, 1.5); ctx.fillStyle = lfg; ctx.fill();
+      ctx.strokeStyle = 'rgba(100,160,240,0.30)'; ctx.lineWidth = 0.5; ctx.stroke();
+      ctx.restore();
+      /* Right flap: rotates around its left edge (slot center) */
+      ctx.save();
+      ctx.translate(GX, slY_s);
+      ctx.rotate(-flapAng);
+      var rfg = ctx.createLinearGradient(0, 0, flapW, flapH);
+      rfg.addColorStop(0, '#040a14'); rfg.addColorStop(0.5, '#0e1c30'); rfg.addColorStop(1, '#1a2e4a');
+      rr(0, 0, flapW, flapH, 1.5); ctx.fillStyle = rfg; ctx.fill();
+      ctx.strokeStyle = 'rgba(100,160,240,0.30)'; ctx.lineWidth = 0.5; ctx.stroke();
+      ctx.restore();
+    }
+
+    /* ── v60: Chosen ball traveling through neck/slot/tray (drawn ABOVE chrome) ── */
+    if(_dispensing && _chosenBallIdx >= 0 && _chosenBallIdx < _balls.length){
+      var _dElapsed2 = t - _dispenseStart;
+      var cbT = _balls[_chosenBallIdx];
+      /* Only render when ball is outside globe (phases 2–4) and visible */
+      if(_dElapsed2 > 200 && _dElapsed2 <= 1100 && cbT._dispAlpha > 0.01){
+        /* Phase 2 (neck): clip to neck shape so ball is partly hidden behind chrome edges
+           Phase 3 (exit): no clip, full visibility */
+        if(_dElapsed2 <= 900){
+          /* Soft clip to a vertical band roughly the neck width */
+          ctx.save();
+          ctx.beginPath();
+          /* Neck region: roughly GX-9 to GX+9, top GY-GR+2 to bY+bH where bY+bH ~= GY+GR */
+          var _neckClipTop = GY + GR * 0.55;
+          var _slotTop = GY + GR + 2 + 14 + 16;  /* slot top */
+          ctx.rect(GX - 10, _neckClipTop, 20, _slotTop - _neckClipTop + 9);
+          ctx.clip();
+          drawBall(cbT, false);
+          ctx.restore();
+        } else {
+          /* Out of slot → draw directly + add small landing dust ring */
+          drawBall(cbT, false);
+        }
+      }
+      /* Vapor puff at slot exit — v62: 3-particle impressionistic burst instead of single radial */
+      if(_vaporPuffStart > 0){
+        var vpAge = t - _vaporPuffStart;
+        if(vpAge < 700){
+          var vpProg = vpAge / 700;
+          var vpY = GY + GR + 2 + 14 + 16 + 4.5;
+          /* Three particles drifting out — center bigger, sides smaller, spread sideways */
+          var vpParticles = [
+            { dx:  0,    spread: 0,   sizeMul: 1.00, alphaMul: 1.00 },
+            { dx: -7,    spread: 14,  sizeMul: 0.62, alphaMul: 0.70 },
+            { dx:  7,    spread: 14,  sizeMul: 0.62, alphaMul: 0.70 }
+          ];
+          ctx.save();
+          for(var vpi=0; vpi<vpParticles.length; vpi++){
+            var pp = vpParticles[vpi];
+            var pR = (8 + vpProg * 26) * pp.sizeMul;
+            var pX = GX + pp.dx + pp.spread * vpProg;
+            var pY2 = vpY + vpProg * 8 - vpProg * vpi * 2;  /* center drifts down slower */
+            var pAlpha = (1 - vpProg) * 0.55 * pp.alphaMul;
+            if(pAlpha <= 0.01) continue;
+            ctx.globalAlpha = pAlpha;
+            var vpG = ctx.createRadialGradient(pX, pY2, 0, pX, pY2, pR);
+            vpG.addColorStop(0, 'rgba(210,230,255,0.78)');
+            vpG.addColorStop(0.45, 'rgba(150,195,255,0.32)');
+            vpG.addColorStop(1, 'rgba(70,130,220,0)');
+            ctx.beginPath(); ctx.arc(pX, pY2, pR, 0, Math.PI*2);
+            ctx.fillStyle = vpG; ctx.fill();
+          }
+          ctx.restore();
+        }
+      }
+    }
+
+    /* ── v60: Morph rect (ball → card shape, color bleed) ── */
+    if(_dispensing && _chosenBallIdx >= 0 && _chosenBallColor){
+      var _mElapsed = t - _dispenseStart;
+      if(_mElapsed > 1100 && _mElapsed <= _DISPENSE_TOTAL){
+        var morphProg = Math.min(1, (_mElapsed - 1100) / 800);  /* 0..1 over 800ms */
+        /* v62: easeOutBack — gentle overshoot then settle. Feels alive vs robotic easeInOutQuad.
+           Magnitude tuned so card briefly hits ~104% of target before resting at 100%. */
+        var _ob_c1 = 1.32;
+        var _ob_c3 = _ob_c1 + 1;
+        var morphEase = 1 + _ob_c3 * Math.pow(morphProg - 1, 3) + _ob_c1 * Math.pow(morphProg - 1, 2);
+        var fadeProg = 0;
+        if(_mElapsed > 1900) fadeProg = Math.min(1, (_mElapsed - 1900) / 300);
+        /* Start: ball at tray (small circle ~18px wide). End: rounded card ~280×80px */
+        var startR = _chosenBallStartR || 9;
+        var startCx = GX;
+        var startCy = GY + GR + 2 + 14 + 50 + 14;
+        var endW = Math.min(W * 0.86, 300);
+        var endH = 78;
+        var endCx = GX;
+        var endCy = H - endH / 2 - 4;  /* near bottom of canvas, where DOM card meets */
+        /* Lerp dimensions */
+        var rectW = startR * 2 + (endW - startR * 2) * morphEase;
+        var rectH = startR * 2 + (endH - startR * 2) * morphEase;
+        var rectCx = startCx + (endCx - startCx) * morphEase;
+        var rectCy = startCy + (endCy - startCy) * morphEase;
+        var cornerR = startR + (16 - startR) * morphEase;
+        var mAlpha = 1 - fadeProg;
+        ctx.save();
+        ctx.globalAlpha = mAlpha;
+        /* Body — uses chosen ball color, gradient blends to deeper blue card bg */
+        var bgColor = _chosenBallColor;
+        var rectX = rectCx - rectW/2, rectY = rectCy - rectH/2;
+        rr(rectX, rectY, rectW, rectH, cornerR);
+        var mg = ctx.createLinearGradient(rectX, rectY, rectX, rectY + rectH);
+        /* Blend ball color → card-like dark bg as morph progresses */
+        var blendT = morphEase;
+        mg.addColorStop(0, _blendCol(bgColor.hi, 'rgba(20,40,80,0.92)', blendT));
+        mg.addColorStop(0.5, _blendCol(bgColor.mid, 'rgba(12,28,60,0.92)', blendT));
+        mg.addColorStop(1, _blendCol(bgColor.sh, 'rgba(8,18,40,0.92)', blendT));
+        ctx.fillStyle = mg; ctx.fill();
+        /* Border glow (ball color) */
+        rr(rectX, rectY, rectW, rectH, cornerR);
+        ctx.strokeStyle = bgColor.base;
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = mAlpha * (0.4 + 0.5 * morphEase);
+        ctx.stroke();
+        /* Outer accent glow */
+        ctx.globalAlpha = mAlpha * 0.5 * morphEase;
+        var halo = ctx.createRadialGradient(rectCx, rectCy, rectW * 0.2, rectCx, rectCy, rectW * 0.7);
+        halo.addColorStop(0, bgColor.mid);
+        halo.addColorStop(1, 'rgba(0,0,0,0)');
+        rr(rectX - 8, rectY - 8, rectW + 16, rectH + 16, cornerR + 8);
+        ctx.fillStyle = halo; ctx.fill();
+        ctx.restore();
+      }
+    }
+
 
     /* ── Excited pulse glow (dynamic) ── */
     if(_excited){
@@ -11608,17 +12401,50 @@ window.finMonthNav = function(delta){
     _lastLoopT = t;
     _simTime += dt * 0.001;
     if(_excited) _glowPhase += dt * 0.008;
-    if(_dispensing && t - _dispenseStart > 2000){
+    /* v62: Pre-reveal rumble fade — when within 600ms of reveal, ramp rumble gain down
+       from 0.28 → 0.05 so the chosen-ball halo + dispense chord have sonic silence to bloom into.
+       Schedule the ramp ONCE per shake (flag prevents repeated re-scheduling). */
+    if(_excited && _rollGain && _ac && !_rumbleHushScheduled){
+      var msToReveal2 = _excitedEnd - t;
+      if(msToReveal2 < 600 && msToReveal2 > 0){
+        _rumbleHushScheduled = true;
+        try{
+          var hushStart = _ac.currentTime;
+          _rollGain.gain.cancelScheduledValues(hushStart);
+          _rollGain.gain.setValueAtTime(_rollGain.gain.value || 0.28, hushStart);
+          _rollGain.gain.linearRampToValueAtTime(0.05, hushStart + (msToReveal2 / 1000));
+        }catch(e){}
+      }
+    }
+    if(_dispensing && t - _dispenseStart > _DISPENSE_TOTAL){
       _dispensing = false;
       var _db = _balls[_chosenBallIdx];
-      if(_db){ _db._dispAlpha = 1; _db._dispScale = 1; }
+      if(_db){ _db._dispAlpha = 1; _db._dispScale = 1; _db._sqsh = 1; _db._strch = 1; }
       _chosenBallIdx = -1;
+      /* v60: reset choreography state */
+      _slotOpenProg = 0;
+      _vaporPuffStart = -1;
+      _trayThudFired = false;
+      _slotClankFired = false;
+      _slotCloseFired = false;
+      _morphCardFired = false;
+      _chosenBallColor = null;
+      _shakeOffX = 0;
+      _shakeOffY = 0;
     }
     if(_excited && t >= _excitedEnd){
       _excited = false;
       _dispensing = true;
       _dispenseStart = t;
       _stopRolling();
+      /* v60: capture chosen ball state for morph (color, start pos) */
+      if(_chosenBallIdx >= 0 && _chosenBallIdx < _balls.length){
+        var _cbInit = _balls[_chosenBallIdx];
+        _chosenBallColor = _cbInit.col;
+        _chosenBallStartX = _cbInit.x;
+        _chosenBallStartY = _cbInit.y;
+        _chosenBallStartR = _cbInit.r;
+      }
       /* Final heavy clank as ball gets chosen */
       _playClank(0.9);
       if(_excitedCb){
@@ -11628,10 +12454,23 @@ window.finMonthNav = function(delta){
     }
     update(t, dt);
     drawMachine(t);
-    /* Screen shake */
+    /* Screen shake — v62: reshape to match audio + halo crescendo/hush.
+       Old: linear fade over full duration (peak at start, taper to 0).
+       New: ramp up over first 18%, peak 18-78%, sharp drop to 0 in last 22% (hush). */
     if(_shakeActive){
       var se = t - _shakeStart;
-      var sFade = Math.max(0, 1 - se / _excitedDurMs);
+      var shakeProg = Math.min(1, se / _excitedDurMs);
+      var sFade;
+      if(shakeProg < 0.18){
+        sFade = Math.pow(shakeProg / 0.18, 1.4);          /* ramp up */
+      } else if(shakeProg < 0.78){
+        sFade = 1.0;                                       /* peak */
+      } else if(shakeProg < 1.0){
+        var hushSP = (shakeProg - 0.78) / 0.22;
+        sFade = 1 - Math.pow(hushSP, 1.8);                 /* hush — easeOut-ish to 0 */
+      } else {
+        sFade = 0;
+      }
       if(sFade > 0 && _excited){
         if(!_isMobile){
           /* Desktop: DOM transform */
@@ -11753,8 +12592,17 @@ window.finMonthNav = function(delta){
     syncBalls(library, cooldownIds);
   };
 
-  /* Called by bowlPlayDrawAnimation() — kicks physics and highlights chosen ball */
-  window._gbSetExcited = function(chosenBallId, durationMs, cb){
+  /* v61: expose tone→PALETTE mapping so bowl draw/replay can pass a matched color
+     into _gbSetExcited for seamless ball→card morph */
+  window._gbToneColor = function(tone){
+    var idx = (tone && tone in TONE_IDX) ? TONE_IDX[tone] : 0;
+    return PALETTE[idx % PALETTE.length];
+  };
+
+  /* Called by bowlPlayDrawAnimation() — kicks physics and highlights chosen ball.
+     v61: 4th param themeColor (PALETTE entry) overrides chosen ball's color
+     so the morph rect that hands off to the DOM card matches the card's theme tone. */
+  window._gbSetExcited = function(chosenBallId, durationMs, cb, themeColor){
     /* Always ensure gumball loop is running before animating */
     if(_gbPaused){
       _gbPaused = false;
@@ -11767,6 +12615,7 @@ window.finMonthNav = function(delta){
     _dispensing = false;
 
     /* Start rolling rumble + initial heavy clank burst */
+    _rumbleHushScheduled = false;  /* v62: reset for fresh shake */
     _startRolling();
     /* Screen shake — tracked by main loop, no extra RAF */
     _shakeActive = true;
@@ -11780,6 +12629,11 @@ window.finMonthNav = function(delta){
     /* Pick a random ball from _balls to be the "chosen" one — visual only */
     _chosenBallIdx = Math.floor(Math.random() * _balls.length);
 
+    /* v61: harmony — override chosen ball's color to match theme so morph→card has no color jump */
+    if(themeColor && _balls[_chosenBallIdx]){
+      _balls[_chosenBallIdx].col = themeColor;
+    }
+
     /* Initial outward burst */
     for(var j=0; j<_balls.length; j++){
       var bk = _balls[j];
@@ -11789,23 +12643,33 @@ window.finMonthNav = function(delta){
       bk.vy += (ady/ad)*4.0 + (Math.random()-0.5)*6.0 - 2.5;
     }
 
-    /* Periodic re-kicks during the shake to keep balls visibly bouncing */
+    /* v62: Periodic re-kicks — peak in middle, taper off, and HARD SKIP in last 600ms
+       so the chosen ball settles into its halo build-up without getting smashed. */
     var reKickCount = 0;
     var maxReKicks = _isMobile ? 2 : 4;
     var reKickInterval = Math.floor((durationMs || 3200) / (maxReKicks + 1));
+    var _shakeStartT = performance.now();
     function scheduleReKick(){
       reKickCount++;
       if(reKickCount > maxReKicks || !_excited) return;
       setTimeout(function(){
         if(!_excited) return;
-        /* Progressively stronger kicks */
-        var kickForce = 2.0 + reKickCount * 0.8;
+        /* v62: skip if reveal is < 600ms away — give chosen ball + halo their hush */
+        var msToReveal = _excitedEnd - performance.now();
+        if(msToReveal < 600){ scheduleReKick(); return; }
+        /* v62: kick force peaks in middle of shake, eases at edges.
+           Was: progressively stronger (2.0 + count*0.8) → final kick at 4.4 force.
+           Now: bell curve, peaks around 60% mark. */
+        var midPoint = (maxReKicks + 1) / 2;
+        var distFromMid = Math.abs(reKickCount - midPoint) / midPoint;
+        var bell = 1 - distFromMid * distFromMid;   /* 1.0 at mid, 0 at edges */
+        var kickForce = 2.0 + bell * 2.2;            /* 2.0 → 4.2 → 2.0 */
         for(var k=0; k<_balls.length; k++){
           if(k === _chosenBallIdx) continue;
           _balls[k].vx += (Math.random()-0.5) * kickForce * 2;
           _balls[k].vy += (Math.random()-0.5) * kickForce * 2 - kickForce * 0.3;
         }
-        _playClank(0.4 + reKickCount * 0.12);
+        _playClank(0.4 + bell * 0.5);
         scheduleReKick();
       }, reKickInterval);
     }
@@ -11981,6 +12845,25 @@ window.finMonthNav = function(delta){
       if(ac && ac.state === 'suspended') ac.resume().catch(function(){});
     }catch(_){}
     if(typeof bowlManualDraw === 'function') bowlManualDraw();
+  });
+
+  /* 1b. v61: Replay — same pointerup pattern. Lock owned by bowlReplayAnimation. */
+  document.addEventListener('pointerup', function(e){
+    var el = e.target;
+    var btn = null;
+    while(el && el !== document.body){
+      if(el.id === 'bowl-replay-btn' || (el.classList && el.classList.contains('bowl-replay-btn'))){ btn = el; break; }
+      el = el.parentElement;
+    }
+    if(!btn) return;
+    if(btn.disabled) return;
+    try{
+      var ac = window._getSharedAudioCtx ? window._getSharedAudioCtx()
+             : (window._getAudioCtx ? window._getAudioCtx() : null);
+      if(ac && ac.state === 'suspended') ac.resume().catch(function(){});
+    }catch(_){}
+    /* Note: onclick will also fire. bowlReplayAnimation has its own _bowlReplayBusy guard,
+       so the duplicate call is a no-op — this just ensures iOS audio unlock happens. */
   });
 
   /* 2. Crank row z-index — sits above challenge area */

@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-24-v57b'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-24-v58'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -8237,30 +8237,26 @@ function tcComputeStreak(){
   var draws = b.dailyDraws || [];
   var todayStr = localKey(today);
   var streak = 0;
-  /* Walk backwards from today */
+  /* Walk backwards from today.
+     A "miss" is ONLY a day where a draw exists but has no completion.
+     Days with no draw at all are simply not bowl days — they don't break the streak. */
   for(var i = 0; i < 365; i++){
     var d = new Date(today.getTime() - i * 86400000);
     var dk = localKey(d);
     if(dk > todayStr) continue;
     var draw = draws.find(function(x){ return x.date === dk; });
-    /* Today: if no draw yet, keep streak going (not broken yet) */
     if(dk === todayStr){
-      if(!draw){ /* no draw yet today — streak is intact */ continue; }
-      if(draw.chosenTier && draw.chosenTier !== 'skipped'){ streak++; continue; }
-      if(!draw.chosenTier){ /* drawn but not done yet */ continue; }
-      /* skipped: break */
-      break;
+      /* Today: completed = count it; no draw or not done yet = keep going; skipped = neutral */
+      if(draw && draw.chosenTier && draw.chosenTier !== 'skipped'){ streak++; }
+      continue; /* never break on today */
     }
-    /* Past day */
-    if(!draw){ /* no draw on past day = miss = break */
-      if(i === 0) { /* shouldn't happen */ continue; }
-      break;
-    }
+    /* Past day with no draw at all — not a bowl day, skip it */
+    if(!draw) continue;
+    /* Past day: completed = count it and keep going */
     if(draw.chosenTier && draw.chosenTier !== 'skipped'){ streak++; continue; }
-    /* Skipped = intentional pass: doesn't break streak, doesn't increment.
-       Matches reward streak rule and the UI promise on Skip button. */
+    /* Past day: skipped intentionally = neutral, keep going */
     if(draw.chosenTier === 'skipped') continue;
-    /* Past draw with no completion at all = break */
+    /* Past day: draw exists but never completed = genuine miss = break streak */
     break;
   }
   return streak;
@@ -8451,40 +8447,40 @@ function tcUndoBall(dateKey){
 function tcCheckStreak(){
   var tc = tcGetCase();
   if(!tc.balls || tc.balls.length === 0) return;
-
-  /* Skip shatter check briefly after retroactive additions to avoid
-     destroying balls the user just added — feels terrible as UX.
-     The flag is set in tcAwardBallForDate and cleared after 2s. */
   if(window._tcRetroGrace) return;
 
-  /* Cross-check: verify each stored ball actually has a completed draw.
-     A ball should only be shattered if its date has NO completed draw in dailyDraws.
-     This prevents retroactive completions from being lost — if the user marks a
-     missed day complete after the fact, the ball survives instead of getting wiped
-     on the next renderBowl call before the retroactive award fires. */
   var b = getBowl();
   var draws = b.dailyDraws || [];
   var todayStr = localKey(today);
 
-  /* Audit existing balls — remove any whose draw is genuinely incomplete (past day, no tier) */
+  /* Audit existing balls — remove any whose draw is now incomplete (past day, drawn but no tier).
+     Days with no draw at all are ignored — not bowl days, not misses. */
   var ballsBefore = tc.balls.length;
   tc.balls = tc.balls.filter(function(ball){
-    /* Today's ball: keep it regardless (today isn't over) */
-    if(ball.dateKey === todayStr) return true;
-    /* Past ball: keep if draw exists AND is completed (non-skipped) */
+    if(ball.dateKey === todayStr) return true; /* today: always keep */
     var draw = draws.find(function(d){ return d.date === ball.dateKey; });
+    /* Keep ball if draw is completed and non-skipped */
     return draw && draw.chosenTier && draw.chosenTier !== 'skipped';
   });
 
   if(tc.balls.length !== ballsBefore){
-    /* Some orphaned balls were pruned — save, but don't mass-shatter the whole case */
     tcSaveCase(tc);
     tcRender(false);
   }
 
-  var liveStreak = tcComputeStreak();
-  /* Only shatter the remaining (all-valid) balls if live streak truly hit 0 */
-  if(liveStreak === 0 && tc.balls.length > 0){
+  /* Shatter only if there exists a past draw that was pulled but never completed.
+     No-draw days are irrelevant — the streak is only "broken" by a drawn+abandoned day. */
+  var hasGenuineMiss = draws.some(function(draw){
+    if(draw.date >= todayStr) return false; /* ignore today and future */
+    if(draw.chosenTier) return false; /* completed or skipped — fine */
+    /* Draw exists, past day, no completion = genuine miss */
+    /* Only counts if it falls within our ball history (after oldest ball) */
+    if(tc.balls.length === 0) return false;
+    var oldest = tc.balls[0].dateKey;
+    return draw.date >= oldest;
+  });
+
+  if(hasGenuineMiss && tc.balls.length > 0){
     tcShatterAll(tc);
   }
 }

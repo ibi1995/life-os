@@ -616,7 +616,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .rw-desc{font-size:13px;color:#FFE8A0;line-height:1.5}
 
 
-.prog{position:relative}
+.prog{position:relative;z-index:60}
 .today-overflow{display:none}
 .today-overflow.on{display:block}
 .today-overflow button:hover{background:rgba(255,255,255,.1)}
@@ -4718,9 +4718,9 @@ function epdLoad(){
     html += '<div class="epd-habits-list">';
     ph.steps.forEach(function(st){
       let val = dayData[st];
-      const tier = (val===1||val===2||val===3) ? val : (val ? 2 : 0); // migrate boolean true → tier 2
+      const isDone = val && val !== false ? 2 : 0; // simple done/not-done
       var isBonus = epdState.normalSteps && epdState.normalSteps.indexOf(st) === -1;
-      html += _epdHabitHTML(st, tier, isBonus);
+      html += _epdHabitHTML(st, isDone, isBonus);
     });
     html += '</div>';
   });
@@ -4737,21 +4737,12 @@ function epdLoad(){
 }
 
 function _epdHabitHTML(st, tier, isBonus){
-  var tierClass = tier > 0 ? ' tier-'+tier : '';
-  var tierLabel = tier===1?'Bare Min':tier===2?'Done Right':tier===3?'Exceeded':'';
   var isDone = tier > 0;
-  /* Round circle tick matching hc-chk style */
+  /* Round circle tick matching Today's hc-chk style */
   var chkInner = isDone ? '<span style="font-size:11px;font-weight:900">✓</span>' : '';
   /* Action hint from NH_MAP */
   var _nh = (typeof NH_MAP !== 'undefined') ? NH_MAP[st] : null;
   var actionTxt = _nh ? (_nh.min || _nh.m || '') : '';
-  /* Inline tier pill */
-  var pillBg = tier===1 ? 'background:rgba(168,196,240,.15);color:rgba(200,220,255,.85)'
-             : tier===2 ? 'background:rgba(77,141,255,.22);color:var(--a2)'
-             : tier===3 ? 'background:rgba(255,217,125,.18);color:var(--gold)' : '';
-  var tierPill = tierLabel
-    ? '<span style="display:inline-block;font-family:var(--font-ui);font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:1px 7px;border-radius:99px;margin-left:7px;'+pillBg+'">'+tierLabel+'</span>'
-    : '';
   /* Bonus badge for habits outside the normal Fri/Sat schedule */
   var bonusBadge = isBonus
     ? '<span style="display:inline-block;font-family:var(--font-ui);font-size:8px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:1px 6px;border-radius:99px;margin-left:5px;background:rgba(255,217,125,.1);color:rgba(255,217,125,.5);border:1px solid rgba(255,217,125,.15)">bonus</span>'
@@ -4759,36 +4750,35 @@ function _epdHabitHTML(st, tier, isBonus){
   var nameStyle = 'font-family:var(--font-ui);font-size:0.9375rem;font-weight:600;letter-spacing:-.2px;'
     + (isDone ? 'opacity:.38;text-decoration:line-through;text-decoration-color:rgba(255,255,255,.25);text-decoration-thickness:1px' : 'color:#fff');
   var actionStyle = 'font-size:0.72rem;color:rgba(184,207,245,'+(isDone?'.28':'.5')+');line-height:1.45;margin-top:3px';
-  return '<div class="epd-habit-row'+tierClass+'" id="epd-h'+st+'" onclick="epdCycleTier(\''+st+'\')" style="-webkit-tap-highlight-color:transparent;touch-action:manipulation"><div class="epd-tier-chk">'+chkInner+'</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;flex-wrap:wrap"><span style="'+nameStyle+'">'+STEP_NAMES[st]+'</span>'+tierPill+bonusBadge+'</div>'+(actionTxt?'<div style="'+actionStyle+'">'+actionTxt+'</div>':'')+'</div></div>';
+  var rowClass = isDone ? 'epd-habit-row tier-2' : 'epd-habit-row';
+  return '<div class="'+rowClass+'" id="epd-h'+st+'" onclick="epdCycleTier(\''+st+'\')" style="-webkit-tap-highlight-color:transparent;touch-action:manipulation"><div class="epd-tier-chk">'+chkInner+'</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;flex-wrap:wrap"><span style="'+nameStyle+'">'+STEP_NAMES[st]+'</span>'+bonusBadge+'</div>'+(actionTxt?'<div style="'+actionStyle+'">'+actionTxt+'</div>':'')+'</div></div>';
 }
 
 function _epdScoreHTML(dayData, daySteps){
-  let total = daySteps.reduce(function(sum,st){ let v=dayData[st]; return sum+(v===3?3:v===2?2:v===1?1:(v?1:0)); },0);
-  const maxScore = daySteps.length * 3;
-  let pct = maxScore > 0 ? (total / maxScore * 100) : 0;
-  const tierBadge = pct >= 78 ? '<span class="epd-tier-badge t3">🥇 Outstanding</span>'
-    : pct >= 50 ? '<span class="epd-tier-badge t2">🥈 Solid</span>'
-    : total > 0 ? '<span class="epd-tier-badge t1">🥉 Bare Min</span>'
-    : '<span class="epd-tier-badge" style="background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--div)">Nothing logged</span>';
   let done = daySteps.filter(function(st){ let v=dayData[st]; return v && v !== false; }).length;
+  let pct = daySteps.length > 0 ? (done / daySteps.length * 100) : 0;
+  const badge = done === daySteps.length ? '<span class="epd-tier-badge t3">🥇 Perfect</span>'
+    : done >= Math.ceil(daySteps.length * 0.7) ? '<span class="epd-tier-badge t2">🥈 Solid</span>'
+    : done > 0 ? '<span class="epd-tier-badge t1">🥉 Partial</span>'
+    : '<span class="epd-tier-badge" style="background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--div)">Nothing logged</span>';
   return '<div class="epd-score-strip" id="epd-score-strip">'
-    +'<div class="epd-score-num">'+total+'<span style="font-size:13px;color:var(--muted);font-weight:600">/'+maxScore+'</span></div>'
+    +'<div class="epd-score-num">'+done+'<span style="font-size:13px;color:var(--muted);font-weight:600">/'+daySteps.length+'</span></div>'
     +'<div style="flex:1">'
-      +'<div style="font-family:var(--font-ui);font-size:10px;color:var(--muted);margin-bottom:5px">'+done+' / '+daySteps.length+' habits · Score: '+total+'</div>'
+      +'<div style="font-family:var(--font-ui);font-size:10px;color:var(--muted);margin-bottom:5px">'+done+' / '+daySteps.length+' habits done</div>'
       +'<div class="epd-score-bar-track"><div class="epd-score-bar-fill" style="width:'+pct+'%"></div></div>'
     +'</div>'
-    +tierBadge
+    +badge
     +'</div>';
 }
 
-/* Cycle tier: 0 → 1 → 2 → 3 → 0 */
+/* Toggle habit: off → done (2) → off — matches Today's checklist */
 function epdCycleTier(st){
   let val = epdState.data[st];
-  const current = (val===1||val===2||val===3) ? val : (val ? 2 : 0);
-  let next = current >= 3 ? 0 : current + 1;
+  const isDone = val && val !== false;
+  let next = isDone ? 0 : 2;
   epdState.data[st] = next > 0 ? next : false;
 
-  // Swap card HTML in-place via outerHTML
+  // Swap card HTML in-place
   let el = document.getElementById('epd-h'+st);
   if(!el) return;
   var _isBonus = epdState.normalSteps && epdState.normalSteps.indexOf(st) === -1;

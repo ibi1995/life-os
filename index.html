@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-28-v60'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-28-v62'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -7346,6 +7346,97 @@ function bowlGetLibBall(id){
   return found;
 }
 
+/* ── Category system ──────────────────────────────────────────
+   The library stores no category field, so map id→category here.
+   Used by the coverage panel and the soft pity timer. */
+var BOWL_CATEGORY={
+  t_pushups:'Physical', t_glute_bridges:'Physical', t_walk:'Physical', t_mobility:'Physical', t_gym:'Physical',
+  t_pl300:'Learning', t_dax:'Learning', t_read:'Learning', t_sql:'Learning', t_banana:'Learning', t_pq_automate:'Learning',
+  t_cats:'Relationships', t_family_call:'Relationships', t_safa_random:'Relationships',
+  t_journal:'Mental', t_breathwork:'Mental', t_gratitude:'Mental', t_sleep:'Mental',
+  t_creative:'Creative',
+  t_home_reset:'Home'
+};
+var BOWL_CAT_META={
+  Physical:{icon:'💪'}, Learning:{icon:'📊'}, Relationships:{icon:'❤️'},
+  Mental:{icon:'🧠'}, Creative:{icon:'🎨'}, Home:{icon:'🏠'}
+};
+var BOWL_CAT_ORDER=['Physical','Learning','Relationships','Mental','Creative','Home'];
+function bowlCatOf(id){ return BOWL_CATEGORY[id]||'Other'; }
+
+/* Days since a category was last DRAWN (not just completed). Returns big number if never. */
+function bowlDaysSinceCat(cat){
+  var b=getBowl();
+  var todayMs=today.getTime();
+  var newest=null;
+  b.dailyDraws.forEach(function(d){
+    if(bowlCatOf(d.themeId)===cat){
+      var ms=new Date(d.date+'T12:00:00').getTime();
+      if(newest===null||ms>newest) newest=ms;
+    }
+  });
+  if(newest===null) return 999;
+  return Math.floor((todayMs-newest)/86400000);
+}
+
+/* Coverage counts per category over the last `days` window. */
+function bowlCoverage(days){
+  var b=getBowl();
+  var cutoff=today.getTime()-(days-1)*86400000;
+  var out={};
+  BOWL_CAT_ORDER.forEach(function(c){ out[c]={count:0,since:bowlDaysSinceCat(c),cold:false}; });
+  b.dailyDraws.forEach(function(d){
+    var ms=new Date(d.date+'T12:00:00').getTime();
+    if(ms>=cutoff){
+      var c=bowlCatOf(d.themeId);
+      if(out[c]) out[c].count++;
+    }
+  });
+  /* relative cold flag: overdue past its own natural interval, not a flat day count */
+  BOWL_CAT_ORDER.forEach(function(c){ out[c].cold=out[c].since>=bowlPityTrigger(c); });
+  return out;
+}
+
+/* Soft pity timer (relative threshold): each category has a NATURAL draw
+   interval based on its share of total weight. A rare category (Creative,
+   Home) is supposed to go weeks between draws — so pity must trigger relative
+   to that interval, not a flat day count. Otherwise rare categories sit in
+   permanent pity and get un-rared, flattening the weighting you set on purpose.
+   Rule: pity kicks in once a category is cold for >PITY_OVERDUE_MULT × its
+   own natural interval, then ramps gently, capped. Stays random, respects
+   deliberate rarity, only rescues a category that's genuinely overdue FOR ITSELF. */
+var BOWL_PITY_OVERDUE_MULT=2;   /* cold past 2× natural interval = overdue */
+var BOWL_PITY_PER_STEP=0.5;     /* boost per extra natural-interval overdue */
+var BOWL_PITY_MAX=2.5;          /* cap so it never dominates the draw */
+
+/* Natural avg days between draws for a category = total weight / category weight.
+   Computed live from the current library so it self-adjusts if weights change. */
+function bowlCatInterval(cat){
+  var b=getBowl();
+  var lib=b.library.filter(function(x){ return !x.deleted; });
+  var tot=0,catW=0;
+  lib.forEach(function(x){
+    var w=x.weight||1; tot+=w;
+    if(bowlCatOf(x.id)===cat) catW+=w;
+  });
+  if(catW<=0) return 999;
+  return tot/catW;
+}
+function bowlPityMult(id){
+  var cat=bowlCatOf(id);
+  var since=bowlDaysSinceCat(cat);
+  var interval=bowlCatInterval(cat);
+  var trigger=interval*BOWL_PITY_OVERDUE_MULT;
+  if(since<trigger) return 1;
+  /* how many extra natural-intervals overdue, beyond the trigger */
+  var stepsOver=(since-trigger)/interval;
+  var m=1+(1+stepsOver)*BOWL_PITY_PER_STEP;
+  return Math.min(m,BOWL_PITY_MAX);
+}
+/* Days cold before pity triggers, per category — used by the coverage panel
+   to flag "cold" correctly (relative, not flat 4-day). */
+function bowlPityTrigger(cat){ return bowlCatInterval(cat)*BOWL_PITY_OVERDUE_MULT; }
+
 /* Weighted random pick from theme library with 2-day cooldown */
 function bowlPickTheme(excludeId){
   var b=getBowl();
@@ -7364,10 +7455,11 @@ function bowlPickTheme(excludeId){
   var weights=pool.map(function(theme){
     var lastDraw=b.dailyDraws.slice().reverse().find(function(d){ return d.themeId===theme.id; });
     var w=theme.weight||1;
-    if(!lastDraw) return w*2;
+    var pity=bowlPityMult(theme.id); /* soft pity timer — leans odds toward cold categories */
+    if(!lastDraw) return w*2*pity;
     var drawDate=new Date(lastDraw.date+'T12:00:00');
     var daysSince=(now-drawDate.getTime())/86400000;
-    return daysSince>=7?w*2:w;
+    return (daysSince>=7?w*2:w)*pity;
   });
   var total=weights.reduce(function(a,c){ return a+c; },0);
   if(total<=0) return pool[Math.floor(Math.random()*pool.length)];
@@ -8073,9 +8165,49 @@ function renderBowl(){
     statsRow+='<span style="color:#fff">'+_hC+' Hard</span>';
     if(_sC) statsRow+='<span style="color:rgba(255,180,120,.6)">'+_sC+' Skip</span>';
     statsRow+='</div>';
-    histEl.innerHTML=cells.join('')+statsRow;
+
+    /* ── Coverage panel — per-category hit count + cold-streak flags ── */
+    var _covDays=window._bowlCovDays||7;
+    var _covLabel=_covDays===7?'this week':'this month';
+    var cov=bowlCoverage(_covDays);
+    var anyCold=BOWL_CAT_ORDER.some(function(c){ return cov[c].cold; });
+    var _covOpen=window._bowlCovOpen;
+    var covH='<div class="bowl-coverage" style="margin-top:12px;border-top:1px solid rgba(127,178,255,.12);padding-top:12px">';
+    covH+='<div onclick="bowlToggleCov()" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">';
+    covH+='Coverage <span style="font-weight:600;letter-spacing:0;text-transform:none;color:var(--a2)">'+_covLabel+'</span>';
+    if(anyCold&&!_covOpen) covH+='<span style="color:var(--gold);font-weight:700;letter-spacing:0;text-transform:none">⚠ '+BOWL_CAT_ORDER.filter(function(c){return cov[c].cold;}).length+' cold</span>';
+    covH+='<span style="margin-left:auto;font-size:13px;color:var(--a2)">'+(_covOpen?'▾':'▸')+'</span></div>';
+
+    if(_covOpen){
+      covH+='<div style="display:flex;justify-content:flex-end;margin:8px 0 4px"><button onclick="bowlToggleCovRange()" style="background:rgba(77,141,255,.12);border:none;color:var(--a2);font-family:var(--font-ui);font-size:10px;font-weight:700;cursor:pointer;padding:3px 8px;border-radius:5px">'+(_covDays===7?'Show month':'Show week')+'</button></div>';
+      covH+='<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">';
+      BOWL_CAT_ORDER.forEach(function(c){
+        var cold=cov[c].cold;
+        var sinceTxt=cov[c].since===0?'today':(cov[c].since>=999?'never':cov[c].since+'d ago');
+        var bg=cold?'rgba(255,200,100,.08)':'rgba(255,255,255,.03)';
+        var bd=cold?'rgba(255,200,100,.25)':'rgba(127,178,255,.12)';
+        var col=cold?'var(--gold)':'#fff';
+        var subcol=cold?'rgba(255,200,100,.7)':'var(--muted)';
+        covH+='<div style="display:flex;align-items:center;gap:10px;background:'+bg+';border:1px solid '+bd+';border-radius:8px;padding:8px 11px">';
+        covH+='<span style="font-size:15px">'+BOWL_CAT_META[c].icon+'</span>';
+        covH+='<span style="font-family:var(--font-ui);font-size:13px;font-weight:700;color:'+col+'">'+c+'</span>';
+        covH+='<span style="margin-left:auto;display:flex;align-items:center;gap:10px">';
+        covH+='<span style="font-family:var(--font-ui);font-size:12px;font-weight:700;color:'+subcol+'">'+cov[c].count+'×</span>';
+        covH+='<span style="font-family:var(--font-ui);font-size:11px;color:'+subcol+';min-width:52px;text-align:right">'+sinceTxt+'</span>';
+        covH+='</span></div>';
+      });
+      covH+='</div>';
+      if(anyCold) covH+='<div style="font-size:10px;color:rgba(255,200,100,.6);margin-top:8px;line-height:1.4;font-family:var(--font-ui)">Cold categories get a quiet odds boost — the bowl self-corrects, you don\'t have to.</div>';
+    }
+    covH+='</div>';
+
+    histEl.innerHTML=cells.join('')+statsRow+covH;
   }
 }
+
+/* Coverage panel toggles */
+function bowlToggleCov(){ window._bowlCovOpen=!window._bowlCovOpen; renderBowl(); }
+function bowlToggleCovRange(){ window._bowlCovDays=(window._bowlCovDays===30)?7:30; renderBowl(); }
 
 /* ── Day detail modal — tap a history dot to see/complete/undo ── */
 function bowlShowDayDetail(dateKey){

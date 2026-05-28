@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-24-v59'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-28-v60'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Today */
     localStorage.removeItem('lifeOS_activePage');
@@ -4956,7 +4956,7 @@ const BOWL_DEFAULT_LIBRARY = [
 
 
   /* ═══ MIND / LEARNING ═══ */
-  {id:'t_pl300', name:'PL-300 Study', icon:'📊', tone:'grape', weight:4,
+  {id:'t_pl300', name:'PL-300 Study', icon:'📊', tone:'grape', weight:8,
     easy:{desc:'5 flashcards or re-read one concept page from your last session. Keep the thread warm.',pts:10},
     medium:{desc:'One micro-session: concept → analogy → trap → quiz. 25 min.',pts:30},
     hard:{desc:'Full practice exam section or build a sample report. 60 min.',pts:60}},
@@ -4979,7 +4979,7 @@ const BOWL_DEFAULT_LIBRARY = [
     hard:{desc:'Full analysis pipeline. CTE chain, window functions. Save the script.',pts:60}},
 
   {id:'t_banana', name:'BANANA Sprint', icon:'🍌', tone:'banana', weight:4,
-    easy:{desc:'Open your current BANANA project and review it for 10 min. Write down one specific thing to fix or add next.',pts:10},
+    easy:{desc:'10 min hands on keyboard. Change one real thing in the file and save it. No planning, no reviewing — build.',pts:10},
     medium:{desc:'30 min focused build session on your next portfolio dashboard. No planning, no research — hands on keyboard, building.',pts:30},
     hard:{desc:'60 min deep work session. Ship something visible — a new page, a finished visual, a LinkedIn post draft. Screenshot your progress.',pts:60}},
 
@@ -5000,20 +5000,10 @@ const BOWL_DEFAULT_LIBRARY = [
     hard:{desc:'Video call 30+ min. Or write a long message to someone you\'ve been meaning to reach.',pts:60}},
 
 
-  {id:'t_gaming_friend', name:'Game with a Friend', icon:'🎮', tone:'strawberry', weight:2,
-    easy:{desc:'Message someone you used to game with. Just check if they\'re still playing.',pts:10},
-    medium:{desc:'Message 3 people and find one who\'s free tonight. Pick the game, lock it in.',pts:30},
-    hard:{desc:'Full evening gaming online with someone. Voice chat on. This is social.',pts:60}},
-
   {id:'t_safa_random', name:'Random Act for Safa', icon:'❤️', tone:'bubblegum', weight:2,
     easy:{desc:'One thing she didn\'t ask for. Coffee, snack, anything.',pts:10},
     medium:{desc:'Take over something she normally handles without being asked.',pts:30},
     hard:{desc:'Plan something small but thoughtful. Homemade, within budget. Effort over money.',pts:60}},
-
-  {id:'t_safa_quality', name:'Safa Quality Time', icon:'💑', tone:'bubblegum', weight:3,
-    easy:{desc:'15 min phones-away conversation. Ask her about her day and actually listen. No screens.',pts:10},
-    medium:{desc:'Do something together — cook, watch a show, walk around the block. Phones in another room for the duration.',pts:30},
-    hard:{desc:'Plan and execute an at-home date night. Cook together or order something nice, pick a movie, no phones for the full evening. Effort over money.',pts:60}},
 
   /* ═══ MENTAL HEALTH / RECHARGE ═══ */
   {id:'t_journal', name:'Journal', icon:'📓', tone:'blueberry', weight:3,
@@ -5032,12 +5022,6 @@ const BOWL_DEFAULT_LIBRARY = [
     hard:{desc:'Write a gratitude letter to someone — Safa, a parent, a friend. Then decide: send it or don\'t. But the writing has to be real.',pts:60}},
 
 
-  {id:'t_ps5', name:'PS5 Session', icon:'🎮', tone:'strawberry', weight:2,
-    easy:{desc:'Turn it on and play 30 min. No guilt.',pts:10},
-    medium:{desc:'1 hour. One game. No phone next to you.',pts:30},
-    hard:{desc:'2 hour session. Actually make progress in a game you\'ve been avoiding.',pts:60}},
-
-
   {id:'t_sleep', name:'Sleep Protocol', icon:'😴', tone:'grape', weight:3,
     easy:{desc:'Set a bedtime alarm tonight. When it goes off, wind down. No debate.',pts:10},
     medium:{desc:'Screens off 30 min before bed. Log what time you slept.',pts:30},
@@ -5049,25 +5033,10 @@ const BOWL_DEFAULT_LIBRARY = [
     hard:{desc:'60 min session. Finish a build stage, try a complex recipe, photograph what you made. The output is the experience, not a deliverable.',pts:60}},
 
   /* ═══ HOME / ADMIN ═══ */
-  {id:'t_kitchen', name:'Kitchen Clean', icon:'🧹', tone:'apple', weight:2,
-    easy:{desc:'Just the dishes. Sink empty is a win.',pts:10},
-    medium:{desc:'Dishes + counters + stove. Full wipe.',pts:30},
-    hard:{desc:'Deep clean. Fridge check, shelves organized, floor mopped.',pts:60}},
-
-  {id:'t_desk', name:'Desk Reset', icon:'🖥️', tone:'blueberry', weight:2,
-    easy:{desc:'Clear the surface. 5 min.',pts:10},
-    medium:{desc:'Full reset — cables managed, surface clean, everything placed.',pts:30},
-    hard:{desc:'Desk + surrounding zone. Clean monitor, organize drawers, cable manage.',pts:60}},
-
-  {id:'t_laundry', name:'Laundry', icon:'👕', tone:'cotton', weight:2,
-    easy:{desc:'Fold and put away what\'s already done.',pts:10},
-    medium:{desc:'Full cycle. Wash, dry, fold, put away.',pts:30},
-    hard:{desc:'Start the machine tonight. Iron 5 items + organize one closet section while it runs. Fold and put away tomorrow morning.',pts:60}},
-
-  {id:'t_declutter', name:'Declutter', icon:'🗑️', tone:'tangerine', weight:1,
-    easy:{desc:'Clear one surface. 5 min.',pts:10},
-    medium:{desc:'One full drawer or shelf. Be ruthless.',pts:30},
-    hard:{desc:'Three zones. 6 months untouched = gone.',pts:60}},
+  {id:'t_home_reset', name:'Home Reset', icon:'🧹', tone:'apple', weight:3,
+    easy:{desc:'Just the dishes, or clear one surface. 5 min. Sink empty is a win.',pts:10},
+    medium:{desc:'Full kitchen — dishes + counters + stove. Or one full drawer/closet section, ruthless.',pts:30},
+    hard:{desc:'Deep clean one zone end to end. Fridge, shelves, floor, or a full declutter of 6-months-untouched stuff.',pts:60}},
 
 
 ];
@@ -7351,9 +7320,30 @@ function setBowl(b){
   let s=gs(); s.bowl=b; ss(s,true);
 }
 
+/* Retired challenges — removed from the active library but still referenced
+   by old history entries. Without this, bowlGetLibBall returns undefined and
+   the history cell renders blank. Keep icon/name/tone so old balls still show. */
+var BOWL_RETIRED_BALLS = {
+  t_cold_shower:   {id:'t_cold_shower',   name:'Cold Shower',        icon:'🚿', tone:'blueberry'},
+  t_gaming_friend: {id:'t_gaming_friend', name:'Game with a Friend', icon:'🎮', tone:'strawberry'},
+  t_safa_quality:  {id:'t_safa_quality',  name:'Safa Quality Time',  icon:'💑', tone:'bubblegum'},
+  t_ps5:           {id:'t_ps5',           name:'PS5 Session',         icon:'🎮', tone:'strawberry'},
+  t_kitchen:       {id:'t_kitchen',       name:'Kitchen Clean',       icon:'🧹', tone:'apple'},
+  t_desk:          {id:'t_desk',          name:'Desk Reset',          icon:'🖥️', tone:'blueberry'},
+  t_laundry:       {id:'t_laundry',       name:'Laundry',             icon:'👕', tone:'cotton'},
+  t_declutter:     {id:'t_declutter',     name:'Declutter',           icon:'🗑️', tone:'tangerine'}
+};
 function bowlGetLibBall(id){
   var b=getBowl();
-  return b.library.find(function(x){ return x.id===id; });
+  var found=b.library.find(function(x){ return x.id===id; });
+  if(found) return found;
+  /* Fall back to retired registry so old history cells never blank out.
+     Marked retired:true so retro-complete buttons correctly hide. */
+  if(id && BOWL_RETIRED_BALLS[id]){
+    var r=BOWL_RETIRED_BALLS[id];
+    return {id:r.id, name:r.name, icon:r.icon, tone:r.tone, retired:true, deleted:true};
+  }
+  return found;
 }
 
 /* Weighted random pick from theme library with 2-day cooldown */

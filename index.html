@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-28-v62'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-05-31-v63'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Finance (home page) */
     localStorage.removeItem('lifeOS_activePage');
@@ -1789,8 +1789,8 @@ backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid r
 
 .fx-vials-stage{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;padding:0 4px}
 .fx-vials-stage.fx-vials-single{display:flex;justify-content:center;grid-template-columns:none}
-.fx-vials-stage.fx-vials-single .fx-vial-col{width:200px}
-.fx-vials-stage.fx-vials-single .fx-vial-tube-wrap{max-width:none;width:100%}
+.fx-vials-stage.fx-vials-single .fx-vial-col{width:min(224px,66vw)}
+.fx-vials-stage.fx-vials-single .fx-vial-tube-wrap{max-width:none;width:100%;aspect-ratio:.52}
 .fx-vial-col{display:flex;flex-direction:column;align-items:center;gap:10px}
 
 
@@ -9624,6 +9624,17 @@ function fxAnimNum(el, target){
 var _fxVialState = {free:{level:0,target:0}};
 var _fxVialAnimId = null;
 var _fxVialTime = 0;
+/* F1: adaptive FPS cap for the always-on cash-stack loop. Mirrors the gumball
+   loop's probe (median of first 10 frame deltas). On a phone that can't hold 60,
+   drop to ~30fps — every motion here (stack bob, per-coin specular sweep, ambient
+   drift) is slow and frame-rate-independent (sim uses measured dt), so 30fps is
+   visually identical but halves per-frame gradient/draw load on the home page.
+   Same UA test the bowl uses, so both loops make the same mobile decision. */
+var _fxLoopMobile = /iPhone|Android|Mobile/i.test(navigator.userAgent);
+var _fxFpsProbed = !_fxLoopMobile;   /* desktop: never probe, run uncapped */
+var _fxFpsInterval = 0;              /* 0 = uncapped; 1000/30 once probe decides slow */
+var _fxLastFpsT = 0;
+var _fxFpsProbeDeltas = [];
 
 function fxRenderVials(f, mk, stats){
   const leftover = f.leftover || 0;
@@ -9674,7 +9685,7 @@ function _fxVialBootCanvas(){
     return true;
   }
   var c2 = document.getElementById('fx-canvas-free');    /* on pg-finance (cash stack) */
-  sizeCanvas(c2, 0.38);  /* cash stack: tall */
+  sizeCanvas(c2, 0.52);  /* cash stack: tall */
 
   /* Cash stack state — only init once */
   if(!_fxVialState.free._initOnce){
@@ -9688,6 +9699,25 @@ function _fxVialBootCanvas(){
 }
 
 function _fxVialDraw(ts){
+  /* F1: schedule next frame first (matches the gumball loop). External
+     cancelAnimationFrame on nav-away / tab-hidden still stops it cleanly. */
+  _fxVialAnimId = requestAnimationFrame(_fxVialDraw);
+  /* Probe frame cadence on mobile; once decided, cap to 30fps on slow devices.
+     Unlike the bowl we do NOT skip drawing during the probe — this stack is the
+     home page's hero and must paint on frame 1 (no blank-canvas flash). */
+  if(_fxLoopMobile && !_fxFpsProbed){
+    if(_fxLastFpsT > 0) _fxFpsProbeDeltas.push(ts - _fxLastFpsT);
+    if(_fxFpsProbeDeltas.length >= 10){
+      var _fpsSorted = _fxFpsProbeDeltas.slice().sort(function(a,b){ return a - b; });
+      _fxFpsInterval = (_fpsSorted[5] > 22) ? (1000/30) : 0;
+      _fxFpsProbed = true;
+    }
+    /* fall through and draw this frame */
+  } else if(_fxFpsInterval > 0 && ts - _fxLastFpsT < _fxFpsInterval){
+    return; /* cap active: skip this frame's draw */
+  }
+  _fxLastFpsT = ts;
+
   _fxVialTime = ts * 0.001;
 
   /* Re-attempt sizing any un-sized canvas — fires cheaply every frame until sized */
@@ -9715,7 +9745,7 @@ function _fxVialDraw(ts){
 
   /* Leftover = cash bill stack */
   var c2 = document.getElementById('fx-canvas-free');
-  _trySize(c2, 0.38);
+  _trySize(c2, 0.52);
   if(c2 && c2._cssW){
     var ctx2 = c2.getContext('2d');
     var W2 = c2._cssW, H2 = c2._cssH;
@@ -9724,7 +9754,7 @@ function _fxVialDraw(ts){
     /* Check for new bill drops → play clink sound */
     if(typeof _chipDropSoundCheck === 'function') _chipDropSoundCheck();
   }
-  _fxVialAnimId = requestAnimationFrame(_fxVialDraw);
+  /* F1: reschedule moved to top of function */
 }
 
 
@@ -9802,7 +9832,7 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     /* Per-coin scatter — tiny xOff so the stack isn't a perfect cylinder */
     for(var i=state._bills.length;i<COIN_MAX;i++){
       state._bills.push({
-        xOff:(hash(i*9.13+1)-0.5)*(W*0.018),
+        xOff:(hash(i*9.13+1)-0.5)*(W*0.010),
         dropT:1,
         landed:true
       });
@@ -9842,10 +9872,13 @@ function _fxDrawCashStack(ctx, W, H, t, state){
   /* ─── GEOMETRY ─── */
   var cx=W*0.5;
   var baseY=H*0.86;
-  var baseRx=W*0.495;                    // pushed to canvas edge — max magnificence on mobile
+  var baseRx=W*0.47;                     // pulled off the edge so coins never clip on phone
   var baseRy=baseRx*0.28;
   var coinH=baseRy*0.95;                 // thicker too — fills the stack with presence
-  var coinSpacing=coinH*1.10;
+  /* Height-fit: compress spacing so the whole COIN_MAX-tall stack sits inside
+     the canvas with a top margin, regardless of how short the box is on phone. */
+  var _fitSpacing=(baseY - H*0.085 - coinH)/(COIN_MAX-1);
+  var coinSpacing=Math.min(coinH*1.10, _fitSpacing);
 
   /* Specular phase — slow drift, shared across coins */
   var specPhase=Math.sin(t*0.70)*0.40;
@@ -10004,48 +10037,75 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       ctx.fill();
     }
 
-    /* ─── OUTER FRAME: CHRONOGRAPH INSCRIPTION RING ─── */
-    var insR=_rx*0.62;
-    var tickI=insR*0.94, tickO=insR*1.04, tickOLong=insR*1.08;
-    function pathTicks(){
+    /* ─── FROSTED FIELD VIGNETTE ─── faint darkening toward the rim so the
+       polished leaf reads as raised metal against a matte field. */
+    var fieldR=_rx*0.80;
+    ctx.save();
+    ctx.beginPath();ctx.ellipse(_cx,_cy,fieldR,fieldR*ratio,0,0,Math.PI*2);ctx.clip();
+    var fieldVig=ctx.createRadialGradient(_cx,_cy,fieldR*0.28,_cx,_cy,fieldR);
+    fieldVig.addColorStop(0.00,'rgba(10,20,40,0)');
+    fieldVig.addColorStop(0.72,'rgba(10,20,40,'+(0.10*opacityScale)+')');
+    fieldVig.addColorStop(1.00,'rgba(8,16,34,'+(0.26*opacityScale)+')');
+    ctx.fillStyle=fieldVig;
+    ctx.fillRect(_cx-fieldR,_cy-fieldR*ratio,fieldR*2,fieldR*ratio*2);
+    ctx.restore();
+
+    /* ─── COIN RIM: a beaded denticle border seated in a fine groove ─── */
+    function pathRing(rr){
+      return function(){ ctx.beginPath(); ctx.ellipse(_cx,_cy,rr,rr*ratio,0,0,Math.PI*2); };
+    }
+    var ringR=_rx*0.80;
+    emboss(pathRing(ringR), 0.9, 0.6, {depth:1.4, darkA:0.55, brightA:0.28});
+    var beadR=ringR*0.90;
+    var beadSz=_rx*0.022;
+    function pathBeads(){
       ctx.beginPath();
-      for(var ti=0;ti<60;ti++){
-        var th=(ti/60)*Math.PI*2 - Math.PI/2;
-        var cosT=Math.cos(th), sinT=Math.sin(th);
-        var rO=(ti%5===0)?tickOLong:tickO;
-        var x0=_cx+tickI*cosT, y0=_cy+tickI*sinT*ratio;
-        var x1=_cx+rO*cosT,    y1=_cy+rO*sinT*ratio;
-        ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);
+      for(var bi=0;bi<40;bi++){
+        var ba=(bi/40)*Math.PI*2;
+        var bx=_cx+beadR*Math.cos(ba);
+        var by=_cy+beadR*Math.sin(ba)*ratio;
+        ctx.moveTo(bx+beadSz,by);
+        ctx.arc(bx,by,beadSz,0,Math.PI*2);
       }
     }
-    emboss(pathTicks,0.7,0.5,{brightA:0.32});
+    embossFill(pathBeads, 0.70, 0.62, {depth:1.6});
 
     /* ─── CANADIAN MAPLE LEAF — the subject ───
        Sugar-maple, 5 main lobes (top + 2 upper-sides + 2 lower-sides),
        deep V-notches between each lobe, palmate vein structure,
        short petiole at base. Matches the Royal Canadian Mint
        Silver Maple Leaf coin design. */
-    var leafR=_rx*0.56;
+    var leafR=_rx*0.66;
 
     /* Right-side outline (normalized to leafR, mirrored to left).
        Trace: top apex → right edge → lobes → notches → stem.
        The deep V-notches between lobes are what makes this READ as maple
        (broadleaf trees like oak have shallower lobing). */
     var leafPts=[
-      [0.00,-0.96], /*  0: top apex */
-      [0.20,-0.65], /*  1: top lobe right edge */
-      [0.12,-0.45], /*  2: NOTCH 1 (deep V-cut, inward) */
-      [0.30,-0.50], /*  3: upper-right lobe left edge */
-      [0.62,-0.55], /*  4: upper-right lobe TIP */
-      [0.50,-0.32], /*  5: upper-right lobe right edge */
-      [0.18,-0.10], /*  6: NOTCH 2 (deep V-cut, inward) */
-      [0.50,-0.05], /*  7: lower-right lobe left edge */
-      [0.92, 0.02], /*  8: lower-right lobe TIP (widest point) */
-      [0.75, 0.22], /*  9: lower-right lobe right edge */
-      [0.30, 0.35], /* 10: NOTCH 3 (deep V-cut toward stem) */
-      [0.08, 0.50], /* 11: leaf-stem transition */
-      [0.06, 0.56], /* 12: stem attach right */
-      [0.05, 0.96]  /* 13: stem bottom right */
+      [0.000,-0.900], /*  0: central lobe apex (sharp) */
+      [0.075,-0.680], /*  1: notch on central lobe right */
+      [0.160,-0.710], /*  2: small serration tip */
+      [0.120,-0.530], /*  3: notch */
+      [0.225,-0.485], /*  4: central lobe right shoulder */
+      [0.140,-0.340], /*  5: SINUS 1 (deep V — central↔upper) */
+      [0.345,-0.390], /*  6: upper lobe inner edge */
+      [0.475,-0.475], /*  7: upper lobe upper tooth */
+      [0.490,-0.360], /*  8: notch */
+      [0.645,-0.335], /*  9: UPPER LOBE TIP (sharp) */
+      [0.520,-0.210], /* 10: upper lobe lower edge */
+      [0.405,-0.140], /* 11: small tooth */
+      [0.220,-0.030], /* 12: SINUS 2 (deep V — upper↔lower) */
+      [0.450, 0.000], /* 13: lower lobe inner edge */
+      [0.610,-0.015], /* 14: lower lobe upper tooth */
+      [0.675, 0.075], /* 15: notch */
+      [0.840, 0.085], /* 16: LOWER LOBE TIP (widest, sharp) */
+      [0.675, 0.215], /* 17: lower lobe lower edge */
+      [0.505, 0.260], /* 18: small tooth */
+      [0.335, 0.295], /* 19: notch toward base */
+      [0.215, 0.335], /* 20: SINUS 3 / blade base */
+      [0.125, 0.450], /* 21: blade→petiole transition */
+      [0.070, 0.620], /* 22: petiole top */
+      [0.055, 0.900]  /* 23: petiole bottom */
     ];
 
     function pathLeaf(){
@@ -10058,7 +10118,7 @@ function _fxDrawCashStack(ctx, W, H, t, state){
         if(li===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       }
       /* Close stem bottom across to left */
-      ctx.lineTo(_cx - 0.05*leafR, _cy + 0.96*leafR*ratio);
+      ctx.lineTo(_cx - 0.055*leafR, _cy + 0.90*leafR*ratio);
       /* Left side from stem bottom back up to apex (mirror of right) */
       for(var li=leafPts.length-1;li>=0;li--){
         var nx=-leafPts[li][0], ny=leafPts[li][1];
@@ -10069,27 +10129,36 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       ctx.closePath();
     }
 
-    /* ─── LEAF FILL ─── Same satin metal as the field — depth comes from
-       the emboss strokes, NOT a contrasting fill. Real coins don't have a
-       differently-colored leaf, the engraving just catches light differently
-       because the surface angle changed. */
+    /* ─── LEAF FILL ─── Polished mirror-metal, brighter than the frosted field
+       and lit from the upper-left, so the leaf reads as the raised, light-catching
+       subject against the matte field (RCM proof-style satin/mirror contrast). */
     ctx.save();
     pathLeaf();
     ctx.clip();
     var leafFill=ctx.createLinearGradient(
-      _cx - leafR*0.4, _cy - leafR*ratio*0.9,
-      _cx + leafR*0.4, _cy + leafR*ratio*0.9
+      _cx - leafR*0.5, _cy - leafR*ratio*0.95,
+      _cx + leafR*0.45, _cy + leafR*ratio*0.95
     );
-    leafFill.addColorStop(0.00,'rgba(195,208,225,'+(0.62*opacityScale)+')');
-    leafFill.addColorStop(0.40,'rgba(160,178,205,'+(0.55*opacityScale)+')');
-    leafFill.addColorStop(0.80,'rgba(95,115,148,'+(0.55*opacityScale)+')');
-    leafFill.addColorStop(1.00,'rgba(60,78,108,'+(0.65*opacityScale)+')');
+    leafFill.addColorStop(0.00,'rgba(226,236,250,'+(0.90*opacityScale)+')');
+    leafFill.addColorStop(0.32,'rgba(194,210,234,'+(0.88*opacityScale)+')');
+    leafFill.addColorStop(0.62,'rgba(150,172,206,'+(0.88*opacityScale)+')');
+    leafFill.addColorStop(0.85,'rgba(104,126,162,'+(0.90*opacityScale)+')');
+    leafFill.addColorStop(1.00,'rgba(74,94,130,'+(0.92*opacityScale)+')');
     ctx.fillStyle=leafFill;
-    ctx.fillRect(_cx - leafR*1.1, _cy - leafR*ratio*1.1, leafR*2.2, leafR*ratio*2.2);
-    /* Inherit the same micro-texture as the field */
+    ctx.fillRect(_cx - leafR*1.2, _cy - leafR*ratio*1.2, leafR*2.4, leafR*ratio*2.4);
+    /* Soft upper-left polish bloom */
+    var leafHi=ctx.createRadialGradient(
+      _cx - leafR*0.30, _cy - leafR*ratio*0.40, 0,
+      _cx - leafR*0.30, _cy - leafR*ratio*0.40, leafR*0.95);
+    leafHi.addColorStop(0.00,'rgba(255,255,255,'+(0.40*opacityScale)+')');
+    leafHi.addColorStop(0.45,'rgba(238,246,255,'+(0.12*opacityScale)+')');
+    leafHi.addColorStop(1.00,'rgba(238,246,255,0)');
+    ctx.fillStyle=leafHi;
+    ctx.fillRect(_cx - leafR*1.2, _cy - leafR*ratio*1.2, leafR*2.4, leafR*ratio*2.4);
+    /* Light micro-texture — polished surface keeps less grain than the frost field */
     var leafNoise=getNoisePattern();
     if(leafNoise){
-      ctx.globalAlpha=0.30*opacityScale;
+      ctx.globalAlpha=0.16*opacityScale;
       ctx.globalCompositeOperation='overlay';
       ctx.fillStyle=leafNoise;
       ctx.fillRect(_cx - leafR*1.1, _cy - leafR*ratio*1.1, leafR*2.2, leafR*ratio*2.2);
@@ -10105,19 +10174,19 @@ function _fxDrawCashStack(ctx, W, H, t, state){
        veins branching from the main side veins toward lobe shoulders. */
     function pathVeins(){
       ctx.beginPath();
-      /* Origin: just above the petiole attach */
-      var ox_n=0.00, oy_n=0.50;
+      /* Origin: at the blade base where the petiole fans out */
+      var ox_n=0.00, oy_n=0.52;
       var ox=_cx + ox_n*leafR;
       var oy=_cy + oy_n*leafR*ratio;
 
-      /* 5 main veins — each radiates from origin to its corresponding lobe tip,
-         stopping 88% of the way (fade into chlorophyll, like a real leaf) */
+      /* 5 main veins — each radiates from origin to its lobe tip,
+         stopping ~88% of the way (fades into the blade like a real leaf) */
       var mainTips=[
-        [0.00,-0.90], /* central → top apex */
-        [0.58,-0.52], /* upper-right */
-        [-0.58,-0.52],/* upper-left */
-        [0.86, 0.02], /* lower-right (mid-side widest) */
-        [-0.86, 0.02] /* lower-left */
+        [0.000,-0.86], /* central → apex */
+        [0.600,-0.31], /* upper-right */
+        [-0.600,-0.31],/* upper-left */
+        [0.770, 0.06], /* lower-right (widest lobe) */
+        [-0.770, 0.06] /* lower-left */
       ];
       for(var vi=0;vi<mainTips.length;vi++){
         var tx_n=mainTips[vi][0], ty_n=mainTips[vi][1];
@@ -10131,10 +10200,10 @@ function _fxDrawCashStack(ctx, W, H, t, state){
          length, reach toward the lobe's shoulder (sub-point near the tip).
          Adds the secondary detail visible on the real Silver Maple Leaf. */
       var sideMains=[
-        {tip:[0.58,-0.52],  shoulder:[0.48,-0.30]}, /* upper-right */
-        {tip:[-0.58,-0.52], shoulder:[-0.48,-0.30]},/* upper-left */
-        {tip:[0.86, 0.02],  shoulder:[0.72, 0.20]}, /* lower-right */
-        {tip:[-0.86, 0.02], shoulder:[-0.72, 0.20]} /* lower-left */
+        {tip:[0.600,-0.31],  shoulder:[0.490,-0.44]}, /* upper-right */
+        {tip:[-0.600,-0.31], shoulder:[-0.490,-0.44]},/* upper-left */
+        {tip:[0.770, 0.06],  shoulder:[0.640,-0.04]}, /* lower-right */
+        {tip:[-0.770, 0.06], shoulder:[-0.640,-0.04]} /* lower-left */
       ];
       var branchT=0.55;
       for(var si=0;si<sideMains.length;si++){

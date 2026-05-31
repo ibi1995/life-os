@@ -20,7 +20,7 @@
 (function(){
   var BUILD = 'lifeOS-2026-05-28-v62'; /* bump this on every update */
   try {
-    /* Always wipe the page-restore key so app boots on Today */
+    /* Always wipe the page-restore key so app boots on Finance (home page) */
     localStorage.removeItem('lifeOS_activePage');
   } catch(e){}
   var last = null;
@@ -2654,8 +2654,25 @@ const OPTIONAL_SAT = []; // weekend optional habits (Sat) — empty by default
 const STEPS_EID  = ['B','N'];
 let STEPS      = STEPS_WEEK; // updated at runtime by applyDaySchedule()
 
+/* ── Uniform-habits transition ──
+   From this date on, the habit checklist is the SAME full stack every day
+   (no Fri/Sat/Eid special sets) and weekends count toward the streak like any
+   day. Days BEFORE this date keep their original per-day set + weekend-skip so
+   historical streaks, XP and the heatmap stay accurate. Habits are no longer
+   tied to the reward system — XP is just a lifetime habit counter. */
+const HABITS_UNIFORM_START = '2026-05-31';
+
+/* A day only counts as a streak "off-day" (skipped, never breaks) if it's a
+   weekend BEFORE the uniform transition. Weekends on/after count normally. */
+function _isStreakOffDay(dayKey, dow){
+  return (dow===5||dow===6) && dayKey < HABITS_UNIFORM_START;
+}
+
 function isEidDay(d){
   const dt=d instanceof Date?d:today;
+  let k=localKey(dt);
+  /* Eid special-casing only applies to historical (pre-uniform) days */
+  if(k>=HABITS_UNIFORM_START) return false;
   let y=dt.getFullYear(), mo=dt.getMonth()+1, day=dt.getDate();
   return y===CONFIG.EID_YEAR && mo===CONFIG.EID_MONTH && day>=CONFIG.EID_START && day<=CONFIG.EID_END;
 }
@@ -2666,18 +2683,23 @@ const SCORING_V2_START = CONFIG.SCORING_V2_START;
 const OPTIONAL_BONUS_MULTI = CONFIG.OPTIONAL_BONUS_MULTI;
 const WEEKEND_WARRIOR_BONUS = CONFIG.WEEKEND_WARRIOR_BONUS;
 function getStepsForDay(d){
-  if(isEidDay(d)) return STEPS_EID;
   const dt = d instanceof Date ? d : today;
-  let day = dt.getDay();
   let k = localKey(dt);
   let base;
-  if(day===5) base = STEPS_FRI.slice();
-  else if(day===6) base = STEPS_SAT.slice();
-  else base = STEPS_WEEK.slice();
-  /* Add weekend optional habits from their start date */
-  if(k >= WEEKEND_OPT_START){
-    const optSteps = day===5 ? OPTIONAL_FRI : day===6 ? OPTIONAL_SAT : [];
-    optSteps.forEach(function(s){ if(base.indexOf(s)===-1) base.push(s); });
+  if(k >= HABITS_UNIFORM_START){
+    /* Uniform era: same full checklist every day, no weekend/Eid variation */
+    base = STEPS_WEEK.slice();
+  } else {
+    /* Legacy era: preserve original per-day sets for historical accuracy */
+    if(isEidDay(dt)) return STEPS_EID;
+    let day = dt.getDay();
+    if(day===5) base = STEPS_FRI.slice();
+    else if(day===6) base = STEPS_SAT.slice();
+    else base = STEPS_WEEK.slice();
+    if(k >= WEEKEND_OPT_START){
+      const optSteps = day===5 ? OPTIONAL_FRI : day===6 ? OPTIONAL_SAT : [];
+      optSteps.forEach(function(s){ if(base.indexOf(s)===-1) base.push(s); });
+    }
   }
   /* Posture habits only count from their start date onwards */
   if(k < POSTURE_START){
@@ -2921,7 +2943,7 @@ function navTo(idx, animate){
   let prev = curPage;
   _navDir = idx > prev ? 1 : -1;
   curPage = idx;
-  /* Intentionally NOT persisting curPage — app always boots on Today */
+  /* Intentionally NOT persisting curPage — app always boots on Finance (home page) */
   _applyTrackPos(true);
   _syncNavUI(idx);
   _onPageEnter(PAGE_IDS[idx]);
@@ -2993,6 +3015,7 @@ function _syncNavUI(idx){
   document.querySelectorAll('.swipe-dot').forEach(function(d,i){ d.classList.toggle('active', i===idx); });
 }
 
+var _onPageEnterTimer=null;
 function _onPageEnter(id){
   /* Exit animation on the departing page */
   document.querySelectorAll('.pages-track > .pg').forEach(function(p){
@@ -3025,10 +3048,10 @@ function _onPageEnter(id){
   }
   /* Render reward immediately (no delay) so content is visible before animation completes */
   if(id==='reward'){ rwCheckNewWeek(); renderReward(); }
-  setTimeout(function(){
+  /* De-dupe rapid page-swipes: cancel a pending page-enter render before queueing a new one */
+  clearTimeout(_onPageEnterTimer);
+  _onPageEnterTimer=setTimeout(function(){
     if(id==='finance'){ _txShowAll=30; if(typeof _txSearchQuery!=='undefined') _txSearchQuery=''; if(typeof _txFilterType!=='undefined') _txFilterType=''; renderFinance(); }
-    if(id==='gym')     renderGym();
-    /* review merged into battlepass — renderWeeklyScore called there */
     if(id==='reward')  { rwCheckNewWeek(); renderReward(); }
     if(id==='bowl')    { renderBowl(); if(typeof bowlRenderLibrary==='function') bowlRenderLibrary(); setTimeout(function(){ if(typeof window._gbResize==='function') window._gbResize();
 /* Set --tc-i on trophy balls for staggered float */
@@ -3456,73 +3479,26 @@ function renderTodayPage(){
    HABITS
 ════════════════════════════════════════════ */
 function applyDaySchedule(){
-  let day=today.getDay(); // 0=Sun,1=Mon...5=Fri,6=Sat
   const body=document.body;
-  body.classList.remove('is-week','is-fri','is-sat','is-eid');
-  if(isEidDay(today)){
-    body.classList.add('is-eid');
-  } else if(day===5){
-    body.classList.add('is-fri');
-  } else if(day===6){
-    body.classList.add('is-sat');
-  } else {
-    body.classList.add('is-week');
-  }
+  /* Uniform checklist every day — always weekday mode, no Fri/Sat/Eid variants */
+  body.classList.remove('is-fri','is-sat','is-eid');
+  body.classList.add('is-week');
   // Update STEPS global for functions that still use it directly
   STEPS=getTodaySteps();
-  // Day mode banner
+  // Day-mode banner no longer used — habits are uniform across all 7 days
   const banner=document.getElementById('day-mode-banner');
-  if(banner){
-    if(isEidDay(today)){
-      banner.style.display='flex';
-      banner.style.background='rgba(255,180,30,.08)';
-      banner.style.borderColor='rgba(255,217,125,.35)';
-      const ic=banner.querySelector('.dmb-icon'); if(ic) ic.textContent='🌙';
-      const t=banner.querySelector('.dmb-text'); if(t){ t.textContent='Eid Al-Fitr 🌙'; t.style.color='var(--gold)'; }
-      let s=banner.querySelector('.dmb-sub');  if(s) s.textContent='Eid Mubarak — vacation mode. 6 essentials only. Enjoy the days.';
-    } else if(day===5){
-      banner.style.display='flex';
-      banner.style.background=''; banner.style.borderColor='';
-      const ic=banner.querySelector('.dmb-icon'); if(ic) ic.textContent='🎁';
-      const t=banner.querySelector('.dmb-text'); if(t){ t.textContent='Friday — Rest Day 🎁'; t.style.color=''; }
-      let s=banner.querySelector('.dmb-sub');  if(s) s.textContent='Rest day · No streak penalty. Complete habits for 1.5× XP bonus!';
-    } else if(day===6){
-      banner.style.display='flex';
-      banner.style.background=''; banner.style.borderColor='';
-      const ic=banner.querySelector('.dmb-icon'); if(ic) ic.textContent='🎁';
-      const t=banner.querySelector('.dmb-text'); if(t){ t.textContent='Saturday — Rest Day 🎁'; t.style.color=''; }
-      let s=banner.querySelector('.dmb-sub');  if(s) s.textContent='Rest day · No streak penalty. Complete habits for 1.5× XP bonus!';
-    } else {
-      banner.style.display='none';
-      banner.style.background=''; banner.style.borderColor='';
-    }
-  }
+  if(banner){ banner.style.display='none'; }
   // Update progress total label immediately
   const ct=$id('prog-ct');
   if(ct){ const ts=getTodaySteps(); ct.textContent='0 / '+ts.length; }
-  // Hide posture habit cards + reward before their start date
+  // Posture cards only appear from their start date onward (historical guard)
   const postureActive = todayKey >= POSTURE_START;
-  const weekendOptActive = todayKey >= WEEKEND_OPT_START;
   POSTURE_STEPS.forEach(function(st){
     let el=document.getElementById('h'+st);
-    if(!el) return;
-    if(!postureActive){ el.style.display='none'; return; }
-    // On Eid, posture is hidden via CSS .is-eid .not-eid — nothing to do
-    // On weekdays posture is always shown; on weekends shown only if weekend opt active
-    if((day===5||day===6) && !weekendOptActive){ el.style.display='none'; }
-    else { el.style.display=''; }
+    if(el) el.style.display = postureActive ? '' : 'none';
   });
   const rWel=document.getElementById('rW');
-  if(rWel){
-    if(!postureActive){ rWel.style.display='none'; }
-    else if((day===5||day===6) && !weekendOptActive){ rWel.style.display='none'; }
-    else { rWel.style.display=''; }
-  }
-  // Show/hide Gym/HIIT card on Friday (optional from weekendOptActive)
-  const hIel=document.getElementById('hI');
-  if(hIel && day===5){
-    hIel.style.display = weekendOptActive ? '' : 'none';
-  }
+  if(rWel) rWel.style.display = postureActive ? '' : 'none';
 }
 
 function initToday(){
@@ -3671,9 +3647,7 @@ function tickDone(e,st){
     if(typeof showXPPopup==='function'&&typeof NH_MAP!=='undefined'){
       const _h=NH_MAP[st];
       if(_h){
-        const _isOffDay=(today.getDay()===5||today.getDay()===6);
-        const _xpe=_isOffDay?Math.round(_h.xp*OPTIONAL_BONUS_MULTI*1.2):Math.round(_h.xp*1.2);
-        showXPPopup(card,_xpe);
+        showXPPopup(card,_h.xp); /* matches the lifetime XP that actually gets counted */
       }
     }
   }
@@ -3712,10 +3686,7 @@ function pickRating(e,st,rating){
   if(typeof showXPPopup==='function'&&typeof NH_MAP!=='undefined'){
     const _h=NH_MAP[st];
     if(_h&&rating){
-      const _isOffDay=(today.getDay()===5||today.getDay()===6); /* Friday and Saturday get bonus */
-      const _m=rating===3?1.5:rating===2?1.2:1;
-      const _xpe=_isOffDay?Math.round(_h.xp*OPTIONAL_BONUS_MULTI*_m):Math.round(_h.xp*_m);
-      showXPPopup(card,_xpe);
+      showXPPopup(card,_h.xp); /* matches the lifetime XP that actually gets counted */
     }
   }
 }
@@ -3785,8 +3756,8 @@ function updRwds(s){
 }
 
 function _isNextRequiredDay(prevKey, curKey){
-  /* Returns true if curKey is the next required (Sun–Thu) day after prevKey,
-     skipping any Fri/Sat off-days in between. */
+  /* Returns true if curKey is the next required day after prevKey,
+     skipping only legacy (pre-uniform) weekend off-days in between. */
   const diff=dateDiff(curKey, prevKey);
   if(diff<=0) return false;
   if(diff===1) return true; /* adjacent days, both required */
@@ -3794,8 +3765,7 @@ function _isNextRequiredDay(prevKey, curKey){
   let d=new Date(prevKey+'T12:00:00');
   for(let i=1;i<diff;i++){
     d.setDate(d.getDate()+1);
-    const dow=d.getDay();
-    if(dow!==5&&dow!==6) return false; /* found a required day gap */
+    if(!_isStreakOffDay(localKey(d), d.getDay())) return false; /* found a required day gap */
   }
   return true;
 }
@@ -3806,12 +3776,12 @@ function updStreaks(s){
   const allKeys=Object.keys(s.days).slice();
   Object.keys(passes).forEach(function(k){ if(allKeys.indexOf(k)<0) allKeys.push(k); });
   allKeys.sort();
-  let cur=0,best=0,tot=0,prev=null,graceDaysUsed=0;
+  let cur=0,best=0,tot=0,prev=null;
   allKeys.forEach(function(day){
     const dayDate=new Date(day+'T12:00:00');
     const dow=dayDate.getDay();
-    /* Skip Fri/Sat off-days entirely — they don't count and don't break */
-    if(dow===5||dow===6) return;
+    /* Skip legacy weekend off-days — they don't count and don't break */
+    if(_isStreakOffDay(day,dow)) return;
 
     const isPass=!!passes[day];
     const dd=s.days[day];
@@ -3828,18 +3798,13 @@ function updStreaks(s){
     if(all||close){
       if(all) tot++;
       if(prev){
-        if(_isNextRequiredDay(prev,day)){
-          cur=cur+1;
-          if(close) graceDaysUsed++;
-          if(cur>0&&cur%7===0) graceDaysUsed=0;
-        } else {
-          cur=1; graceDaysUsed=close?1:0;
-        }
-      } else { cur=1; graceDaysUsed=close?1:0; }
+        if(_isNextRequiredDay(prev,day)){ cur=cur+1; }
+        else { cur=1; }
+      } else { cur=1; }
       if(cur>best) best=cur;
       prev=day;
     } else {
-      if(day!==todayKey){ cur=0; prev=null; graceDaysUsed=0; }
+      if(day!==todayKey){ cur=0; prev=null; }
     }
   });
   window._streakCur=cur; window._streakBest=best; window._streakTot=tot;
@@ -4251,6 +4216,12 @@ function buildHeatmap(){
 
   const todayY=today.getFullYear(),todayM2=today.getMonth(),todayD=today.getDate();
   const DAY_LBLS=['Mo','','We','','Fr','','Su'];
+  /* Read theme tokens ONCE — avoids ~200 getComputedStyle reflows per rebuild */
+  const _rootCS=getComputedStyle(document.documentElement);
+  const _tokA1=(_rootCS.getPropertyValue('--a1')||'hsl(210,95%,62%)').trim();
+  const _tokA2=(_rootCS.getPropertyValue('--a2')||'rgba(107,182,255,.7)').trim();
+  const _hueMatch=_tokA1.match(/\d+/);
+  const _hmHue=_hueMatch?parseInt(_hueMatch[0]):210;
 
   // Build month label row as a flex div inserted before the grid
   const outer=grid.parentElement;
@@ -4288,14 +4259,12 @@ function buildHeatmap(){
         cell.style.background='rgba(255,255,255,.05)'; cell.style.cursor='default';
       } else if(isToday){
         cell.style.background='rgba(255,255,255,.15)';
-        var _a1=getComputedStyle(document.documentElement).getPropertyValue('--a2').trim();
-        cell.style.outline='1.5px solid '+(_a1||'rgba(107,182,255,.7)');
+        cell.style.outline='1.5px solid '+(_tokA2||'rgba(107,182,255,.7)');
         cell.style.outlineOffset='-1px';
         cell.style.animation='hm-today-pulse 1.8s ease-in-out infinite';
         cell.title='Today: '+day.n+'/'+getStepsForDay(day.date).length+' habits';
       } else if(cellPass2){
-        var _hmA1=getComputedStyle(document.documentElement).getPropertyValue('--a1').trim();
-        cell.style.background=(_hmA1||'hsl(210,95%,62%)')+'28'; // approx .28 alpha — use hex shortcut
+        cell.style.background=(_tokA1||'hsl(210,95%,62%)')+'28'; // approx .28 alpha — use hex shortcut
         cell.style.outline='1px dashed rgba(107,182,255,.55)';
         cell.style.outlineOffset='-1px';
         cell.title=day.key+(cellPass2==='freepass'?' (Free Pass)':(cellPass2==='freeze'?' (Shield)':''));
@@ -4303,10 +4272,7 @@ function buildHeatmap(){
         cell.style.background='rgba(255,255,255,.08)';
         cell.title=day.key+': 0 habits';
       } else {
-        var _cs=getComputedStyle(document.documentElement);
-        var _rawHue=(_cs.getPropertyValue('--a1')||'hsl(210,95%,62%)').trim();
-        var _hueMatch=_rawHue.match(/\d+/);
-        var _h=_hueMatch?parseInt(_hueMatch[0]):210;
+        var _h=_hmHue;
         const intensity=day.n/getStepsForDay(day.date).length;
         if(intensity<0.25)       cell.style.background='hsla('+_h+',70%,58%,.28)';
         else if(intensity<0.5)   cell.style.background='hsla('+_h+',75%,60%,.52)';
@@ -4334,12 +4300,13 @@ function buildHeatmap(){
 /* ── Data export/import ── */
 function exportData(){
   let s=gs();
-  /* Include satellite data so reward images survive backup/restore */
-  try{ var _rwImg=localStorage.getItem('lifeOS_rwImg'); if(_rwImg) s._satellite_rwImg=_rwImg; }catch(e){}
-  const blob=new Blob([JSON.stringify(s,null,2)],{type:'application/json'});
+  /* Clone so we never mutate the live cached state (a debounced save could
+     otherwise persist the temporary satellite key into localStorage). */
+  let out={};
+  try{ for(var k in s){ if(Object.prototype.hasOwnProperty.call(s,k)) out[k]=s[k]; } }catch(e){ out=s; }
+  try{ var _rwImg=localStorage.getItem('lifeOS_rwImg'); if(_rwImg) out._satellite_rwImg=_rwImg; }catch(e){}
+  const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='lifeOS-backup-'+todayKey+'.json'; a.click();
-  /* Clean up temporary satellite key from in-memory state */
-  delete s._satellite_rwImg;
   toast('Backup exported ✓');
 }
 function importData(e){
@@ -4348,6 +4315,12 @@ function importData(e){
   reader.onload=function(ev){
     try{
       let d=JSON.parse(ev.target.result);
+      /* Reject non-object / array payloads. Writing one to lifeOS gets silently
+         dropped by gs() on next boot, which would wipe all data behind a fake
+         "Imported ✓" toast. Bail loudly instead. */
+      if(typeof d!=='object' || d===null || Array.isArray(d)){
+        toast('Invalid backup file'); return;
+      }
       /* ── Sanitize bowl on import ──
          1. Ensure bowl object exists.
          2. Wipe library so getBowl() repopulates from BOWL_DEFAULT_LIBRARY.
@@ -4360,9 +4333,13 @@ function importData(e){
       }
       /* Capture backup library before wiping (needed to look up deleted themes in draws) */
       var backupLib = d.bowl.library ? d.bowl.library.slice() : [];
-      /* Wipe library — getBowl() will repopulate from BOWL_DEFAULT_LIBRARY */
-      delete d.bowl.library;
-      delete d.bowl._themeLibMigrated;
+      /* Preserve a user-customized library through import (matches the build-bump
+         behaviour in the cache-buster). Only wipe for non-customized backups so they
+         pick up fresh defaults + format migration via getBowl(). */
+      if(!d.bowl.libraryCustomized){
+        delete d.bowl.library;
+        delete d.bowl._themeLibMigrated;
+      }
       var todayStr = localKey(today);
       if(!d.bowl.dailyDraws) d.bowl.dailyDraws = [];
       /* Only strip today's draw so the crank works immediately after import.
@@ -4699,6 +4676,8 @@ function epdLoad(){
   const epdDate = new Date(key + 'T12:00:00');
   const daySteps = getStepsForDay(epdDate);
   const dow = epdDate.getDay();
+  /* Uniform era: weekends are normal days — no Q/R merge, no weekend phases/badge */
+  const epdUniform = (key >= HABITS_UNIFORM_START);
 
   /* For EPD editing, use full weekday habit set on Fri/Sat so user can
      retroactively mark any habit done — not just the reduced schedule.
@@ -4706,7 +4685,7 @@ function epdLoad(){
   var epdSteps;
   if(isEidDay(epdDate)){
     epdSteps = daySteps;
-  } else if(dow === 5 || dow === 6){
+  } else if(!epdUniform && (dow === 5 || dow === 6)){
     /* Merge: start with full weekday set, add any Fri/Sat-specific steps not already in it */
     epdSteps = STEPS_WEEK.slice();
     daySteps.forEach(function(st){ if(epdSteps.indexOf(st) === -1) epdSteps.push(st); });
@@ -4725,14 +4704,14 @@ function epdLoad(){
     phases = [
       { label:'🌙 Eid Essentials', steps: epdSteps }
     ];
-  } else if(dow === 5){
+  } else if(!epdUniform && dow === 5){
     phases = [
       { label:'☀️ Morning', steps: epdSteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
       { label:'💼 Mid-Day', steps: epdSteps.filter(function(st){ return ['F','G','Q'].indexOf(st)>-1; }) },
       { label:'🌆 Evening', steps: epdSteps.filter(function(st){ return ['S','T','U','V','W','I','H','K'].indexOf(st)>-1; }) },
       { label:'🌙 Night',   steps: epdSteps.filter(function(st){ return ['N','O','M','X','R'].indexOf(st)>-1; }) }
     ].filter(function(ph){ return ph.steps.length > 0; });
-  } else if(dow === 6){
+  } else if(!epdUniform && dow === 6){
     phases = [
       { label:'☀️ Morning', steps: epdSteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
       { label:'🌤️ Mid-Day',  steps: epdSteps.filter(function(st){ return ['F','G','Q'].indexOf(st)>-1; }) },
@@ -4753,8 +4732,8 @@ function epdLoad(){
   const dayLabel = epdDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short',year:'numeric'});
   let dayTypeBadge = '';
   if(isEidDay(epdDate)) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">🌙 EID · '+epdSteps.length+' habits</span>';
-  else if(dow===5) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">🎁 FRIDAY · 1.5× XP BONUS · '+epdSteps.length+' habits</span>';
-  else if(dow===6) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">🎁 SATURDAY · 1.5× XP BONUS · '+epdSteps.length+' habits</span>';
+  else if(!epdUniform && dow===5) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">🎁 FRIDAY · 1.5× XP BONUS · '+epdSteps.length+' habits</span>';
+  else if(!epdUniform && dow===6) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">🎁 SATURDAY · 1.5× XP BONUS · '+epdSteps.length+' habits</span>';
   else dayTypeBadge = '<span style="display:inline-block;background:rgba(77,141,255,.1);color:var(--a2);border:1px solid rgba(77,141,255,.2);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">WEEKDAY · '+epdSteps.length+' habits</span>';
   html += '<div style="font-family:var(--font-ui);font-size:12px;font-weight:700;color:var(--a2);text-align:center;margin-bottom:12px;letter-spacing:.3px">'+dayLabel+' '+dayTypeBadge+'</div>';
 
@@ -4914,7 +4893,6 @@ const BOWL_SYSTEM_START = '2026-04-18'; /* Bowl tier scoring applies to cycles s
 const BOWL_XP_EASY = 15;
 const BOWL_XP_MEDIUM = 30;
 const BOWL_XP_HARD = 50;
-const BOWL_REROLL_COST = 30; /* XP cost for 4th+ reroll per day */
 const BOWL_PTS_EASY = 10;
 const BOWL_PTS_MEDIUM = 30;
 const BOWL_PTS_HARD = 60;
@@ -5761,6 +5739,10 @@ window._chipDropSoundCheck = (function(){
     try {
       var state = (window._fxVialState && window._fxVialState.free);
       if(!state || !state._bills || !window._chipSnd) return;
+      /* Don't schedule clinks while the AudioContext is suspended (pre-gesture / boot)
+         — otherwise the boot fill animation queues a stack of one-shots that all fire
+         at once on the first user tap. Keep _prev tracking so no crossings pile up. */
+      var audioReady = !!(_audioCtx && _audioCtx.state === 'running');
       var bills = state._bills;
       for(var i=0;i<bills.length;i++){
         var prev = _prev[i];
@@ -5770,7 +5752,7 @@ window._chipDropSoundCheck = (function(){
           /* Velocity scales with stack height: higher coins hit a taller stack
              with slightly more force; cap so it doesn't get loud. */
           var vel = 0.42 + Math.min(0.20, i*0.012);
-          window._chipSnd.playClink(vel);
+          if(audioReady) window._chipSnd.playClink(vel);
         }
         _prev[i] = cur;
       }
@@ -5778,7 +5760,7 @@ window._chipDropSoundCheck = (function(){
       if(!_completeFired && _prevLevel < 0.999 && lv >= 0.999){
         _completeFired = true;
         /* Delay slightly so it lands after the final clink decays */
-        setTimeout(function(){
+        if(audioReady) setTimeout(function(){
           if(window._chipSnd) window._chipSnd.playStackComplete();
         }, 260);
       }
@@ -6656,9 +6638,8 @@ function checkStreakAtRisk(){
   if(!banner) return;
   const hour = new Date().getHours();
   if(hour < 17){ banner.style.display='none'; return; }
-  /* Off-days (Fri/Sat) are never at risk */
-  const dow=today.getDay();
-  if(dow===5||dow===6){ banner.style.display='none'; return; }
+  /* Legacy weekend off-days are never at risk; uniform-era weekends count */
+  if(_isStreakOffDay(todayKey, today.getDay())){ banner.style.display='none'; return; }
   let s = gs();
   const td = (s.days && s.days[todayKey]) ? s.days[todayKey] : {};
   const _ts=getTodaySteps(); let done=_ts.filter(function(st){ return !!td[st]; }).length;
@@ -6689,16 +6670,15 @@ function checkNeverMissTwice(){
   /* Check if yesterday was a complete miss (0 habits done) */
   const yDate = new Date(today); yDate.setDate(yDate.getDate()-1);
   const yKey = localKey(yDate);
-  const yDow = yDate.getDay();
-  const yIsOffDay = (yDow===5||yDow===6); /* Fri/Sat off-days don't trigger NMT */
+  const yIsOffDay = _isStreakOffDay(yKey, yDate.getDay()); /* legacy weekend off-days don't trigger NMT */
   if(yIsOffDay){ overlay.style.display='none'; return; }
   const yData = s.days[yKey];
   const yDone = yData && typeof yData==='object' ? getStepsForDay(yDate).filter(function(st){ return !!yData[st]; }).length : 0;
   /* Check if today we haven't started yet */
   const tdData = s.days[todayKey];
-  const tdDone = tdData && typeof tdData==='object' ? STEPS.filter(function(st){ return !!tdData[st]; }).length : 0;
-  /* Show if: yesterday was missed entirely AND today hasn't started */
-  if(yDone === 0 && tdDone === 0 && yData !== undefined){
+  const tdDone = tdData && typeof tdData==='object' ? getTodaySteps().filter(function(st){ return !!tdData[st]; }).length : 0;
+  /* Show if: yesterday was missed entirely (incl. app never opened) AND today hasn't started */
+  if(yDone === 0 && tdDone === 0){
     overlay.style.display = 'block';
   } else {
     overlay.style.display = 'none';
@@ -6823,9 +6803,8 @@ function checkComebackBanner(){
   let d=new Date(today); d.setDate(d.getDate()-1);
   for(let i=0;i<21;i++){
     let key=localKey(d);
-    const dDow=d.getDay();
-    /* Skip off-days — they don't count as "missed" */
-    if(dDow===5||dDow===6){ d.setDate(d.getDate()-1); continue; }
+    /* Skip legacy weekend off-days — they don't count as "missed" */
+    if(_isStreakOffDay(key, d.getDay())){ d.setDate(d.getDate()-1); continue; }
     const dd=days[key];
     let hasAny=dd&&typeof dd==='object'&&Object.keys(dd).some(function(k){ return !!dd[k]; });
     const isPass=(getPassState().activePasses||{})[key];
@@ -6983,7 +6962,7 @@ initTheme();
 })();
 /* ── Init gesture navigation ── */
 (function(){
-  // Always start on Today page. One clean init on load — no duplicates.
+  // Always start on Finance page (home). One clean init on load — no duplicates.
   const track = $id('pages-track');
   if(track && track.classList.contains('is-dragging')){
     requestAnimationFrame(function(){
@@ -7169,18 +7148,12 @@ function calcDayXP(dateKey,s){
   if(!dd||typeof dd!=='object') return {earned:0,max:0};
   let d=new Date(dateKey+'T12:00:00');
   const stepsD=getStepsForDay(d);
-  const isOffDay=(d.getDay()===5||d.getDay()===6); /* Friday and Saturday get bonus */
   let earned=0,maxXP=0;
   stepsD.forEach(function(st){
     let h=NH_MAP[st];
     const baseXP=h?h.xp:10;
-    if(isOffDay){
-      maxXP+=Math.round(baseXP*OPTIONAL_BONUS_MULTI);
-      if(dd[st]) earned+=Math.round(baseXP*OPTIONAL_BONUS_MULTI);
-    } else {
-      maxXP+=baseXP;
-      if(dd[st]) earned+=baseXP;
-    }
+    maxXP+=baseXP;
+    if(dd[st]) earned+=baseXP;
   });
   return {earned:earned,max:maxXP};
 }
@@ -7293,7 +7266,8 @@ function getBowl(){
       draws: [],      /* legacy single draws */
       tripleDraws: [], /* legacy triple draws — kept for history */
       dailyDraws: [],  /* NEW: {date, themeId, chosenTier, pts, xp, doneAt, rerolls} */
-      rerollsByCycle: {}
+      rerollsByCycle: {},
+      rerollsByWeek: {} /* weekly reroll budget: { weekKey: count }, max 2/week */
     };
     _dirty = true;
   }
@@ -7303,6 +7277,7 @@ function getBowl(){
   if(!s.bowl.tripleDraws) s.bowl.tripleDraws=[];
   if(!s.bowl.dailyDraws) s.bowl.dailyDraws=[];
   if(!s.bowl.rerollsByCycle) s.bowl.rerollsByCycle={};
+  if(!s.bowl.rerollsByWeek) s.bowl.rerollsByWeek={};
   if(!s.bowl.systemStart){ s.bowl.systemStart=_BSS; _dirty = true; }
   /* Migration: upgrade library to theme format if needed */
   if(!s.bowl._themeLibMigrated){
@@ -7573,6 +7548,7 @@ function bowlManualDraw(){
 
   /* Start shaking sound — extended anticipation before reveal */
   setTimeout(function(){
+    if(!_bowlCrankBusy) return; /* draw was interrupted (nav-away / tab hidden) — don't start audio */
     try{ if(typeof _playBallsShaking==='function') _playBallsShaking(2900); }catch(e){}
   }, 100);
 
@@ -7663,6 +7639,7 @@ function bowlReplayAnimation(){
   try{ if(typeof window._gbSetExcited==='function') window._gbSetExcited(theme.id, 3000, function(){}, _toneColR); }catch(e){}
 
   setTimeout(function(){
+    if(!_bowlCrankBusy) return; /* replay was interrupted (nav-away / tab hidden) — don't start audio */
     try{ if(typeof _playBallsShaking==='function') _playBallsShaking(2900); }catch(e){}
   }, 100);
 
@@ -7721,20 +7698,10 @@ function bowlChooseTier(tier){
   var hardStreakNow=0;
   try{ hardStreakNow=getRwHardStreak()||0; }catch(e){}
   if(tier==='hard'&&hardStreakNow>=3) dd.pts=(tierData.pts||0)+10;
-  var xpMap={easy:BOWL_XP_EASY,medium:BOWL_XP_MEDIUM,hard:BOWL_XP_HARD};
-  dd.xp=xpMap[tier]||0;
+  /* Bowl awards reward POINTS only — XP is a separate lifetime habit counter */
+  dd.xp=0;
   dd.doneAt=Date.now();
   setBowl(b);
-
-  try{
-    var s2=gs();
-    if(!s2.battlepass) s2.battlepass={totalXP:0,tokens:0,tokensLifetime:0,milestones:{},tokenHistory:[],tokenShop:[],dailyXP:{}};
-    if(!s2.battlepass.dailyXP) s2.battlepass.dailyXP={};
-    s2.battlepass.dailyXP[todayKey2]=(s2.battlepass.dailyXP[todayKey2]||0)+dd.xp;
-    s2.battlepass.totalXP=(s2.battlepass.totalXP||0)+dd.xp;
-    ss(s2,true);
-    if(typeof updateXPStrip==='function') updateXPStrip();
-  }catch(e){}
 
   try{
     if(typeof window._gbSetExcited==='function') window._gbSetExcited(null,1800,function(){});
@@ -7754,7 +7721,7 @@ function bowlChooseTier(tier){
   var celTitle=document.getElementById("bowl-celebrate-title");
   var celSub=document.getElementById("bowl-celebrate-sub");
   if(celTitle) celTitle.textContent=theme.name+" — "+tierLabel[tier]+" Done!";
-  if(celSub) celSub.textContent="+"+dd.pts+" pts · +"+dd.xp+" XP earned.";
+  if(celSub) celSub.textContent="+"+dd.pts+" pts toward your reward.";
   var cel=document.getElementById("bowl-celebrate");
   if(cel){ cel.classList.add("on"); window._celebrateTimer=setTimeout(function(){ bowlCloseCelebrate(); },3500); }
 
@@ -7774,7 +7741,6 @@ function bowlUndoTier(dateKey){
   var dd=b.dailyDraws.find(function(x){ return x.date===targetDate; });
   if(!dd||!dd.chosenTier){ toast('Nothing to undo.'); return; }
   if(dd.chosenTier==='skipped'){ /* undo skip too */}
-  var xpToRemove=dd.xp||0;
   var tier=dd.chosenTier;
   /* Wipe completion fields */
   dd.chosenTier=null;
@@ -7787,18 +7753,6 @@ function bowlUndoTier(dateKey){
     /* The +5 bonus was already baked into dd.pts above (now 0), so no separate subtraction needed */
   }
   setBowl(b);
-  /* Reverse XP */
-  if(xpToRemove>0){
-    var s2=gs();
-    if(s2.battlepass){
-      s2.battlepass.totalXP=Math.max(0,(s2.battlepass.totalXP||0)-xpToRemove);
-      if(s2.battlepass.dailyXP && s2.battlepass.dailyXP[targetDate]!==undefined){
-        s2.battlepass.dailyXP[targetDate]=Math.max(0,(s2.battlepass.dailyXP[targetDate]||0)-xpToRemove);
-      }
-      ss(s2,true);
-      if(typeof updateXPStrip==='function') updateXPStrip();
-    }
-  }
   var tierLabels={easy:'Easy',medium:'Medium',hard:'Hard',skipped:'Skip'};
   toast('↩ '+(tierLabels[tier]||tier)+' undone — pick again.');
   /* ── Trophy Case: remove the ball we just undid ── */
@@ -7806,27 +7760,52 @@ function bowlUndoTier(dateKey){
   setTimeout(function(){ renderBowl(); },120);
 }
 
-/* Reroll — 3 free per day, then costs XP */
+/* Weekly reroll budget — 2 per ISO week, shared across all days */
+var BOWL_REROLLS_PER_WEEK = 2;
+function bowlRerollsUsedThisWeek(){
+  var b=getBowl();
+  var wk=getWeekKey(today);
+  return (b.rerollsByWeek && b.rerollsByWeek[wk]) || 0;
+}
+function bowlRerollsLeftThisWeek(){
+  return Math.max(0, BOWL_REROLLS_PER_WEEK - bowlRerollsUsedThisWeek());
+}
+
+/* Reroll — 2 free per week, shared budget */
+var _bowlRerollBusy=false;
 function bowlRerollTheme(){
+  /* Guard against double-fire (pointerup + click, or fat-finger double-tap).
+     The 2/week budget is small enough that one stray tap shouldn't burn two. */
+  if(_bowlRerollBusy) return;
+  _bowlRerollBusy=true;
+  setTimeout(function(){ _bowlRerollBusy=false; }, 800);
   var todayKey2=localKey(today);
   var b=getBowl();
   var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
   if(!dd){ toast('Draw a challenge first.'); return; }
   if(dd.chosenTier){ toast('Already completed — can\'t reroll.'); return; }
+  /* Weekly cap */
+  var wk=getWeekKey(today);
+  if(!b.rerollsByWeek) b.rerollsByWeek={};
+  var usedThisWeek=b.rerollsByWeek[wk]||0;
+  if(usedThisWeek>=BOWL_REROLLS_PER_WEEK){
+    toast('No rerolls left this week — pick from your options below.');
+    if(!dd.options) dd.options=[dd.themeId];
+    dd.showingOptions = dd.options.length>1;
+    setBowl(b); renderBowl(); return;
+  }
   /* Init options array on first reroll — includes original draw */
   if(!dd.options) dd.options=[dd.themeId];
-  var rerollCount=(dd.rerolls||0)+1;
-  /* Hard cap: 2 rerolls max (3 options total) */
-  if(rerollCount>2){ toast('Max 2 rerolls reached — pick from your 3 options below.'); setBowl(b); renderBowl(); return; }
   /* Pick a new theme not already in options */
   var excludeIds=dd.options.concat([]);
   var newTheme=bowlPickThemeExcluding(excludeIds);
   if(!newTheme){ toast('No other themes available.'); setBowl(b); return; }
   dd.options.push(newTheme.id);
-  dd.rerolls=rerollCount;
+  dd.rerolls=(dd.rerolls||0)+1;
   dd.showingOptions=true;
-  /* Current displayed theme stays as last option for now — selection happens via UI */
   dd.themeId=newTheme.id;
+  /* Spend one from the weekly budget */
+  b.rerollsByWeek[wk]=usedThisWeek+1;
   setBowl(b);
   /* Animate */
   _bowlAnimResume();
@@ -7834,8 +7813,8 @@ function bowlRerollTheme(){
   if(typeof _playGumballCrank==='function') _playGumballCrank();
   if(window._gbSetExcited){ window._gbSetExcited(null,2500,function(){}); }
   else { if(typeof _playBallsShaking==='function') _playBallsShaking(2500); }
-  var rerollsLeft=2-rerollCount;
-  toast(rerollsLeft>0?('Rerolled! '+rerollsLeft+' reroll'+(rerollsLeft===1?'':'s')+' left.'):'Last reroll used — pick your challenge below.');
+  var rerollsLeft=BOWL_REROLLS_PER_WEEK-(usedThisWeek+1);
+  toast(rerollsLeft>0?('Rerolled! '+rerollsLeft+' reroll'+(rerollsLeft===1?'':'s')+' left this week.'):'Last weekly reroll used — pick your challenge below.');
   setTimeout(function(){ _stateCache=null; renderBowl(); },700);
 }
 
@@ -7883,23 +7862,8 @@ function bowlBackToOptions(){
   renderBowl();
 }
 
-/* Skip today's challenge — marks as intentionally passed (0 pts, no streak break) */
-function bowlSkipToday(){
-  var todayKey2=localKey(today);
-  var b=getBowl();
-  var dd=b.dailyDraws.find(function(x){ return x.date===todayKey2; });
-  if(!dd){ toast('No challenge drawn.'); return; }
-  if(dd.chosenTier){ toast('Already completed.'); return; }
-  _confirm('Skip today\'s challenge? It will be marked as skipped (0 pts, no streak break).', function(){
-    dd.chosenTier='skipped';
-    dd.pts=0;
-    dd.xp=0;
-    dd.doneAt=Date.now();
-    setBowl(b);
-    toast('Skipped — no penalty. Come back tomorrow.');
-    renderBowl();
-  }, {okLabel:'Skip'});
-}
+/* Skip mechanic removed — challenges apply every day, weekdays and weekends. */
+function bowlSkipToday(){ /* no-op: skipping is no longer allowed */ }
 
 /* Count completed draws within current reward cycle */
 function bowlCloseCelebrate(){
@@ -7985,15 +7949,14 @@ function renderBowl(){
         /* v61: even after picking a tier, allow replaying the animation */
         crankHint.innerHTML='<div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap"><span style="font-family:var(--font-ui);font-size:11px;color:var(--muted);padding:4px 4px">Done for today.</span><button class="bowl-replay-btn" id="bowl-replay-btn" onclick="bowlReplayAnimation()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg><span class="replay-lbl">Replay animation</span></button></div>';
       } else {
-        var rerollsLeft2=2-(dd.rerolls||0);
+        var rerollsLeft2=(typeof bowlRerollsLeftThisWeek==='function')?bowlRerollsLeftThisWeek():0;
         var _hintH='<div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap">';
         if(rerollsLeft2>0){
-          _hintH+='<button class="bowl-reroll-btn" onclick="bowlRerollTheme()">↺ Reroll <span style="opacity:.7;font-size:10px">('+rerollsLeft2+' left)</span></button>';
+          _hintH+='<button class="bowl-reroll-btn" onclick="bowlRerollTheme()">↺ Reroll <span style="opacity:.7;font-size:10px">('+rerollsLeft2+' left this week)</span></button>';
         } else {
-          _hintH+='<span style="font-family:var(--font-ui);font-size:11px;color:var(--muted);padding:4px 8px">No rerolls left — pick below</span>';
+          _hintH+='<span style="font-family:var(--font-ui);font-size:11px;color:var(--muted);padding:4px 8px">No rerolls left this week — pick below</span>';
         }
         _hintH+='<button class="bowl-replay-btn" id="bowl-replay-btn" onclick="bowlReplayAnimation()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg><span class="replay-lbl">Replay</span></button>';
-        _hintH+='<button class="bowl-reroll-btn" style="background:rgba(255,100,100,.08);border-color:rgba(255,100,100,.25);color:rgba(255,130,120,.85)" onclick="bowlSkipToday()">Skip today</button>';
         _hintH+='</div>';
         crankHint.innerHTML=_hintH;
       }
@@ -8235,7 +8198,6 @@ function bowlShowDayDetail(dateKey){
     h+='<div style="background:rgba(10,35,15,.6);border:1px solid rgba(74,222,128,.25);border-radius:10px;padding:14px;text-align:center;margin-bottom:10px">';
     h+='<div style="font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:'+tc+'">✓ '+tierLabels[dd.chosenTier]+' completed</div>';
     h+='<div style="font-size:20px;font-weight:900;color:'+tc+';margin-top:4px">+'+dd.pts+' pts</div>';
-    if(dd.xp) h+='<div style="font-size:11px;color:var(--muted);margin-top:2px">+'+dd.xp+' XP</div>';
     h+='</div>';
     /* Allow undo for any past or present day */
     h+='<button onclick="bowlUndoTier(\''+dateKey+'\');bowlCloseDayDetail()" style="width:100%;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;cursor:pointer;min-height:40px">↩ Undo — pick a different tier</button>';
@@ -8306,19 +8268,11 @@ function bowlRetroComplete(dateKey, tier){
   if(!tierData){ toast('Invalid tier.'); return; }
   dd.chosenTier=tier;
   dd.pts=tierData.pts;
-  var xpMap={easy:BOWL_XP_EASY,medium:BOWL_XP_MEDIUM,hard:BOWL_XP_HARD};
-  dd.xp=xpMap[tier]||0;
+  /* Bowl awards reward POINTS only — no XP */
+  dd.xp=0;
   dd.doneAt=Date.now();
   dd.retroactive=true;
   setBowl(b);
-  /* Award XP */
-  var s2=gs();
-  if(!s2.battlepass) s2.battlepass={totalXP:0,tokens:0,tokensLifetime:0,milestones:{},tokenHistory:[],tokenShop:[],manualWeight:CONFIG.DEFAULT_WEIGHT,dailyXP:{}};
-  if(!s2.battlepass.dailyXP) s2.battlepass.dailyXP={};
-  s2.battlepass.dailyXP[dateKey]=(s2.battlepass.dailyXP[dateKey]||0)+dd.xp;
-  s2.battlepass.totalXP=(s2.battlepass.totalXP||0)+dd.xp;
-  ss(s2,true);
-  if(typeof updateXPStrip==='function') updateXPStrip();
   var tierLabels={easy:'Easy',medium:'Medium',hard:'Hard'};
   toast('✓ '+tierLabels[tier]+' marked complete for '+dateKey+' (+'+dd.pts+' pts)');
   /* Award trophy ball for retroactive completions */
@@ -8688,7 +8642,6 @@ function bowlBackfillComplete(tier){
   if(!ball){ toast('Ball not found.'); return; }
   var tierData=ball[tier];
   if(!tierData){ toast('Invalid tier.'); return; }
-  var xpMap={easy:BOWL_XP_EASY,medium:BOWL_XP_MEDIUM,hard:BOWL_XP_HARD};
   /* Create the draw record */
   var newDraw={
     date:_missedDayKey,
@@ -8696,7 +8649,7 @@ function bowlBackfillComplete(tier){
     drawnAt:new Date(_missedDayKey+'T12:00:00').getTime(),
     chosenTier:tier,
     pts:tierData.pts,
-    xp:xpMap[tier]||0,
+    xp:0,
     doneAt:Date.now(),
     retroactive:true,
     backfilled:true
@@ -8704,14 +8657,6 @@ function bowlBackfillComplete(tier){
   if(!b.dailyDraws) b.dailyDraws=[];
   b.dailyDraws.push(newDraw);
   setBowl(b);
-  /* Award XP */
-  var s2=gs();
-  if(!s2.battlepass) s2.battlepass={totalXP:0,tokens:0,tokensLifetime:0,milestones:{},tokenHistory:[],tokenShop:[],manualWeight:CONFIG.DEFAULT_WEIGHT,dailyXP:{}};
-  if(!s2.battlepass.dailyXP) s2.battlepass.dailyXP={};
-  s2.battlepass.dailyXP[_missedDayKey]=(s2.battlepass.dailyXP[_missedDayKey]||0)+newDraw.xp;
-  s2.battlepass.totalXP=(s2.battlepass.totalXP||0)+newDraw.xp;
-  ss(s2,true);
-  if(typeof updateXPStrip==='function') updateXPStrip();
   var tierLabels={easy:'Easy',medium:'Medium',hard:'Hard'};
   toast('✓ '+ball.name+' — '+tierLabels[tier]+' logged for '+_missedDayKey+' (+'+tierData.pts+' pts)');
   /* Award trophy ball for backfilled completions */
@@ -9416,7 +9361,7 @@ function tcRender(animateNew){
   <div class="bowl-celebrate-inner">
     <div class="bowl-celebrate-icon" id="bowl-celebrate-icon" style="display:flex;align-items:center;justify-content:center;color:#7EC8FF"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="currentColor"><use href="#icon-trophy"/></svg></div>
     <div class="bowl-celebrate-title" id="bowl-celebrate-title">Challenge Crushed!</div>
-    <div class="bowl-celebrate-sub" id="bowl-celebrate-sub">+40 XP earned. One step closer to the tier.</div>
+    <div class="bowl-celebrate-sub" id="bowl-celebrate-sub">Points added. One step closer to your reward.</div>
     <button class="bowl-celebrate-btn" onclick="bowlCloseCelebrate()">Nice</button>
   </div>
 </div>
@@ -11280,6 +11225,20 @@ window.finMonthNav = function(delta){
   };
 })();
 
+/* Pause the finance vial canvas when the tab is backgrounded; resume on return
+   only if Finance is the active page. Mirrors the gumball loop — keeps RAF/CPU
+   off the moment the app is hidden instead of relying on browser throttling. */
+(function(){
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden){
+      if(_fxVialAnimId){ cancelAnimationFrame(_fxVialAnimId); _fxVialAnimId = null; }
+    } else {
+      var onFinance = (typeof PAGE_IDS !== 'undefined' && typeof curPage !== 'undefined' && PAGE_IDS[curPage] === 'finance');
+      if(onFinance && !_fxVialAnimId) _fxVialBootCanvas();
+    }
+  });
+})();
+
 
 </script>
 
@@ -11641,11 +11600,16 @@ window.finMonthNav = function(delta){
   /* Rolling rumble: low continuous friction noise during excited mode */
   var _rollNode = null;
   var _rollGain = null;
+  var _rollStopRequested = false; /* set when _stopRolling fires before the async start finishes */
   function _startRolling(){
     if(!window._isSoundEnabled() || _rollNode) return;
     var _acCheck = _getAC(); if(!_acCheck) return;
+    _rollStopRequested = false;
     window._ensureAudioReady(function(ac){
       if(_rollNode) return; /* guard against double-start */
+      /* _stopRolling ran while the AudioContext was resuming — abort before we
+         create a looping node that nothing would ever stop. */
+      if(_rollStopRequested){ _rollStopRequested = false; return; }
       try{
         var bufLen = ac.sampleRate * 2;
         var buf = ac.createBuffer(1, bufLen, ac.sampleRate);
@@ -11672,11 +11636,21 @@ window.finMonthNav = function(delta){
 
         _rollNode.connect(lp); lp.connect(hp2); hp2.connect(_rollGain); _rollGain.connect(_dest());
         _rollNode.start();
+        /* stop arrived during node setup — tear down immediately */
+        if(_rollStopRequested){
+          _rollStopRequested = false;
+          try{ _rollNode.stop(); }catch(e){}
+          _rollNode = null; _rollGain = null;
+        }
       }catch(e){ _rollNode = null; }
     });
   }
   function _stopRolling(){
-    if(!_rollGain || !_ac) return;
+    if(!_rollGain || !_ac){
+      /* async start hasn't finished yet — tell it to abort/stop itself */
+      _rollStopRequested = true;
+      return;
+    }
     try{
       _rollGain.gain.linearRampToValueAtTime(0.001, _ac.currentTime + 0.3);
       var node = _rollNode; var gain = _rollGain;
@@ -12794,7 +12768,7 @@ window.finMonthNav = function(delta){
 
   /* ── RAF loop ── */
   var _raf = null;
-  var _gbPaused = false;
+  var _gbPaused = true; /* start paused — boot page is Finance; _onPageEnter('bowl') resumes. Avoids two RAF loops on boot. */
   var _shakeWrapCached = null;
   var _fpsInterval = 0;
   var _lastFpsT = 0;
@@ -12925,12 +12899,41 @@ window.finMonthNav = function(delta){
   window._gbPause = function(){
     _gbPaused = true;
     if(_raf){ cancelAnimationFrame(_raf); _raf=null; }
+    /* Stop any in-flight shake so the looping rumble + screen-shake don't leak */
+    try{ _stopRolling(); }catch(e){}
+    _stopBallSoundSafe();
+    _excited = false;
+    _dispensing = false;
+    _shakeActive = false;
+    _shakeOffX = 0; _shakeOffY = 0;
+    if(!_isMobile && _shakeWrapCached){ _shakeWrapCached.style.transform = ''; }
+    /* Release any scroll lock / busy flag left by an interrupted draw */
+    try{
+      document.body.classList.remove('bowl-anim-lock');
+      var _mw = document.getElementById('bowl-machine-wrap');
+      if(_mw) _mw.classList.remove('is-drawing');
+    }catch(e){}
+    try{ if(typeof _bowlCrankBusy!=='undefined') _bowlCrankBusy=false; }catch(e){}
+    try{ if(typeof _bowlReplayBusy!=='undefined') _bowlReplayBusy=false; }catch(e){}
   };
   window._gbResume = function(){
     if(!_gbPaused) return;
     _gbPaused = false;
     _raf = requestAnimationFrame(loop);
   };
+  /* Helper: stop the older ball-shake sound interval if that path was used */
+  function _stopBallSoundSafe(){ try{ if(typeof _stopBallSound==='function') _stopBallSound(); }catch(e){} }
+
+  /* Pause the physics + audio when the tab is backgrounded; resume on return
+     only if the Bowl page is the active page. Prevents background CPU/audio. */
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'hidden'){
+      window._gbPause();
+    } else {
+      var onBowl = (typeof PAGE_IDS!=='undefined' && typeof curPage!=='undefined' && PAGE_IDS[curPage]==='bowl');
+      if(onBowl){ window._gbResume(); }
+    }
+  });
 
   /* ── Touch / click ripple on globe ── */
   function _playGlassPing(){
@@ -13115,7 +13118,7 @@ window.finMonthNav = function(delta){
     } else {
       setTimeout(_bootSync, 300);
     }
-    /* App boots on Today page — pause gumball loop until Bowl page is entered */
+    /* App boots on Finance page — pause gumball loop until Bowl page is entered */
     setTimeout(function(){ if(typeof window._gbPause==='function') window._gbPause(); }, 100);
   }
   setTimeout(_bootSync, 500);

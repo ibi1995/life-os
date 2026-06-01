@@ -1112,7 +1112,7 @@ button,a,[role="button"],.hc-main,.hc-chk,.tab,.bn-tab,.epd-habit,.wk-day{-webki
 
 
 .theme-sw{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;padding:0;-webkit-tap-highlight-color:transparent;position:relative}
-.tsw-ring{position:absolute;top:-3px;left:-3px;right:-3px;bottom:18px;border-radius:50%;border:2px solid transparent;transition:border-color .2s}
+.tsw-ring{position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:52px;height:52px;border-radius:50%;border:2px solid transparent;transition:border-color .2s}
 .tsw-dot{width:44px;height:44px;border-radius:50%;box-shadow:0 3px 12px rgba(0,0,0,.3);transition:transform .18s}
 .tsw-lbl{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.3px}
 .theme-sw.active .tsw-ring{border-color:var(--a2)}
@@ -1788,9 +1788,9 @@ backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid r
 
 
 .fx-vials-stage{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;padding:0 4px}
-.fx-vials-stage.fx-vials-single{display:flex;justify-content:center;grid-template-columns:none}
+.fx-vials-stage.fx-vials-single{display:flex;justify-content:center;grid-template-columns:none;margin-bottom:10px}
 .fx-vials-stage.fx-vials-single .fx-vial-col{width:min(224px,66vw)}
-.fx-vials-stage.fx-vials-single .fx-vial-tube-wrap{max-width:none;width:100%;aspect-ratio:.52}
+.fx-vials-stage.fx-vials-single .fx-vial-tube-wrap{max-width:none;width:100%;aspect-ratio:.86}
 .fx-vial-col{display:flex;flex-direction:column;align-items:center;gap:10px}
 
 
@@ -2243,9 +2243,7 @@ backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid r
   <!-- The gumball machine + challenge area in ONE container so they share the same center -->
   <div class="bowl-machine-wrap" id="bowl-machine-wrap">
     <canvas id="bowl-machine-canvas" width="340" height="390" role="img" aria-label="Gumball machine with colorful challenge balls bouncing inside a glass globe"></canvas>
-    <div id="bowl-challenge-area" style="width:100%;margin-top:0;margin-bottom:12px;padding:0;box-sizing:border-box;position:relative;z-index:2">
-      <div style="text-align:center;padding:24px 16px;color:var(--muted);font-size:12px;font-style:italic">Pull the crank to draw today's challenge.</div>
-    </div>
+    <div id="bowl-challenge-area" style="width:100%;margin-top:0;margin-bottom:12px;padding:0;box-sizing:border-box;position:relative;z-index:2"></div>
   </div>
 
   <!-- Crank + reroll — below machine -->
@@ -5413,10 +5411,14 @@ function renderReward(){
       html+='<div id="rw-hero-img-wrap" style="width:100%;height:220px;overflow:hidden;border-radius:8px 8px 0 0">'
         +'<img src="'+imgSrc+'" onerror="var w=document.getElementById(\'rw-hero-img-wrap\');if(w)w.style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;display:block;transform:'+_imgScale+';filter:'+_imgGlow+';transition:transform 1.2s cubic-bezier(.4,0,.2,1),filter 1.2s ease">'
         +'</div>';
+    } else {
+      html+='<div style="position:relative;width:100%;height:150px;display:flex;align-items:center;justify-content:center;border-radius:8px 8px 0 0;background:radial-gradient(120% 110% at 50% 0%,rgba(77,141,255,.24),rgba(10,15,35,0) 70%),linear-gradient(180deg,rgba(126,200,255,.10),rgba(10,15,35,0));overflow:hidden">'
+        +'<div style="font-size:52px;line-height:1;filter:drop-shadow(0 6px 20px rgba(77,141,255,.5));opacity:.94">🎁</div>'
+        +'</div>';
     }
     html+='<div style="padding:14px 16px">'
       +'<div style="font-family:var(--font-ui);font-size:20px;font-weight:900;color:#fff;margin-bottom:6px">'+a.name+'</div>';
-    if(a.price) html+='<div style="font-size:13px;color:var(--gold);font-weight:700;margin-bottom:8px">'+a.price+'</div>';
+    if(a.price){ var _pp=String(a.price).trim(); var _pd=/^[\d.,\s]+$/.test(_pp)?('﷼ '+_pp):_pp; html+='<div style="font-size:13px;color:var(--gold);font-weight:700;margin-bottom:8px">'+_pd+'</div>'; }
     if(a.why) html+='<div style="font-size:12px;color:var(--sec);line-height:1.5;margin-bottom:10px;opacity:.85">'+a.why+'</div>';
     html+='</div></div>';
 
@@ -6816,7 +6818,7 @@ function checkComebackBanner(){
   const sub=document.getElementById('comeback-sub');
   if(missedDays>=2){
     if(title){
-      title.textContent=missedDays>=7 ? 'Welcome back &#8212; it\'s been a while' : 'Welcome back';
+      title.textContent=missedDays>=7 ? 'Welcome back — it\'s been a while' : 'Welcome back';
     }
     if(sub){
       if(missedDays>=7)
@@ -7974,7 +7976,7 @@ function renderBowl(){
   var challengeArea=document.getElementById('bowl-challenge-area');
   if(challengeArea){
     if(!dd){
-      challengeArea.innerHTML='<div style="text-align:center;padding:24px 16px;color:var(--muted);font-size:12px;font-style:italic">Pull the crank to draw today\'s challenge.</div>';
+      challengeArea.innerHTML='';
     } else if(dd.options && dd.options.length>1 && !dd.chosenTier && dd.showingOptions!==false){
       /* ── Multi-option selection view (after rerolls) ── */
       var _optH='<div style="margin-bottom:8px;text-align:center;font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase">Choose your challenge</div>';
@@ -9791,8 +9793,12 @@ window._chipInteract = window._chipInteract || {
     this._inspect.dir = 1;
     this._inspect.tiltX = 0; this._inspect.tiltY = 0;
     this._inspect.tiltTargetX = 0; this._inspect.tiltTargetY = 0;
+    var _pe = document.getElementById('fx-vial-pct-free'); if(_pe) _pe.style.opacity = '0';
   },
-  endInspect: function(){ this._inspect.dir = -1; },
+  endInspect: function(){
+    this._inspect.dir = -1;
+    var _pe = document.getElementById('fx-vial-pct-free'); if(_pe) _pe.style.opacity = '';
+  },
   setTilt: function(x, y){
     var I = this._inspect;
     I.tiltTargetX = Math.max(-0.7, Math.min(0.7, x));
@@ -9871,14 +9877,16 @@ function _fxDrawCashStack(ctx, W, H, t, state){
 
   /* ─── GEOMETRY ─── */
   var cx=W*0.5;
-  var baseY=H*0.86;
-  var baseRx=W*0.47;                     // pulled off the edge so coins never clip on phone
+  var baseY=H*0.88;
+  var baseRx=W*0.35;                     // pulled off the edge so coins never clip on phone
   var baseRy=baseRx*0.28;
-  var coinH=baseRy*0.95;                 // thicker too — fills the stack with presence
-  /* Height-fit: compress spacing so the whole COIN_MAX-tall stack sits inside
-     the canvas with a top margin, regardless of how short the box is on phone. */
-  var _fitSpacing=(baseY - H*0.085 - coinH)/(COIN_MAX-1);
-  var coinSpacing=Math.min(coinH*1.10, _fitSpacing);
+  /* Spacing fills the vertical zone with COIN_MAX coins; disc thickness (coinH)
+     is tied to that spacing — NOT to the disc radius — so each coin shows a
+     uniform edge sliver with only a hair of overlap. This keeps the discs slim
+     (no chunky look) and stops the bottom coin from rendering as a fat band on
+     short phone canvases. Capped vs radius so very tall canvases stay sane. */
+  var coinSpacing=(baseY - H*0.09)/COIN_MAX;
+  var coinH=Math.min(coinSpacing*1.18, baseRy*0.95);
 
   /* Specular phase — slow drift, shared across coins */
   var specPhase=Math.sin(t*0.70)*0.40;
@@ -10039,7 +10047,7 @@ function _fxDrawCashStack(ctx, W, H, t, state){
 
     /* ─── FROSTED FIELD VIGNETTE ─── faint darkening toward the rim so the
        polished leaf reads as raised metal against a matte field. */
-    var fieldR=_rx*0.80;
+    var fieldR=_rx*0.96;
     ctx.save();
     ctx.beginPath();ctx.ellipse(_cx,_cy,fieldR,fieldR*ratio,0,0,Math.PI*2);ctx.clip();
     var fieldVig=ctx.createRadialGradient(_cx,_cy,fieldR*0.28,_cx,_cy,fieldR);
@@ -10054,14 +10062,14 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     function pathRing(rr){
       return function(){ ctx.beginPath(); ctx.ellipse(_cx,_cy,rr,rr*ratio,0,0,Math.PI*2); };
     }
-    var ringR=_rx*0.80;
+    var ringR=_rx*0.96;
     emboss(pathRing(ringR), 0.9, 0.6, {depth:1.4, darkA:0.55, brightA:0.28});
-    var beadR=ringR*0.90;
+    var beadR=ringR*0.94;
     var beadSz=_rx*0.022;
     function pathBeads(){
       ctx.beginPath();
-      for(var bi=0;bi<40;bi++){
-        var ba=(bi/40)*Math.PI*2;
+      for(var bi=0;bi<48;bi++){
+        var ba=(bi/48)*Math.PI*2;
         var bx=_cx+beadR*Math.cos(ba);
         var by=_cy+beadR*Math.sin(ba)*ratio;
         ctx.moveTo(bx+beadSz,by);
@@ -10070,174 +10078,168 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     }
     embossFill(pathBeads, 0.70, 0.62, {depth:1.6});
 
-    /* ─── CANADIAN MAPLE LEAF — the subject ───
-       Sugar-maple, 5 main lobes (top + 2 upper-sides + 2 lower-sides),
-       deep V-notches between each lobe, palmate vein structure,
-       short petiole at base. Matches the Royal Canadian Mint
-       Silver Maple Leaf coin design. */
-    var leafR=_rx*0.66;
+    /* ═══ CANADIAN MAPLE LEAF — sculpted struck-silver relief ═══
+       Silhouette is the official 11-point flag-leaf geometry (public-domain
+       grid, normalized). Realism is pre-baked ONCE into an offscreen sprite
+       (anisotropic radial brushing + graded edge bevel + palmate raised veins
+       + sinus occlusion), then per-frame we only composite the sprite + a
+       shaped cast shadow + a live tilt-tracking specular. Hot loop ≈ 1
+       drawImage + a few cheap traces — lighter at steady state than per-frame fills. */
+    var leafR=_rx*0.82;
 
-    /* Right-side outline (normalized to leafR, mirrored to left).
-       Trace: top apex → right edge → lobes → notches → stem.
-       The deep V-notches between lobes are what makes this READ as maple
-       (broadleaf trees like oak have shallower lobing). */
-    var leafPts=[
-      [0.000,-0.900], /*  0: central lobe apex (sharp) */
-      [0.075,-0.680], /*  1: notch on central lobe right */
-      [0.160,-0.710], /*  2: small serration tip */
-      [0.120,-0.530], /*  3: notch */
-      [0.225,-0.485], /*  4: central lobe right shoulder */
-      [0.140,-0.340], /*  5: SINUS 1 (deep V — central↔upper) */
-      [0.345,-0.390], /*  6: upper lobe inner edge */
-      [0.475,-0.475], /*  7: upper lobe upper tooth */
-      [0.490,-0.360], /*  8: notch */
-      [0.645,-0.335], /*  9: UPPER LOBE TIP (sharp) */
-      [0.520,-0.210], /* 10: upper lobe lower edge */
-      [0.405,-0.140], /* 11: small tooth */
-      [0.220,-0.030], /* 12: SINUS 2 (deep V — upper↔lower) */
-      [0.450, 0.000], /* 13: lower lobe inner edge */
-      [0.610,-0.015], /* 14: lower lobe upper tooth */
-      [0.675, 0.075], /* 15: notch */
-      [0.840, 0.085], /* 16: LOWER LOBE TIP (widest, sharp) */
-      [0.675, 0.215], /* 17: lower lobe lower edge */
-      [0.505, 0.260], /* 18: small tooth */
-      [0.335, 0.295], /* 19: notch toward base */
-      [0.215, 0.335], /* 20: SINUS 3 / blade base */
-      [0.125, 0.450], /* 21: blade→petiole transition */
-      [0.070, 0.620], /* 22: petiole top */
-      [0.055, 0.900]  /* 23: petiole bottom */
-    ];
+    if(!state._mapleSprite || !state._mapleOutline){
+      var MP=[-0.0447,1, -0.0223,0.5717, -0.0292,0.5449, -0.05,0.5266, -0.0774,0.5231, -0.5037,0.598, -0.4462,0.4392, -0.4442,0.4261, -0.4477,0.4133, -0.4561,0.403, -0.9231,0.0248, -0.8179,-0.0243, -0.8059,-0.034, -0.7998,-0.0482, -0.801,-0.0635, -0.8933,-0.3474, -0.6243,-0.2903, -0.6097,-0.2907, -0.5967,-0.2974, -0.5881,-0.3092, -0.536,-0.4318, -0.3261,-0.2065, -0.3012,-0.1964, -0.2773,-0.2087, -0.271,-0.2347, -0.3722,-0.7568, -0.2099,-0.663, -0.1931,-0.6586, -0.1764,-0.6635, -0.1648,-0.6764, 0,-1, 0.1648,-0.6764, 0.1764,-0.6635, 0.1931,-0.6586, 0.2099,-0.663, 0.3722,-0.7568, 0.271,-0.2347, 0.2773,-0.2087, 0.3012,-0.1964, 0.3261,-0.2065, 0.536,-0.4318, 0.5881,-0.3092, 0.5967,-0.2974, 0.6097,-0.2907, 0.6243,-0.2903, 0.8933,-0.3474, 0.801,-0.0635, 0.7998,-0.0482, 0.8059,-0.034, 0.8179,-0.0243, 0.9231,0.0248, 0.4561,0.403, 0.4477,0.4133, 0.4442,0.4261, 0.4462,0.4392, 0.5037,0.598, 0.0774,0.5231, 0.05,0.5266, 0.0292,0.5449, 0.0223,0.5717, 0.0447,1];
+      var ol=[]; for(var mi=0;mi<MP.length;mi+=2) ol.push({x:MP[mi],y:MP[mi+1]});
+      state._mapleOutline=ol;
 
-    function pathLeaf(){
-      ctx.beginPath();
-      /* Right side from top apex down to stem bottom */
-      for(var li=0;li<leafPts.length;li++){
-        var nx=leafPts[li][0], ny=leafPts[li][1];
-        var x=_cx + nx*leafR;
-        var y=_cy + ny*leafR*ratio;
-        if(li===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      var SP=480, C=SP/2, LR=206;
+      state._mapleSP=SP; state._mapleC=C; state._mapleLR=LR;
+      var oc=document.createElement('canvas'); oc.width=SP; oc.height=SP;
+      var o=oc.getContext('2d'); o.imageSmoothingQuality='high';
+      var O=state._mapleOutline;
+      var lx=-0.58, ly=-0.81; /* light from upper-left */
+      function lp(){ o.beginPath();
+        for(var i=0;i<O.length;i++){var X=C+O[i].x*LR,Y=C+O[i].y*LR; if(i===0)o.moveTo(X,Y);else o.lineTo(X,Y);} o.closePath(); }
+
+      /* ── FILL ── */
+      o.save(); lp(); o.clip();
+      var g=o.createLinearGradient(C+lx*LR,C+ly*LR,C-lx*LR,C-ly*LR);
+      g.addColorStop(0.00,'#eef4fb'); g.addColorStop(0.30,'#cdd9ea');
+      g.addColorStop(0.60,'#a6b5cd'); g.addColorStop(0.82,'#7d8da9');
+      g.addColorStop(1.00,'#5c6b8b');
+      o.fillStyle=g; o.fillRect(0,0,SP,SP);
+      var dome=o.createRadialGradient(C+lx*LR*0.45,C+ly*LR*0.45,0,C,C,LR*1.05);
+      dome.addColorStop(0,'rgba(255,255,255,0.34)');
+      dome.addColorStop(0.45,'rgba(214,228,246,0.08)');
+      dome.addColorStop(1,'rgba(34,52,86,0.26)');
+      o.fillStyle=dome; o.fillRect(0,0,SP,SP);
+      /* anisotropic radial brushing — the minted-metal tell */
+      var bcx=C+lx*LR*0.22, bcy=C+ly*LR*0.22; o.lineCap='round';
+      for(var i=0;i<160;i++){
+        var ang=i*2.399963229+(Math.random()-0.5)*0.05;
+        var r0=LR*(0.02+Math.random()*0.05), r1=LR*(0.86+Math.random()*0.34);
+        var al=(Math.cos(ang)*lx+Math.sin(ang)*ly), br=0.5+0.5*al;
+        o.strokeStyle=(i&1)?('rgba(255,255,255,'+(0.016+0.05*br)+')')
+                           :('rgba(26,40,68,'+(0.018+0.045*(1-br))+')');
+        o.lineWidth=0.55+Math.random()*0.7;
+        o.beginPath(); o.moveTo(bcx+Math.cos(ang)*r0,bcy+Math.sin(ang)*r0);
+        o.lineTo(bcx+Math.cos(ang)*r1,bcy+Math.sin(ang)*r1); o.stroke();
       }
-      /* Close stem bottom across to left */
-      ctx.lineTo(_cx - 0.055*leafR, _cy + 0.90*leafR*ratio);
-      /* Left side from stem bottom back up to apex (mirror of right) */
-      for(var li=leafPts.length-1;li>=0;li--){
-        var nx=-leafPts[li][0], ny=leafPts[li][1];
-        var x=_cx + nx*leafR;
-        var y=_cy + ny*leafR*ratio;
-        ctx.lineTo(x,y);
+      /* frost micro-grain */
+      var nC=document.createElement('canvas'); nC.width=nC.height=110;
+      var nx2=nC.getContext('2d'), nim=nx2.createImageData(110,110), nd=nim.data;
+      for(var p=0;p<nd.length;p+=4){var v=176+(Math.random()*78|0); nd[p]=nd[p+1]=nd[p+2]=v; nd[p+3]=26;}
+      nx2.putImageData(nim,0,0);
+      o.save(); o.globalAlpha=0.5; o.globalCompositeOperation='overlay';
+      o.fillStyle=o.createPattern(nC,'repeat'); o.fillRect(0,0,SP,SP); o.restore();
+      /* graded edge bevel: bright lit flank + dark shadow flank + cool blue bounce */
+      var bo=LR*0.010, bw=[6.0,4.6,3.4,2.3,1.3], sk=LR/206;
+      for(var p=0;p<bw.length;p++){ o.save(); o.translate(lx*bo,ly*bo);
+        o.lineJoin='round'; o.lineWidth=bw[p]*sk;
+        o.strokeStyle='rgba(255,255,255,'+(0.14*(1-p/bw.length))+')'; lp(); o.stroke(); o.restore(); }
+      for(var p=0;p<bw.length;p++){ o.save(); o.translate(-lx*bo,-ly*bo);
+        o.lineJoin='round'; o.lineWidth=(bw[p]+0.2)*sk;
+        o.strokeStyle='rgba(9,18,40,'+(0.16*(1-p/bw.length))+')'; lp(); o.stroke(); o.restore(); }
+      o.save(); o.translate(-lx*bo*1.7,-ly*bo*1.7); o.lineWidth=2.0*sk;
+      o.strokeStyle='rgba(126,200,255,0.13)'; o.lineJoin='round'; lp(); o.stroke(); o.restore();
+      o.restore(); /* end fill clip */
+
+      /* ── VEINS ── palmate raised ridges, anchored to the real point tips ── */
+      o.save(); lp(); o.clip();
+      var O0x=C, O0y=C+0.50*LR;
+      function quadPts(tx,ty,bow,n){
+        var ex=C+tx*LR,ey=C+ty*LR,mx=(O0x+ex)/2,my=(O0y+ey)/2;
+        var dx=ex-O0x,dy=ey-O0y,len=Math.hypot(dx,dy)||1,px=-dy/len,py=dx/len;
+        var cxq=mx+px*bow*len,cyq=my+py*bow*len,ps=[];
+        for(var s=0;s<=n;s++){var u=s/n,iu=1-u;
+          ps.push([iu*iu*O0x+2*iu*u*cxq+u*u*ex, iu*iu*O0y+2*iu*u*cyq+u*u*ey]);}
+        return ps;
       }
-      ctx.closePath();
+      function segQuad(axn,ayn,bxn,byn,bowAbs,n){var ax=C+axn*LR,ay=C+ayn*LR,bx=C+bxn*LR,by=C+byn*LR;
+        var mx=(ax+bx)/2,my=(ay+by)/2,dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||1,px=-dy/len,py=dx/len;
+        var cx2=mx+px*bowAbs*LR,cy2=my+py*bowAbs*LR,ps=[];
+        for(var s=0;s<=n;s++){var u=s/n,iu=1-u;
+          ps.push([iu*iu*ax+2*iu*u*cx2+u*u*bx, iu*iu*ay+2*iu*u*cy2+u*u*by]);} return ps;}
+      /* stroke the tapered ridge OPAQUELY onto a scratch layer, then composite
+         once at the target alpha — overlapping round caps on an opaque layer
+         don't stack, so the ridge reads as one continuous raised line, not beads */
+      var vScratch=document.createElement('canvas'); vScratch.width=SP; vScratch.height=SP;
+      var vsc=vScratch.getContext('2d');
+      function taper(ps,wA,wB,rgb,al,dx,dy){
+        vsc.clearRect(0,0,SP,SP);
+        vsc.save(); vsc.translate(dx,dy); vsc.lineCap='round'; vsc.lineJoin='round'; vsc.strokeStyle='rgb('+rgb+')';
+        var n=ps.length-1;
+        for(var i=0;i<n;i++){vsc.lineWidth=Math.max(0.4,wA+(wB-wA)*(i/n));
+          vsc.beginPath(); vsc.moveTo(ps[i][0],ps[i][1]); vsc.lineTo(ps[i+1][0],ps[i+1][1]); vsc.stroke();}
+        vsc.restore();
+        o.save(); o.globalAlpha=al; o.drawImage(vScratch,0,0); o.restore();}
+      function ridge(ps,wA,wB,sh,hi,co){var vo=LR*0.006;
+        taper(ps,(wA+0.2),(wB+0.2),'8,16,36',sh,-lx*vo,-ly*vo);
+        taper(ps,wA*0.82,wB*0.82,'244,250,255',hi,lx*vo,ly*vo);
+        taper(ps,wA*0.45,wB*0.4,'150,168,200',co,0,0);}
+      /* 5 main ribs: midrib + two upper-lobe + two lower-arm */
+      var mains=[[0.000,-0.90,0.00],[0.820,-0.33,0.10],[-0.820,-0.33,-0.10],[0.840,0.02,0.10],[-0.840,0.02,-0.10]];
+      for(var m=0;m<mains.length;m++){var wide=(m===0)?LR*0.022:LR*0.016;
+        ridge(quadPts(mains[m][0],mains[m][1],mains[m][2],48),wide,LR*0.003,0.46,0.50,0.34);}
+      /* secondaries branching toward the sub-points (subtle) */
+      var sec=[[0.000,-0.032,0.330,-0.700,0.05],[0.000,-0.032,-0.330,-0.700,-0.05],
+               [0.378,0.284,0.460,0.550,0.05],[-0.378,0.284,-0.460,0.550,-0.05]];
+      for(var sxi=0;sxi<sec.length;sxi++)
+        ridge(segQuad(sec[sxi][0],sec[sxi][1],sec[sxi][2],sec[sxi][3],sec[sxi][4],28),LR*0.010,LR*0.0025,0.28,0.30,0.20);
+      o.restore();
+
+      /* ── SINUS OCCLUSION ── deep notches read as cut shadow ── */
+      o.save(); lp(); o.clip();
+      function dab(nx3,ny3,rad,al){var X=C+nx3*LR,Y=C+ny3*LR;
+        var dd=o.createRadialGradient(X,Y,0,X,Y,rad);
+        dd.addColorStop(0,'rgba(4,10,24,'+al+')'); dd.addColorStop(1,'rgba(4,10,24,0)');
+        o.fillStyle=dd; o.fillRect(X-rad,Y-rad,rad*2,rad*2);}
+      dab(0.290,-0.210,LR*0.085,0.30); dab(-0.290,-0.210,LR*0.085,0.30);
+      dab(0.450, 0.420,LR*0.075,0.26); dab(-0.450, 0.420,LR*0.075,0.26);
+      dab(0.000, 0.520,LR*0.100,0.26);
+      o.restore();
+
+      /* crisp struck edge */
+      o.save(); o.lineJoin='round';
+      o.strokeStyle='rgba(6,14,30,0.55)'; o.lineWidth=1.1*sk; lp(); o.stroke();
+      o.translate(lx*0.8,ly*0.8); o.strokeStyle='rgba(245,250,255,0.32)'; o.lineWidth=0.8*sk; lp(); o.stroke();
+      o.restore();
+
+      state._mapleSprite=oc;
     }
 
-    /* ─── LEAF FILL ─── Polished mirror-metal, brighter than the frosted field
-       and lit from the upper-left, so the leaf reads as the raised, light-catching
-       subject against the matte field (RCM proof-style satin/mirror contrast). */
-    ctx.save();
-    pathLeaf();
-    ctx.clip();
-    var leafFill=ctx.createLinearGradient(
-      _cx - leafR*0.5, _cy - leafR*ratio*0.95,
-      _cx + leafR*0.45, _cy + leafR*ratio*0.95
-    );
-    leafFill.addColorStop(0.00,'rgba(226,236,250,'+(0.90*opacityScale)+')');
-    leafFill.addColorStop(0.32,'rgba(194,210,234,'+(0.88*opacityScale)+')');
-    leafFill.addColorStop(0.62,'rgba(150,172,206,'+(0.88*opacityScale)+')');
-    leafFill.addColorStop(0.85,'rgba(104,126,162,'+(0.90*opacityScale)+')');
-    leafFill.addColorStop(1.00,'rgba(74,94,130,'+(0.92*opacityScale)+')');
-    ctx.fillStyle=leafFill;
-    ctx.fillRect(_cx - leafR*1.2, _cy - leafR*ratio*1.2, leafR*2.4, leafR*ratio*2.4);
-    /* Soft upper-left polish bloom */
-    var leafHi=ctx.createRadialGradient(
-      _cx - leafR*0.30, _cy - leafR*ratio*0.40, 0,
-      _cx - leafR*0.30, _cy - leafR*ratio*0.40, leafR*0.95);
-    leafHi.addColorStop(0.00,'rgba(255,255,255,'+(0.40*opacityScale)+')');
-    leafHi.addColorStop(0.45,'rgba(238,246,255,'+(0.12*opacityScale)+')');
-    leafHi.addColorStop(1.00,'rgba(238,246,255,0)');
-    ctx.fillStyle=leafHi;
-    ctx.fillRect(_cx - leafR*1.2, _cy - leafR*ratio*1.2, leafR*2.4, leafR*ratio*2.4);
-    /* Light micro-texture — polished surface keeps less grain than the frost field */
-    var leafNoise=getNoisePattern();
-    if(leafNoise){
-      ctx.globalAlpha=0.16*opacityScale;
-      ctx.globalCompositeOperation='overlay';
-      ctx.fillStyle=leafNoise;
-      ctx.fillRect(_cx - leafR*1.1, _cy - leafR*ratio*1.1, leafR*2.2, leafR*ratio*2.2);
+    var O=state._mapleOutline, SPR=state._mapleSprite,
+        SP=state._mapleSP, C=state._mapleC, LR=state._mapleLR;
+
+    function trace(px,py,sx,sy){ ctx.beginPath();
+      for(var i=0;i<O.length;i++){var X=px+O[i].x*sx,Y=py+O[i].y*sy; if(i===0)ctx.moveTo(X,Y);else ctx.lineTo(X,Y);} ctx.closePath(); }
+
+    /* shaped cast shadow — raised relief onto the field */
+    var u=leafR*0.02, sbx=_cx+leafR*0.05, sby=_cy+leafR*0.06;
+    var ring=[[0,0,0.16],[0.7,0.8,0.11],[1.5,1.7,0.06],[-0.6,0.7,0.08],[0.7,-0.5,0.08]];
+    for(var k=0;k<ring.length;k++){
+      ctx.fillStyle='rgba(4,10,26,'+(ring[k][2]*opacityScale)+')';
+      trace(sbx+ring[k][0]*u, sby+ring[k][1]*u, leafR, leafR*ratio); ctx.fill();
     }
+
+    /* composite the sprite (light baked from upper-left, foreshortened by ratio) */
+    ctx.save(); ctx.globalAlpha*=opacityScale;
+    ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+    ctx.translate(_cx,_cy); ctx.scale(1,ratio);
+    var sc=leafR/LR; ctx.drawImage(SPR,-C*sc,-C*sc,SP*sc,SP*sc);
     ctx.restore();
 
-    /* ─── LEAF OUTLINE ─── Deepest strike — the leaf anchors the coin */
-    emboss(pathLeaf, 1.8, 1.3, {depth:2.6, brightA:0.78});
-
-    /* ─── VEINS ─── PALMATE structure: all main veins originate from a
-       single point at the petiole attach (where stem meets leaf), then
-       radiate outward to each of the 5 lobe tips. Plus 4 secondary
-       veins branching from the main side veins toward lobe shoulders. */
-    function pathVeins(){
-      ctx.beginPath();
-      /* Origin: at the blade base where the petiole fans out */
-      var ox_n=0.00, oy_n=0.52;
-      var ox=_cx + ox_n*leafR;
-      var oy=_cy + oy_n*leafR*ratio;
-
-      /* 5 main veins — each radiates from origin to its lobe tip,
-         stopping ~88% of the way (fades into the blade like a real leaf) */
-      var mainTips=[
-        [0.000,-0.86], /* central → apex */
-        [0.600,-0.31], /* upper-right */
-        [-0.600,-0.31],/* upper-left */
-        [0.770, 0.06], /* lower-right (widest lobe) */
-        [-0.770, 0.06] /* lower-left */
-      ];
-      for(var vi=0;vi<mainTips.length;vi++){
-        var tx_n=mainTips[vi][0], ty_n=mainTips[vi][1];
-        var ex=_cx + tx_n*leafR;
-        var ey=_cy + ty_n*leafR*ratio;
-        ctx.moveTo(ox,oy);
-        ctx.lineTo(ex,ey);
-      }
-
-      /* 4 secondary veins — branch from each SIDE main vein at 55% of its
-         length, reach toward the lobe's shoulder (sub-point near the tip).
-         Adds the secondary detail visible on the real Silver Maple Leaf. */
-      var sideMains=[
-        {tip:[0.600,-0.31],  shoulder:[0.490,-0.44]}, /* upper-right */
-        {tip:[-0.600,-0.31], shoulder:[-0.490,-0.44]},/* upper-left */
-        {tip:[0.770, 0.06],  shoulder:[0.640,-0.04]}, /* lower-right */
-        {tip:[-0.770, 0.06], shoulder:[-0.640,-0.04]} /* lower-left */
-      ];
-      var branchT=0.55;
-      for(var si=0;si<sideMains.length;si++){
-        var sm=sideMains[si];
-        /* Branch point: origin + t*(tip - origin) */
-        var bx_n=ox_n + branchT*(sm.tip[0]-ox_n);
-        var by_n=oy_n + branchT*(sm.tip[1]-oy_n);
-        var bxPx=_cx + bx_n*leafR;
-        var byPx=_cy + by_n*leafR*ratio;
-        var shXpx=_cx + sm.shoulder[0]*leafR;
-        var shYpx=_cy + sm.shoulder[1]*leafR*ratio;
-        ctx.moveTo(bxPx,byPx);
-        ctx.lineTo(shXpx,shYpx);
-      }
-    }
-    emboss(pathVeins, 0.9, 0.6, {depth:1.3, brightA:0.50});
-
-    /* ─── LEAF SHEEN — tilt-responsive polished-metal highlight ───
-       When inspecting, the leaf catches the light as you tilt the coin.
-       Matches the satin-mirror finish of the actual Silver Maple Leaf. */
-    if(tilt){
-      var sheenX=_cx + tilt.tx*leafR*0.55;
-      var sheenY=_cy + tilt.ty*leafR*0.55*ratio - leafR*0.12;
-      ctx.save();
-      pathLeaf();
-      ctx.clip();
-      var sheen=ctx.createRadialGradient(sheenX,sheenY,0,sheenX,sheenY,leafR*0.85);
-      sheen.addColorStop(0.00,'rgba(255,255,255,'+(0.75*opacityScale)+')');
-      sheen.addColorStop(0.35,'rgba(225,242,255,'+(0.35*opacityScale)+')');
-      sheen.addColorStop(1.00,'rgba(220,240,255,0)');
-      ctx.fillStyle=sheen;
-      ctx.fillRect(_cx - leafR*1.2, _cy - leafR*ratio*1.2, leafR*2.4, leafR*ratio*2.4);
-      ctx.restore();
-    }
+    /* live specular — gentle drift at rest, tracks tilt while inspecting */
+    ctx.save(); trace(_cx,_cy,leafR,leafR*ratio); ctx.clip();
+    var dX=Math.cos(t*0.6)*0.10, dY=Math.sin(t*0.5)*0.06, hx,hy,amp;
+    if(tilt){ hx=_cx+(tilt.tx*0.55+dX)*leafR; hy=_cy+((tilt.ty*0.55+dY)-0.18)*leafR*ratio; amp=(isFilled?0.95:0.8); }
+    else{ hx=_cx+(dX-0.28)*leafR; hy=_cy+((dY-0.34))*leafR*ratio; amp=(isFilled?0.4:0.32); }
+    var spc=ctx.createRadialGradient(hx,hy,0,hx,hy,leafR*0.9);
+    spc.addColorStop(0.00,'rgba(255,255,255,'+(amp*0.9*opacityScale)+')');
+    spc.addColorStop(0.40,'rgba(232,244,255,'+(amp*0.30*opacityScale)+')');
+    spc.addColorStop(1.00,'rgba(226,240,255,0)');
+    ctx.fillStyle=spc; ctx.fillRect(_cx-leafR,_cy-leafR*ratio,leafR*2,leafR*ratio*2);
+    ctx.restore();
   }
 
   /* ─── FROSTED FIELD NOISE PATTERN (lazy-cached on state) ─── */
@@ -10674,7 +10676,7 @@ function _fxDrawCashStack(ctx, W, H, t, state){
         var homeX = cx + (b.xOff || 0);
 
         /* Lifted position — centered, large, face-on */
-        var liftedRx = Math.min(W * 0.48, H * 0.26);
+        var liftedRx = Math.min(W * 0.46, H * 0.34);
         var targetX = cx;
         var targetYTop = H * 0.34;
         var targetRx = liftedRx;

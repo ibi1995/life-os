@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-05-31-v63'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-06-01-v65'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Finance (home page) */
     localStorage.removeItem('lifeOS_activePage');
@@ -9985,15 +9985,15 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     ctx.ellipse(_cx,_cy,_rx,_ry,0,0,Math.PI*2);
   }
 
-  /* ─── EMBOSSED EMBLEM — CANADIAN MAPLE LEAF ───
-     Single sugar-maple leaf struck into the field:
-       • 11-point silhouette, vertical symmetry
-       • Palmate vein structure — central vein + 5 paired branches
-       • Short petiole at base
+  /* ─── EMBOSSED EMBLEM — RUNAWAY STAR (SUPERNOVA SCENE) ───
+     The supernova from the reference image, struck into the field:
+       • Turbulent exploding shell as the hero — ragged flame-edged rim,
+         radial blast filaments from a bright core, hollow-interior occlusion
+       • Runaway star kicked clear at lower-right + a thin light jet back to it
        • Polished mirror fill (diagonal gradient) against matte frosted field
-       • Deepest strike on the coin — leaf anchors the composition
-       • Chronograph inscription ring as outer frame
-     Tilt-responsive: leaf gains a polished sheen highlight
+       • Deepest strike on the coin — the blast anchors the composition
+       • Beaded denticle ring as outer frame
+     Tilt-responsive: the shell gains a polished sheen highlight
      when the coin is being inspected (matches real silver satin finish). */
   function drawEmbossedMark(_cx,_cy,_rx,_ry,opacityScale,isFilled,tilt){
     opacityScale=opacityScale==null?1:opacityScale;
@@ -10078,25 +10078,39 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     }
     embossFill(pathBeads, 0.70, 0.62, {depth:1.6});
 
-    /* ═══ CANADIAN MAPLE LEAF — sculpted struck-silver relief ═══
-       Silhouette is the official 11-point flag-leaf geometry (public-domain
-       grid, normalized). Realism is pre-baked ONCE into an offscreen sprite
-       (anisotropic radial brushing + graded edge bevel + palmate raised veins
-       + sinus occlusion), then per-frame we only composite the sprite + a
-       shaped cast shadow + a live tilt-tracking specular. Hot loop ≈ 1
-       drawImage + a few cheap traces — lighter at steady state than per-frame fills. */
-    var leafR=_rx*0.82;
+    /* ═══ RUNAWAY STAR (SUPERNOVA SCENE) — sculpted struck-silver relief ═══
+       The image's actual subject: a turbulent exploding supernova shell (the
+       struck hero) with the bright runaway star kicked clear at lower-right,
+       joined back to the blast by a thin light jet. Same pipeline as the old
+       maple — fill / anisotropic brushing / graded edge bevel / raised ridges /
+       occlusion all baked ONCE into an offscreen sprite, then per-frame we only
+       composite the sprite + a shaped cast shadow + a live tilt-tracking
+       specular. The SHELL is one closed silhouette (gets the full clipped metal
+       treatment); the star + jet are baked separately outside that clip with
+       their own bevel/shadow/shine, so they read as their own raised marks. */
+    var starR=_rx*0.82;
 
-    if(!state._mapleSprite || !state._mapleOutline){
-      var MP=[-0.0447,1, -0.0223,0.5717, -0.0292,0.5449, -0.05,0.5266, -0.0774,0.5231, -0.5037,0.598, -0.4462,0.4392, -0.4442,0.4261, -0.4477,0.4133, -0.4561,0.403, -0.9231,0.0248, -0.8179,-0.0243, -0.8059,-0.034, -0.7998,-0.0482, -0.801,-0.0635, -0.8933,-0.3474, -0.6243,-0.2903, -0.6097,-0.2907, -0.5967,-0.2974, -0.5881,-0.3092, -0.536,-0.4318, -0.3261,-0.2065, -0.3012,-0.1964, -0.2773,-0.2087, -0.271,-0.2347, -0.3722,-0.7568, -0.2099,-0.663, -0.1931,-0.6586, -0.1764,-0.6635, -0.1648,-0.6764, 0,-1, 0.1648,-0.6764, 0.1764,-0.6635, 0.1931,-0.6586, 0.2099,-0.663, 0.3722,-0.7568, 0.271,-0.2347, 0.2773,-0.2087, 0.3012,-0.1964, 0.3261,-0.2065, 0.536,-0.4318, 0.5881,-0.3092, 0.5967,-0.2974, 0.6097,-0.2907, 0.6243,-0.2903, 0.8933,-0.3474, 0.801,-0.0635, 0.7998,-0.0482, 0.8059,-0.034, 0.8179,-0.0243, 0.9231,0.0248, 0.4561,0.403, 0.4477,0.4133, 0.4442,0.4261, 0.4462,0.4392, 0.5037,0.598, 0.0774,0.5231, 0.05,0.5266, 0.0292,0.5449, 0.0223,0.5717, 0.0447,1];
-      var ol=[]; for(var mi=0;mi<MP.length;mi+=2) ol.push({x:MP[mi],y:MP[mi+1]});
-      state._mapleOutline=ol;
+    if(!state._starSprite || !state._starOutline){
+      /* Shell silhouette: a turbulent, flame-edged blast circle, centred
+         left-of-middle (SCx,SCy) so the runaway star + jet have room at the
+         lower-right. Seeded LCG → the ragged rim is stable across reloads. */
+      var SCx=-0.10, SCy=-0.02, NSH=80, _ss=20260601>>>0;
+      function SR(){ _ss=(_ss*1664525+1013904223)>>>0; return _ss/4294967296; }
+      var ol=[];
+      for(var si=0;si<NSH;si++){
+        var sa=(si/NSH)*Math.PI*2;
+        var lobes=0.585+0.055*Math.sin(sa*3+0.6)+0.030*Math.sin(sa*7+2.3)+0.022*Math.sin(sa*5-1.1);
+        var jit=(SR()-0.5)*0.030, flame=(SR()<0.16)?(0.035+SR()*0.075):0;
+        var rr=lobes+jit+flame;
+        ol.push({x:SCx+Math.cos(sa)*rr, y:SCy+Math.sin(sa)*rr*0.985});
+      }
+      state._starOutline=ol;
 
       var SP=480, C=SP/2, LR=206;
-      state._mapleSP=SP; state._mapleC=C; state._mapleLR=LR;
+      state._starSP=SP; state._starC=C; state._starLR=LR;
       var oc=document.createElement('canvas'); oc.width=SP; oc.height=SP;
       var o=oc.getContext('2d'); o.imageSmoothingQuality='high';
-      var O=state._mapleOutline;
+      var O=state._starOutline;
       var lx=-0.58, ly=-0.81; /* light from upper-left */
       function lp(){ o.beginPath();
         for(var i=0;i<O.length;i++){var X=C+O[i].x*LR,Y=C+O[i].y*LR; if(i===0)o.moveTo(X,Y);else o.lineTo(X,Y);} o.closePath(); }
@@ -10144,9 +10158,10 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       o.strokeStyle='rgba(126,200,255,0.13)'; o.lineJoin='round'; lp(); o.stroke(); o.restore();
       o.restore(); /* end fill clip */
 
-      /* ── VEINS ── palmate raised ridges, anchored to the real point tips ── */
+      /* ── BLAST FILAMENTS ── wavy raised ridges bursting from the core out
+         toward the shell, varied length + curvature for an organic explosion ── */
       o.save(); lp(); o.clip();
-      var O0x=C, O0y=C+0.50*LR;
+      var O0x=C+SCx*LR, O0y=C+SCy*LR; /* blast core */
       function quadPts(tx,ty,bow,n){
         var ex=C+tx*LR,ey=C+ty*LR,mx=(O0x+ex)/2,my=(O0y+ey)/2;
         var dx=ex-O0x,dy=ey-O0y,len=Math.hypot(dx,dy)||1,px=-dy/len,py=dx/len;
@@ -10155,11 +10170,6 @@ function _fxDrawCashStack(ctx, W, H, t, state){
           ps.push([iu*iu*O0x+2*iu*u*cxq+u*u*ex, iu*iu*O0y+2*iu*u*cyq+u*u*ey]);}
         return ps;
       }
-      function segQuad(axn,ayn,bxn,byn,bowAbs,n){var ax=C+axn*LR,ay=C+ayn*LR,bx=C+bxn*LR,by=C+byn*LR;
-        var mx=(ax+bx)/2,my=(ay+by)/2,dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||1,px=-dy/len,py=dx/len;
-        var cx2=mx+px*bowAbs*LR,cy2=my+py*bowAbs*LR,ps=[];
-        for(var s=0;s<=n;s++){var u=s/n,iu=1-u;
-          ps.push([iu*iu*ax+2*iu*u*cx2+u*u*bx, iu*iu*ay+2*iu*u*cy2+u*u*by]);} return ps;}
       /* stroke the tapered ridge OPAQUELY onto a scratch layer, then composite
          once at the target alpha — overlapping round caps on an opaque layer
          don't stack, so the ridge reads as one continuous raised line, not beads */
@@ -10177,26 +10187,32 @@ function _fxDrawCashStack(ctx, W, H, t, state){
         taper(ps,(wA+0.2),(wB+0.2),'8,16,36',sh,-lx*vo,-ly*vo);
         taper(ps,wA*0.82,wB*0.82,'244,250,255',hi,lx*vo,ly*vo);
         taper(ps,wA*0.45,wB*0.4,'150,168,200',co,0,0);}
-      /* 5 main ribs: midrib + two upper-lobe + two lower-arm */
-      var mains=[[0.000,-0.90,0.00],[0.820,-0.33,0.10],[-0.820,-0.33,-0.10],[0.840,0.02,0.10],[-0.840,0.02,-0.10]];
-      for(var m=0;m<mains.length;m++){var wide=(m===0)?LR*0.022:LR*0.016;
-        ridge(quadPts(mains[m][0],mains[m][1],mains[m][2],48),wide,LR*0.003,0.46,0.50,0.34);}
-      /* secondaries branching toward the sub-points (subtle) */
-      var sec=[[0.000,-0.032,0.330,-0.700,0.05],[0.000,-0.032,-0.330,-0.700,-0.05],
-               [0.378,0.284,0.460,0.550,0.05],[-0.378,0.284,-0.460,0.550,-0.05]];
-      for(var sxi=0;sxi<sec.length;sxi++)
-        ridge(segQuad(sec[sxi][0],sec[sxi][1],sec[sxi][2],sec[sxi][3],sec[sxi][4],28),LR*0.010,LR*0.0025,0.28,0.30,0.20);
+      /* radial filaments — seeded so they're stable; wavy via random bow */
+      var _fs=777>>>0; function FR(){ _fs=(_fs*1664525+1013904223)>>>0; return _fs/4294967296; }
+      for(var f=0;f<20;f++){
+        var fa=(f/20)*Math.PI*2+(FR()-0.5)*0.18, flen=0.30+FR()*0.26;
+        var ftx=SCx+Math.cos(fa)*flen, fty=SCy+Math.sin(fa)*flen;
+        ridge(quadPts(ftx,fty,(FR()-0.5)*0.5,40), LR*(0.006+FR()*0.006), LR*0.0015, 0.34, 0.42, 0.24);
+      }
+      /* short turbulent ridges around the core */
+      for(var c2=0;c2<6;c2++){var ca=(c2/6)*Math.PI*2+0.4;
+        ridge(quadPts(SCx+Math.cos(ca)*0.12,SCy+Math.sin(ca)*0.12,(FR()-0.5)*0.6,18), LR*0.007, LR*0.002, 0.30, 0.40, 0.22);}
+      /* bright turbulent core knot */
+      var ck=o.createRadialGradient(O0x,O0y,0,O0x,O0y,LR*0.17);
+      ck.addColorStop(0,'rgba(248,252,255,0.55)'); ck.addColorStop(0.5,'rgba(212,228,248,0.16)'); ck.addColorStop(1,'rgba(212,228,248,0)');
+      o.fillStyle=ck; o.fillRect(O0x-LR*0.2,O0y-LR*0.2,LR*0.4,LR*0.4);
       o.restore();
 
-      /* ── SINUS OCCLUSION ── deep notches read as cut shadow ── */
+      /* ── SHELL OCCLUSION ── soft shadow pockets in the hollow interior between
+         core and rim, so the blast reads as a 3-D shell, not a flat disc ── */
       o.save(); lp(); o.clip();
       function dab(nx3,ny3,rad,al){var X=C+nx3*LR,Y=C+ny3*LR;
         var dd=o.createRadialGradient(X,Y,0,X,Y,rad);
         dd.addColorStop(0,'rgba(4,10,24,'+al+')'); dd.addColorStop(1,'rgba(4,10,24,0)');
         o.fillStyle=dd; o.fillRect(X-rad,Y-rad,rad*2,rad*2);}
-      dab(0.290,-0.210,LR*0.085,0.30); dab(-0.290,-0.210,LR*0.085,0.30);
-      dab(0.450, 0.420,LR*0.075,0.26); dab(-0.450, 0.420,LR*0.075,0.26);
-      dab(0.000, 0.520,LR*0.100,0.26);
+      var _ds=4242>>>0; function DR(){ _ds=(_ds*1664525+1013904223)>>>0; return _ds/4294967296; }
+      for(var d=0;d<6;d++){var da=DR()*Math.PI*2, dr=0.28+DR()*0.22;
+        dab(SCx+Math.cos(da)*dr, SCy+Math.sin(da)*dr, LR*(0.07+DR()*0.05), 0.14+DR()*0.08);}
       o.restore();
 
       /* crisp struck edge */
@@ -10205,40 +10221,64 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       o.translate(lx*0.8,ly*0.8); o.strokeStyle='rgba(245,250,255,0.32)'; o.lineWidth=0.8*sk; lp(); o.stroke();
       o.restore();
 
-      state._mapleSprite=oc;
+      /* ── RUNAWAY STAR + LIGHT JET ── struck at lower-right, clear of the blast.
+         Baked outside the shell clip; carries its own bevel, shadow + shine. */
+      var RSx=C+0.74*LR, RSy=C+0.40*LR, rsr=LR*0.165;
+      /* jet: thin tapering streak from the shell rim toward the star (widens in) */
+      ridge([[C+0.42*LR,C+0.24*LR],[RSx-0.42*rsr,RSy-0.42*rsr]], LR*0.004, LR*0.018, 0.30, 0.55, 0.30);
+      /* 4 long + 4 short ray burst */
+      var rsp=[];
+      for(var k=0;k<8;k++){var ka=k*Math.PI/4-Math.PI/2, rad=(k%2===0)?rsr:rsr*0.36;
+        rsp.push([RSx+Math.cos(ka)*rad, RSy+Math.sin(ka)*rad]);}
+      function rbp(){ o.beginPath();
+        for(var i=0;i<rsp.length;i++){ if(i===0)o.moveTo(rsp[i][0],rsp[i][1]); else o.lineTo(rsp[i][0],rsp[i][1]); } o.closePath(); }
+      o.save(); o.translate(-lx*1.6,-ly*1.6); o.fillStyle='rgba(4,10,26,0.5)'; rbp(); o.fill(); o.restore(); /* shadow */
+      o.save(); rbp(); o.clip();
+      var rsg=o.createRadialGradient(RSx,RSy,0,RSx,RSy,rsr);
+      rsg.addColorStop(0,'#ffffff'); rsg.addColorStop(0.45,'#eaf3ff'); rsg.addColorStop(1,'#b8c8e0');
+      o.fillStyle=rsg; o.fillRect(RSx-rsr,RSy-rsr,rsr*2,rsr*2); o.restore();
+      o.save(); o.lineJoin='round'; o.strokeStyle='rgba(6,14,30,0.5)'; o.lineWidth=1.0*sk; rbp(); o.stroke(); o.restore();
+      for(var k2=0;k2<8;k2+=2){var ka2=k2*Math.PI/4-Math.PI/2;
+        ridge([[RSx,RSy],[RSx+Math.cos(ka2)*rsr*0.92,RSy+Math.sin(ka2)*rsr*0.92]], LR*0.008, LR*0.001, 0.30, 0.55, 0.0);}
+      var hc=o.createRadialGradient(RSx,RSy,0,RSx,RSy,rsr*0.55);
+      hc.addColorStop(0,'rgba(255,255,255,0.95)'); hc.addColorStop(1,'rgba(255,255,255,0)');
+      o.fillStyle=hc; o.fillRect(RSx-rsr*0.6,RSy-rsr*0.6,rsr*1.2,rsr*1.2);
+
+      state._starSprite=oc;
     }
 
-    var O=state._mapleOutline, SPR=state._mapleSprite,
-        SP=state._mapleSP, C=state._mapleC, LR=state._mapleLR;
+    var O=state._starOutline, SPR=state._starSprite,
+        SP=state._starSP, C=state._starC, LR=state._starLR;
 
     function trace(px,py,sx,sy){ ctx.beginPath();
       for(var i=0;i<O.length;i++){var X=px+O[i].x*sx,Y=py+O[i].y*sy; if(i===0)ctx.moveTo(X,Y);else ctx.lineTo(X,Y);} ctx.closePath(); }
 
     /* shaped cast shadow — raised relief onto the field */
-    var u=leafR*0.02, sbx=_cx+leafR*0.05, sby=_cy+leafR*0.06;
+    var u=starR*0.02, sbx=_cx+starR*0.05, sby=_cy+starR*0.06;
     var ring=[[0,0,0.16],[0.7,0.8,0.11],[1.5,1.7,0.06],[-0.6,0.7,0.08],[0.7,-0.5,0.08]];
     for(var k=0;k<ring.length;k++){
       ctx.fillStyle='rgba(4,10,26,'+(ring[k][2]*opacityScale)+')';
-      trace(sbx+ring[k][0]*u, sby+ring[k][1]*u, leafR, leafR*ratio); ctx.fill();
+      trace(sbx+ring[k][0]*u, sby+ring[k][1]*u, starR, starR*ratio); ctx.fill();
     }
 
     /* composite the sprite (light baked from upper-left, foreshortened by ratio) */
     ctx.save(); ctx.globalAlpha*=opacityScale;
     ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
     ctx.translate(_cx,_cy); ctx.scale(1,ratio);
-    var sc=leafR/LR; ctx.drawImage(SPR,-C*sc,-C*sc,SP*sc,SP*sc);
+    var sc=starR/LR; ctx.drawImage(SPR,-C*sc,-C*sc,SP*sc,SP*sc);
     ctx.restore();
 
-    /* live specular — gentle drift at rest, tracks tilt while inspecting */
-    ctx.save(); trace(_cx,_cy,leafR,leafR*ratio); ctx.clip();
+    /* live specular — gentle drift at rest, tracks tilt while inspecting.
+       Rest highlight biased toward the head (0.16,-0.14) so the star catches light, not the tail. */
+    ctx.save(); trace(_cx,_cy,starR,starR*ratio); ctx.clip();
     var dX=Math.cos(t*0.6)*0.10, dY=Math.sin(t*0.5)*0.06, hx,hy,amp;
-    if(tilt){ hx=_cx+(tilt.tx*0.55+dX)*leafR; hy=_cy+((tilt.ty*0.55+dY)-0.18)*leafR*ratio; amp=(isFilled?0.95:0.8); }
-    else{ hx=_cx+(dX-0.28)*leafR; hy=_cy+((dY-0.34))*leafR*ratio; amp=(isFilled?0.4:0.32); }
-    var spc=ctx.createRadialGradient(hx,hy,0,hx,hy,leafR*0.9);
+    if(tilt){ hx=_cx+(tilt.tx*0.55+dX-0.10)*starR; hy=_cy+((tilt.ty*0.55+dY)-0.16)*starR*ratio; amp=(isFilled?0.95:0.8); }
+    else{ hx=_cx+(dX-0.14)*starR; hy=_cy+((dY-0.22))*starR*ratio; amp=(isFilled?0.4:0.32); }
+    var spc=ctx.createRadialGradient(hx,hy,0,hx,hy,starR*0.9);
     spc.addColorStop(0.00,'rgba(255,255,255,'+(amp*0.9*opacityScale)+')');
     spc.addColorStop(0.40,'rgba(232,244,255,'+(amp*0.30*opacityScale)+')');
     spc.addColorStop(1.00,'rgba(226,240,255,0)');
-    ctx.fillStyle=spc; ctx.fillRect(_cx-leafR,_cy-leafR*ratio,leafR*2,leafR*ratio*2);
+    ctx.fillStyle=spc; ctx.fillRect(_cx-starR,_cy-starR*ratio,starR*2,starR*ratio*2);
     ctx.restore();
   }
 

@@ -4928,11 +4928,16 @@ const BOWL_DEFAULT_LIBRARY = [
     medium:{desc:'Full split — lat pulldown, chest press, leg press, leg curl. All 4.',pts:30},
     hard:{desc:'Full split + 15 min Zone 2 walk after. Extra credit, no excuses.',pts:60}},
 
+  {id:'t_split_squats', name:'Split Squats', icon:'🦿', tone:'strawberry', weight:5,
+    easy:{desc:'10 split squats each leg. Bodyweight, hand on a wall if you wobble. Right now.',pts:10},
+    medium:{desc:'3 × 10 each leg, slow 3-sec descent. Then hold a 30-sec plank.',pts:30},
+    hard:{desc:'4 × 12 each leg + 45-sec plank + 20-sec side plank each side. Legs and core both pay.',pts:60}},
+
   /* ═══ NUTRITION ═══ */
 
 
   /* ═══ MIND / LEARNING ═══ */
-  {id:'t_pl300', name:'PL-300 Study', icon:'📊', tone:'grape', weight:8,
+  {id:'t_pl300', name:'PL-300 Study', icon:'📊', tone:'grape', weight:11,
     easy:{desc:'5 flashcards or re-read one concept page from your last session. Keep the thread warm.',pts:10},
     medium:{desc:'One micro-session: concept → analogy → trap → quiz. 25 min.',pts:30},
     hard:{desc:'Full practice exam section or build a sample report. 60 min.',pts:60}},
@@ -7327,7 +7332,7 @@ function bowlGetLibBall(id){
    The library stores no category field, so map id→category here.
    Used by the coverage panel and the soft pity timer. */
 var BOWL_CATEGORY={
-  t_pushups:'Physical', t_glute_bridges:'Physical', t_walk:'Physical', t_mobility:'Physical', t_gym:'Physical',
+  t_pushups:'Physical', t_glute_bridges:'Physical', t_walk:'Physical', t_mobility:'Physical', t_gym:'Physical', t_split_squats:'Physical',
   t_pl300:'Learning', t_dax:'Learning', t_read:'Learning', t_sql:'Learning', t_banana:'Learning', t_pq_automate:'Learning',
   t_cats:'Relationships', t_family_call:'Relationships', t_safa_random:'Relationships',
   t_journal:'Mental', t_breathwork:'Mental', t_gratitude:'Mental', t_sleep:'Mental',
@@ -10078,203 +10083,170 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     }
     embossFill(pathBeads, 0.70, 0.62, {depth:1.6});
 
-    /* ═══ RUNAWAY STAR (SUPERNOVA SCENE) — sculpted struck-silver relief ═══
-       The image's actual subject: a turbulent exploding supernova shell (the
-       struck hero) with the bright runaway star kicked clear at lower-right,
-       joined back to the blast by a thin light jet. Same pipeline as the old
-       maple — fill / anisotropic brushing / graded edge bevel / raised ridges /
-       occlusion all baked ONCE into an offscreen sprite, then per-frame we only
-       composite the sprite + a shaped cast shadow + a live tilt-tracking
-       specular. The SHELL is one closed silhouette (gets the full clipped metal
-       treatment); the star + jet are baked separately outside that clip with
-       their own bevel/shadow/shine, so they read as their own raised marks. */
+    /* === COMPASS POLESTAR - struck-silver faceted relief ===
+       Replaces the soft supernova. A bold, SYMMETRIC mariner's star: 4 long
+       cardinal rays + 4 short ordinal rays, each a folded facet that catches
+       light down its spine, a domed polished boss at the hub, framed by an
+       engraved compass tick ring. Bullion reads best with high-contrast
+       symmetric relief - sharp ridges + deep struck shadows - which is exactly
+       what the old turbulent blob lacked. Same perf pipeline as before: bake
+       the metal ONCE into an offscreen sprite, then per-frame composite the
+       sprite + a shaped cast shadow + a live tilt-tracking specular sweep. */
     var starR=_rx*0.82;
 
-    if(!state._starSprite || !state._starOutline){
-      /* Shell silhouette: a turbulent, flame-edged blast circle, centred
-         left-of-middle (SCx,SCy) so the runaway star + jet have room at the
-         lower-right. Seeded LCG → the ragged rim is stable across reloads. */
-      var SCx=-0.10, SCy=-0.02, NSH=80, _ss=20260601>>>0;
-      function SR(){ _ss=(_ss*1664525+1013904223)>>>0; return _ss/4294967296; }
-      var ol=[];
-      for(var si=0;si<NSH;si++){
-        var sa=(si/NSH)*Math.PI*2;
-        var lobes=0.585+0.055*Math.sin(sa*3+0.6)+0.030*Math.sin(sa*7+2.3)+0.022*Math.sin(sa*5-1.1);
-        var jit=(SR()-0.5)*0.030, flame=(SR()<0.16)?(0.035+SR()*0.075):0;
-        var rr=lobes+jit+flame;
-        ol.push({x:SCx+Math.cos(sa)*rr, y:SCy+Math.sin(sa)*rr*0.985});
+    /* --- Engraved compass tick ring (live, sits IN the satin field) --- */
+    (function(){
+      var ringRr=_rx*0.86, tickN=60;
+      function pathTicks(){
+        ctx.beginPath();
+        for(var ti=0;ti<tickN;ti++){
+          var ta=(ti/tickN)*Math.PI*2 - Math.PI/2;
+          var card=(ti%15===0);                       /* 4 cardinal ticks longer */
+          var inR=ringRr*(card?0.90:0.945), outR=ringRr*0.985;
+          var ca=Math.cos(ta), sa=Math.sin(ta);
+          ctx.moveTo(_cx+ca*inR,  _cy+sa*inR*ratio);
+          ctx.lineTo(_cx+ca*outR, _cy+sa*outR*ratio);
+        }
       }
-      state._starOutline=ol;
+      emboss(pathTicks, 1.0, 0.7, {depth:1.0, darkA:0.42, brightA:0.22});
+    })();
 
-      var SP=480, C=SP/2, LR=206;
-      state._starSP=SP; state._starC=C; state._starLR=LR;
+    if(!state._emblemSprite || !state._emblemOutline){
+      /* normalized star outline: 8 tips (alternating long / short) + inner valleys */
+      var RL=0.95, RS=0.60, RV=0.28, ol=[];
+      for(var tj=0;tj<8;tj++){
+        var ang=-Math.PI/2 + tj*(Math.PI/4);
+        var rr=(tj%2===0)?RL:RS;
+        ol.push({x:Math.cos(ang)*rr, y:Math.sin(ang)*rr});      /* ray tip   */
+        var va=ang+Math.PI/8;
+        ol.push({x:Math.cos(va)*RV, y:Math.sin(va)*RV});        /* notch     */
+      }
+      state._emblemOutline=ol;
+
+      var SP=480, C=SP/2, LR=200, sk=LR/200;
+      state._emblemSP=SP; state._emblemC=C; state._emblemLR=LR;
       var oc=document.createElement('canvas'); oc.width=SP; oc.height=SP;
       var o=oc.getContext('2d'); o.imageSmoothingQuality='high';
-      var O=state._starOutline;
-      var lx=-0.58, ly=-0.81; /* light from upper-left */
+      var O=state._emblemOutline;
+      var lx=-0.55, ly=-0.78;                                   /* light from upper-left */
       function lp(){ o.beginPath();
         for(var i=0;i<O.length;i++){var X=C+O[i].x*LR,Y=C+O[i].y*LR; if(i===0)o.moveTo(X,Y);else o.lineTo(X,Y);} o.closePath(); }
 
-      /* ── FILL ── */
+      /* -- base fill -- */
       o.save(); lp(); o.clip();
       var g=o.createLinearGradient(C+lx*LR,C+ly*LR,C-lx*LR,C-ly*LR);
-      g.addColorStop(0.00,'#eef4fb'); g.addColorStop(0.30,'#cdd9ea');
-      g.addColorStop(0.60,'#a6b5cd'); g.addColorStop(0.82,'#7d8da9');
-      g.addColorStop(1.00,'#5c6b8b');
+      g.addColorStop(0.00,'#f1f6fc'); g.addColorStop(0.32,'#cfdbec');
+      g.addColorStop(0.62,'#9fb0ca'); g.addColorStop(0.83,'#76879f'); g.addColorStop(1.00,'#586780');
       o.fillStyle=g; o.fillRect(0,0,SP,SP);
-      var dome=o.createRadialGradient(C+lx*LR*0.45,C+ly*LR*0.45,0,C,C,LR*1.05);
-      dome.addColorStop(0,'rgba(255,255,255,0.34)');
-      dome.addColorStop(0.45,'rgba(214,228,246,0.08)');
-      dome.addColorStop(1,'rgba(34,52,86,0.26)');
-      o.fillStyle=dome; o.fillRect(0,0,SP,SP);
-      /* anisotropic radial brushing — the minted-metal tell */
-      var bcx=C+lx*LR*0.22, bcy=C+ly*LR*0.22; o.lineCap='round';
-      for(var i=0;i<160;i++){
-        var ang=i*2.399963229+(Math.random()-0.5)*0.05;
-        var r0=LR*(0.02+Math.random()*0.05), r1=LR*(0.86+Math.random()*0.34);
-        var al=(Math.cos(ang)*lx+Math.sin(ang)*ly), br=0.5+0.5*al;
-        o.strokeStyle=(i&1)?('rgba(255,255,255,'+(0.016+0.05*br)+')')
-                           :('rgba(26,40,68,'+(0.018+0.045*(1-br))+')');
-        o.lineWidth=0.55+Math.random()*0.7;
-        o.beginPath(); o.moveTo(bcx+Math.cos(ang)*r0,bcy+Math.sin(ang)*r0);
-        o.lineTo(bcx+Math.cos(ang)*r1,bcy+Math.sin(ang)*r1); o.stroke();
+
+      /* -- FACETS: fan of triangles from hub to each outline edge, shaded by how
+         the facet's outward direction aligns to the light -> folded-gem look -- */
+      for(var i=0;i<O.length;i++){
+        var a0=O[i], a1=O[(i+1)%O.length];
+        var mx=(a0.x+a1.x)*0.5, my=(a0.y+a1.y)*0.5, ml=Math.hypot(mx,my)||1;
+        var nl=(mx/ml)*lx + (my/ml)*ly;            /* -1 (away) .. 1 (toward light) */
+        var br=0.5+0.5*nl;                          /* 0 dark .. 1 lit */
+        o.beginPath(); o.moveTo(C,C);
+        o.lineTo(C+a0.x*LR, C+a0.y*LR);
+        o.lineTo(C+a1.x*LR, C+a1.y*LR); o.closePath();
+        if(br>=0.5){ o.fillStyle='rgba(248,252,255,'+(0.10+(br-0.5)*0.64)+')'; }
+        else       { o.fillStyle='rgba(13,25,49,'+(0.10+(0.5-br)*0.78)+')'; }
+        o.fill();
+      }
+
+      /* anisotropic radial brushing - the minted-metal tell */
+      var bcx=C+lx*LR*0.18, bcy=C+ly*LR*0.18; o.lineCap='round';
+      for(var i=0;i<150;i++){
+        var bang=i*2.399963229+(Math.random()-0.5)*0.05;
+        var r0=LR*(0.02+Math.random()*0.04), r1=LR*(0.85+Math.random()*0.18);
+        var al=(Math.cos(bang)*lx+Math.sin(bang)*ly), bb=0.5+0.5*al;
+        o.strokeStyle=(i&1)?('rgba(255,255,255,'+(0.012+0.045*bb)+')'):('rgba(26,40,68,'+(0.014+0.04*(1-bb))+')');
+        o.lineWidth=0.5+Math.random()*0.6;
+        o.beginPath(); o.moveTo(bcx+Math.cos(bang)*r0,bcy+Math.sin(bang)*r0);
+        o.lineTo(bcx+Math.cos(bang)*r1,bcy+Math.sin(bang)*r1); o.stroke();
       }
       /* frost micro-grain */
       var nC=document.createElement('canvas'); nC.width=nC.height=110;
       var nx2=nC.getContext('2d'), nim=nx2.createImageData(110,110), nd=nim.data;
-      for(var p=0;p<nd.length;p+=4){var v=176+(Math.random()*78|0); nd[p]=nd[p+1]=nd[p+2]=v; nd[p+3]=26;}
+      for(var p=0;p<nd.length;p+=4){var v=176+(Math.random()*70|0); nd[p]=nd[p+1]=nd[p+2]=v; nd[p+3]=22;}
       nx2.putImageData(nim,0,0);
-      o.save(); o.globalAlpha=0.5; o.globalCompositeOperation='overlay';
+      o.save(); o.globalAlpha=0.45; o.globalCompositeOperation='overlay';
       o.fillStyle=o.createPattern(nC,'repeat'); o.fillRect(0,0,SP,SP); o.restore();
-      /* graded edge bevel: bright lit flank + dark shadow flank + cool blue bounce */
-      var bo=LR*0.010, bw=[6.0,4.6,3.4,2.3,1.3], sk=LR/206;
-      for(var p=0;p<bw.length;p++){ o.save(); o.translate(lx*bo,ly*bo);
-        o.lineJoin='round'; o.lineWidth=bw[p]*sk;
-        o.strokeStyle='rgba(255,255,255,'+(0.14*(1-p/bw.length))+')'; lp(); o.stroke(); o.restore(); }
-      for(var p=0;p<bw.length;p++){ o.save(); o.translate(-lx*bo,-ly*bo);
-        o.lineJoin='round'; o.lineWidth=(bw[p]+0.2)*sk;
-        o.strokeStyle='rgba(9,18,40,'+(0.16*(1-p/bw.length))+')'; lp(); o.stroke(); o.restore(); }
-      o.save(); o.translate(-lx*bo*1.7,-ly*bo*1.7); o.lineWidth=2.0*sk;
-      o.strokeStyle='rgba(126,200,255,0.13)'; o.lineJoin='round'; lp(); o.stroke(); o.restore();
       o.restore(); /* end fill clip */
 
-      /* ── BLAST FILAMENTS ── wavy raised ridges bursting from the core out
-         toward the shell, varied length + curvature for an organic explosion ── */
-      o.save(); lp(); o.clip();
-      var O0x=C+SCx*LR, O0y=C+SCy*LR; /* blast core */
-      function quadPts(tx,ty,bow,n){
-        var ex=C+tx*LR,ey=C+ty*LR,mx=(O0x+ex)/2,my=(O0y+ey)/2;
-        var dx=ex-O0x,dy=ey-O0y,len=Math.hypot(dx,dy)||1,px=-dy/len,py=dx/len;
-        var cxq=mx+px*bow*len,cyq=my+py*bow*len,ps=[];
-        for(var s=0;s<=n;s++){var u=s/n,iu=1-u;
-          ps.push([iu*iu*O0x+2*iu*u*cxq+u*u*ex, iu*iu*O0y+2*iu*u*cyq+u*u*ey]);}
-        return ps;
+      /* -- spine ridge down each ray: bright lit flank + dark shadow flank -- */
+      var vo=LR*0.012;
+      for(var tj=0;tj<8;tj++){
+        var tip=O[tj*2];
+        var tx=C+tip.x*LR, ty=C+tip.y*LR; o.lineCap='round';
+        o.strokeStyle='rgba(8,16,38,0.50)';   o.lineWidth=2.4*sk;
+        o.beginPath(); o.moveTo(C-lx*vo,C-ly*vo); o.lineTo(tx-lx*vo,ty-ly*vo); o.stroke();
+        o.strokeStyle='rgba(250,253,255,0.55)'; o.lineWidth=1.5*sk;
+        o.beginPath(); o.moveTo(C+lx*vo,C+ly*vo); o.lineTo(tx+lx*vo,ty+ly*vo); o.stroke();
       }
-      /* stroke the tapered ridge OPAQUELY onto a scratch layer, then composite
-         once at the target alpha — overlapping round caps on an opaque layer
-         don't stack, so the ridge reads as one continuous raised line, not beads */
-      var vScratch=document.createElement('canvas'); vScratch.width=SP; vScratch.height=SP;
-      var vsc=vScratch.getContext('2d');
-      function taper(ps,wA,wB,rgb,al,dx,dy){
-        vsc.clearRect(0,0,SP,SP);
-        vsc.save(); vsc.translate(dx,dy); vsc.lineCap='round'; vsc.lineJoin='round'; vsc.strokeStyle='rgb('+rgb+')';
-        var n=ps.length-1;
-        for(var i=0;i<n;i++){vsc.lineWidth=Math.max(0.4,wA+(wB-wA)*(i/n));
-          vsc.beginPath(); vsc.moveTo(ps[i][0],ps[i][1]); vsc.lineTo(ps[i+1][0],ps[i+1][1]); vsc.stroke();}
-        vsc.restore();
-        o.save(); o.globalAlpha=al; o.drawImage(vScratch,0,0); o.restore();}
-      function ridge(ps,wA,wB,sh,hi,co){var vo=LR*0.006;
-        taper(ps,(wA+0.2),(wB+0.2),'8,16,36',sh,-lx*vo,-ly*vo);
-        taper(ps,wA*0.82,wB*0.82,'244,250,255',hi,lx*vo,ly*vo);
-        taper(ps,wA*0.45,wB*0.4,'150,168,200',co,0,0);}
-      /* radial filaments — seeded so they're stable; wavy via random bow */
-      var _fs=777>>>0; function FR(){ _fs=(_fs*1664525+1013904223)>>>0; return _fs/4294967296; }
-      for(var f=0;f<20;f++){
-        var fa=(f/20)*Math.PI*2+(FR()-0.5)*0.18, flen=0.30+FR()*0.26;
-        var ftx=SCx+Math.cos(fa)*flen, fty=SCy+Math.sin(fa)*flen;
-        ridge(quadPts(ftx,fty,(FR()-0.5)*0.5,40), LR*(0.006+FR()*0.006), LR*0.0015, 0.34, 0.42, 0.24);
-      }
-      /* short turbulent ridges around the core */
-      for(var c2=0;c2<6;c2++){var ca=(c2/6)*Math.PI*2+0.4;
-        ridge(quadPts(SCx+Math.cos(ca)*0.12,SCy+Math.sin(ca)*0.12,(FR()-0.5)*0.6,18), LR*0.007, LR*0.002, 0.30, 0.40, 0.22);}
-      /* bright turbulent core knot */
-      var ck=o.createRadialGradient(O0x,O0y,0,O0x,O0y,LR*0.17);
-      ck.addColorStop(0,'rgba(248,252,255,0.55)'); ck.addColorStop(0.5,'rgba(212,228,248,0.16)'); ck.addColorStop(1,'rgba(212,228,248,0)');
-      o.fillStyle=ck; o.fillRect(O0x-LR*0.2,O0y-LR*0.2,LR*0.4,LR*0.4);
-      o.restore();
 
-      /* ── SHELL OCCLUSION ── soft shadow pockets in the hollow interior between
-         core and rim, so the blast reads as a 3-D shell, not a flat disc ── */
+      /* -- valley occlusion: soft dark pockets at the inner notches -- */
       o.save(); lp(); o.clip();
-      function dab(nx3,ny3,rad,al){var X=C+nx3*LR,Y=C+ny3*LR;
-        var dd=o.createRadialGradient(X,Y,0,X,Y,rad);
-        dd.addColorStop(0,'rgba(4,10,24,'+al+')'); dd.addColorStop(1,'rgba(4,10,24,0)');
-        o.fillStyle=dd; o.fillRect(X-rad,Y-rad,rad*2,rad*2);}
-      var _ds=4242>>>0; function DR(){ _ds=(_ds*1664525+1013904223)>>>0; return _ds/4294967296; }
-      for(var d=0;d<6;d++){var da=DR()*Math.PI*2, dr=0.28+DR()*0.22;
-        dab(SCx+Math.cos(da)*dr, SCy+Math.sin(da)*dr, LR*(0.07+DR()*0.05), 0.14+DR()*0.08);}
+      for(var vj=0;vj<8;vj++){
+        var val=O[vj*2+1];
+        var vx=C+val.x*LR, vy=C+val.y*LR, vr=LR*0.10;
+        var vd=o.createRadialGradient(vx,vy,0,vx,vy,vr);
+        vd.addColorStop(0,'rgba(4,10,24,0.34)'); vd.addColorStop(1,'rgba(4,10,24,0)');
+        o.fillStyle=vd; o.fillRect(vx-vr,vy-vr,vr*2,vr*2);
+      }
       o.restore();
 
-      /* crisp struck edge */
-      o.save(); o.lineJoin='round';
-      o.strokeStyle='rgba(6,14,30,0.55)'; o.lineWidth=1.1*sk; lp(); o.stroke();
-      o.translate(lx*0.8,ly*0.8); o.strokeStyle='rgba(245,250,255,0.32)'; o.lineWidth=0.8*sk; lp(); o.stroke();
-      o.restore();
+      /* -- crisp struck edge (dark down-right, bright up-left) -- */
+      o.save(); o.lineJoin='miter'; o.miterLimit=3;
+      o.translate(-lx*0.8,-ly*0.8); o.strokeStyle='rgba(6,14,30,0.55)';   o.lineWidth=1.4*sk; lp(); o.stroke(); o.restore();
+      o.save(); o.lineJoin='miter'; o.miterLimit=3;
+      o.translate( lx*0.8, ly*0.8); o.strokeStyle='rgba(248,252,255,0.34)'; o.lineWidth=0.9*sk; lp(); o.stroke(); o.restore();
 
-      /* ── RUNAWAY STAR + LIGHT JET ── struck at lower-right, clear of the blast.
-         Baked outside the shell clip; carries its own bevel, shadow + shine. */
-      var RSx=C+0.74*LR, RSy=C+0.40*LR, rsr=LR*0.165;
-      /* jet: thin tapering streak from the shell rim toward the star (widens in) */
-      ridge([[C+0.42*LR,C+0.24*LR],[RSx-0.42*rsr,RSy-0.42*rsr]], LR*0.004, LR*0.018, 0.30, 0.55, 0.30);
-      /* 4 long + 4 short ray burst */
-      var rsp=[];
-      for(var k=0;k<8;k++){var ka=k*Math.PI/4-Math.PI/2, rad=(k%2===0)?rsr:rsr*0.36;
-        rsp.push([RSx+Math.cos(ka)*rad, RSy+Math.sin(ka)*rad]);}
-      function rbp(){ o.beginPath();
-        for(var i=0;i<rsp.length;i++){ if(i===0)o.moveTo(rsp[i][0],rsp[i][1]); else o.lineTo(rsp[i][0],rsp[i][1]); } o.closePath(); }
-      o.save(); o.translate(-lx*1.6,-ly*1.6); o.fillStyle='rgba(4,10,26,0.5)'; rbp(); o.fill(); o.restore(); /* shadow */
-      o.save(); rbp(); o.clip();
-      var rsg=o.createRadialGradient(RSx,RSy,0,RSx,RSy,rsr);
-      rsg.addColorStop(0,'#ffffff'); rsg.addColorStop(0.45,'#eaf3ff'); rsg.addColorStop(1,'#b8c8e0');
-      o.fillStyle=rsg; o.fillRect(RSx-rsr,RSy-rsr,rsr*2,rsr*2); o.restore();
-      o.save(); o.lineJoin='round'; o.strokeStyle='rgba(6,14,30,0.5)'; o.lineWidth=1.0*sk; rbp(); o.stroke(); o.restore();
-      for(var k2=0;k2<8;k2+=2){var ka2=k2*Math.PI/4-Math.PI/2;
-        ridge([[RSx,RSy],[RSx+Math.cos(ka2)*rsr*0.92,RSy+Math.sin(ka2)*rsr*0.92]], LR*0.008, LR*0.001, 0.30, 0.55, 0.0);}
-      var hc=o.createRadialGradient(RSx,RSy,0,RSx,RSy,rsr*0.55);
-      hc.addColorStop(0,'rgba(255,255,255,0.95)'); hc.addColorStop(1,'rgba(255,255,255,0)');
-      o.fillStyle=hc; o.fillRect(RSx-rsr*0.6,RSy-rsr*0.6,rsr*1.2,rsr*1.2);
+      /* -- central polished boss (domed cabochon) -- */
+      var bR=LR*0.17;
+      o.beginPath(); o.arc(C,C,bR*1.18,0,Math.PI*2);
+      o.strokeStyle='rgba(6,14,30,0.50)'; o.lineWidth=2.2*sk; o.stroke();
+      o.beginPath(); o.arc(C-lx*0.6,C-ly*0.6,bR*1.18,0,Math.PI*2);
+      o.strokeStyle='rgba(245,250,255,0.30)'; o.lineWidth=1.0*sk; o.stroke();
+      var dome=o.createRadialGradient(C+lx*bR*0.5,C+ly*bR*0.5,bR*0.05,C,C,bR);
+      dome.addColorStop(0.00,'#fbfdff'); dome.addColorStop(0.45,'#cdd9ec');
+      dome.addColorStop(0.80,'#8496b0'); dome.addColorStop(1.00,'#4f5e78');
+      o.beginPath(); o.arc(C,C,bR,0,Math.PI*2); o.fillStyle=dome; o.fill();
+      var pipx=C+lx*bR*0.42, pipy=C+ly*bR*0.42;
+      var pip=o.createRadialGradient(pipx,pipy,0,pipx,pipy,bR*0.55);
+      pip.addColorStop(0,'rgba(255,255,255,0.95)'); pip.addColorStop(1,'rgba(255,255,255,0)');
+      o.fillStyle=pip; o.beginPath(); o.arc(pipx,pipy,bR*0.55,0,Math.PI*2); o.fill();
 
-      state._starSprite=oc;
+      state._emblemSprite=oc;
     }
 
-    var O=state._starOutline, SPR=state._starSprite,
-        SP=state._starSP, C=state._starC, LR=state._starLR;
+    var O=state._emblemOutline, SPR=state._emblemSprite,
+        SP=state._emblemSP, C=state._emblemC, LR=state._emblemLR;
 
     function trace(px,py,sx,sy){ ctx.beginPath();
       for(var i=0;i<O.length;i++){var X=px+O[i].x*sx,Y=py+O[i].y*sy; if(i===0)ctx.moveTo(X,Y);else ctx.lineTo(X,Y);} ctx.closePath(); }
 
-    /* shaped cast shadow — raised relief onto the field */
-    var u=starR*0.02, sbx=_cx+starR*0.05, sby=_cy+starR*0.06;
-    var ring=[[0,0,0.16],[0.7,0.8,0.11],[1.5,1.7,0.06],[-0.6,0.7,0.08],[0.7,-0.5,0.08]];
+    /* shaped cast shadow - raised relief onto the field */
+    var u=starR*0.02, sbx=_cx+starR*0.045, sby=_cy+starR*0.055;
+    var ring=[[0,0,0.16],[0.7,0.8,0.10],[1.5,1.7,0.05]];
     for(var k=0;k<ring.length;k++){
       ctx.fillStyle='rgba(4,10,26,'+(ring[k][2]*opacityScale)+')';
       trace(sbx+ring[k][0]*u, sby+ring[k][1]*u, starR, starR*ratio); ctx.fill();
     }
 
-    /* composite the sprite (light baked from upper-left, foreshortened by ratio) */
+    /* composite the sprite (light baked upper-left, foreshortened by ratio) */
     ctx.save(); ctx.globalAlpha*=opacityScale;
     ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
     ctx.translate(_cx,_cy); ctx.scale(1,ratio);
     var sc=starR/LR; ctx.drawImage(SPR,-C*sc,-C*sc,SP*sc,SP*sc);
     ctx.restore();
 
-    /* live specular — gentle drift at rest, tracks tilt while inspecting.
-       Rest highlight biased toward the head (0.16,-0.14) so the star catches light, not the tail. */
+    /* live specular sweep across the facets - drifts at rest, tracks tilt while inspecting */
     ctx.save(); trace(_cx,_cy,starR,starR*ratio); ctx.clip();
     var dX=Math.cos(t*0.6)*0.10, dY=Math.sin(t*0.5)*0.06, hx,hy,amp;
-    if(tilt){ hx=_cx+(tilt.tx*0.55+dX-0.10)*starR; hy=_cy+((tilt.ty*0.55+dY)-0.16)*starR*ratio; amp=(isFilled?0.95:0.8); }
-    else{ hx=_cx+(dX-0.14)*starR; hy=_cy+((dY-0.22))*starR*ratio; amp=(isFilled?0.4:0.32); }
-    var spc=ctx.createRadialGradient(hx,hy,0,hx,hy,starR*0.9);
+    if(tilt){ hx=_cx+(tilt.tx*0.6+dX-0.18)*starR; hy=_cy+((tilt.ty*0.6+dY)-0.22)*starR*ratio; amp=(isFilled?0.95:0.8); }
+    else{ hx=_cx+(dX-0.20)*starR; hy=_cy+((dY-0.26))*starR*ratio; amp=(isFilled?0.42:0.34); }
+    var spc=ctx.createRadialGradient(hx,hy,0,hx,hy,starR*0.95);
     spc.addColorStop(0.00,'rgba(255,255,255,'+(amp*0.9*opacityScale)+')');
     spc.addColorStop(0.40,'rgba(232,244,255,'+(amp*0.30*opacityScale)+')');
     spc.addColorStop(1.00,'rgba(226,240,255,0)');
@@ -11868,6 +11840,11 @@ window.finMonthNav = function(delta){
     var isExcited = _excited;
     /* dt-scale: normalize to 60fps baseline (16.667ms) so physics is framerate-independent */
     var dtScale = (dt || 16.667) / 16.667;
+    if(dtScale > 2) dtScale = 2;   /* frame-drop guard: a stutter frame must NOT catapult balls into deep overlap (root cause of idle jitter on slow frames) */
+    /* idle contact-solver tuning */
+    var _SLOP = 0.5;     /* allowed penetration (px) - stops the solver fighting over sub-pixel overlap */
+    var _CORR = 0.8;     /* fraction of remaining overlap resolved per pass - <1 prevents teleport/overshoot */
+    var _BOUNCE = 0.35;  /* min approach speed for an idle bounce; slower contacts resolve inelastically (no buzz) */
     /* During excited: ramp intensity over time for dramatic buildup */
     var excitedProg = 0;
     if(isExcited && _excitedEnd > 0){
@@ -11935,7 +11912,7 @@ window.finMonthNav = function(delta){
       if(spd > maxSpd){ var sc = maxSpd/spd; b.vx *= sc; b.vy *= sc; }
     }
 
-    var PASSES = isExcited ? 2 : 1;
+    var PASSES = 2;  /* was isExcited?2:1 - idle needs >=2 passes so a packed pile converges instead of buzzing */
     for(var p=0; p<PASSES; p++){
       /* Globe wall */
       for(var i=0; i<_balls.length; i++){
@@ -11943,14 +11920,22 @@ window.finMonthNav = function(delta){
         if(_dispensing && i === _chosenBallIdx) continue;
         var dx=b.x-GX, dy=b.y-GY, d=Math.hypot(dx,dy);
         var mx=GR-b.r-3;
-        if(d>mx){
+        if(d>mx && d>0.01){
           var nx=dx/d, ny=dy/d;
-          b.x=GX+nx*mx; b.y=GY+ny*mx;
           var dot=b.vx*nx+b.vy*ny;
-          if(dot>0){
-            var wallSpd=Math.hypot(b.vx,b.vy);
-            if(wallSpd>1.2){ _triggerClank('w'+i, Math.min(1,wallSpd*0.14)); }
-            b.vx-=dot*nx*0.62; b.vy-=dot*ny*0.62;
+          if(isExcited){
+            /* shaking: original snappy wall - chaos hides the hard snap */
+            b.x=GX+nx*mx; b.y=GY+ny*mx;
+            if(dot>0){
+              var wallSpd=Math.hypot(b.vx,b.vy);
+              if(wallSpd>1.2){ _triggerClank('w'+i, Math.min(1,wallSpd*0.14)); }
+              b.vx-=dot*nx*0.62; b.vy-=dot*ny*0.62;
+            }
+          } else {
+            /* idle: soft push-out (slop+percent) + inelastic stop = calm rest against glass, no teleport */
+            var pen=d-mx, corr=pen-_SLOP; if(corr<0) corr=0;
+            b.x-=nx*corr*_CORR; b.y-=ny*corr*_CORR;
+            if(dot>0){ b.vx-=dot*nx; b.vy-=dot*ny; }
           }
         }
       }
@@ -12008,16 +11993,19 @@ window.finMonthNav = function(delta){
                   var ex=c.x-b.x, ey=c.y-b.y, ed=Math.hypot(ex,ey);
                   var md=b.r+c.r;
                   if(ed<md && ed>0.01){
-                    var ov=(md-ed)*0.5, nx2=ex/ed, ny2=ey/ed;
-                    b.x-=nx2*ov; b.y-=ny2*ov;
-                    c.x+=nx2*ov; c.y+=ny2*ov;
+                    var nx2=ex/ed, ny2=ey/ed, pen=md-ed;
+                    /* idle uses slop+percent split; excited keeps the full split */
+                    var ov = isExcited ? pen*0.5 : (pen>_SLOP?(pen-_SLOP)*_CORR*0.5:0);
+                    if(ov>0){ b.x-=nx2*ov; b.y-=ny2*ov; c.x+=nx2*ov; c.y+=ny2*ov; }
                     var rel=b.vx*nx2+b.vy*ny2-(c.vx*nx2+c.vy*ny2);
                     if(rel>0){
                       if((isExcited || _dispensing) && rel>0.8){
                         var _pKey = bi < ci ? bi+'_'+ci : ci+'_'+bi;
                         _triggerClank(_pKey, Math.min(1, rel*0.22));
                       }
-                      var f=rel*0.45; b.vx-=f*nx2; b.vy-=f*ny2; c.vx+=f*nx2; c.vy+=f*ny2;
+                      /* excited/impact: springy (0.45). idle slow contact: inelastic (0.5 -> no rebound buzz) */
+                      var f=(isExcited || rel>_BOUNCE)?rel*0.45:rel*0.5;
+                      b.vx-=f*nx2; b.vy-=f*ny2; c.vx+=f*nx2; c.vy+=f*ny2;
                     }
                   }
                 }
@@ -12035,14 +12023,15 @@ window.finMonthNav = function(delta){
               var ex=c.x-b.x, ey=c.y-b.y, ed=Math.hypot(ex,ey);
               var md=b.r+c.r;
               if(ed<md && ed>0.01){
-                var ov=(md-ed)*0.5, nx2=ex/ed, ny2=ey/ed;
-                b.x-=nx2*ov; b.y-=ny2*ov;
-                c.x+=nx2*ov; c.y+=ny2*ov;
+                var nx2=ex/ed, ny2=ey/ed, pen=md-ed;
+                var ov = isExcited ? pen*0.5 : (pen>_SLOP?(pen-_SLOP)*_CORR*0.5:0);
+                if(ov>0){ b.x-=nx2*ov; b.y-=ny2*ov; c.x+=nx2*ov; c.y+=ny2*ov; }
                 var rel=b.vx*nx2+b.vy*ny2-(c.vx*nx2+c.vy*ny2);
                 if(rel>0){
                   var _pKey = i+'_'+j;
                   if(rel>0.8){ _triggerClank(_pKey, Math.min(1, rel*0.22)); }
-                  var f=rel*0.45; b.vx-=f*nx2; b.vy-=f*ny2; c.vx+=f*nx2; c.vy+=f*ny2;
+                  var f=(isExcited || rel>_BOUNCE)?rel*0.45:rel*0.5;
+                  b.vx-=f*nx2; b.vy-=f*ny2; c.vx+=f*nx2; c.vy+=f*ny2;
                 }
               }
             }

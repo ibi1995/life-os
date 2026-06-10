@@ -203,6 +203,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bowl-crank-btn{background:linear-gradient(135deg,rgba(255,217,125,.14),rgba(255,190,80,.08));border:1.5px solid rgba(255,217,125,.35);border-radius:50px;color:var(--gold);font-family:var(--font-ui);font-size:13.5px;font-weight:800;padding:15px 36px;cursor:pointer;letter-spacing:.5px;transition:transform .14s,box-shadow .22s,background .18s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;box-shadow:0 4px 20px rgba(255,217,125,.12),inset 0 1px 0 rgba(255,255,255,.06);min-height:50px;display:inline-flex;align-items:center;gap:9px}
 .bowl-crank-btn:hover{background:linear-gradient(135deg,rgba(255,217,125,.22),rgba(255,190,80,.14));box-shadow:0 6px 28px rgba(255,217,125,.18),inset 0 1px 0 rgba(255,255,255,.08)}
 .bowl-crank-btn:active{transform:scale(.96)}
+/* v67: celebration hop — machine physically jumps with squash & stretch on completion */
+@keyframes gbHop{0%{transform:translate3d(0,0,0) scale(1,1)}16%{transform:translate3d(0,2.5px,0) scale(1.015,.982)}44%{transform:translate3d(0,-8px,0) scale(.988,1.018)}68%{transform:translate3d(0,1.5px,0) scale(1.01,.99)}84%{transform:translate3d(0,-1.5px,0) scale(.997,1.004)}100%{transform:translate3d(0,0,0) scale(1,1)}}
+#bowl-machine-wrap.celebrate-hop{animation:gbHop .68s cubic-bezier(.34,1.56,.64,1) 1;transform-origin:50% 88%}
+@media (prefers-reduced-motion:reduce){#bowl-machine-wrap.celebrate-hop{animation:none}}
+/* v67: crank icon ratchets during draw — wind, slip back, complete the turn */
+@keyframes crankIconSpin{0%{transform:rotate(0deg)}52%{transform:rotate(295deg)}66%{transform:rotate(278deg)}100%{transform:rotate(360deg)}}
+.bowl-crank-btn.drawing .svg-icon{animation:crankIconSpin 1.15s cubic-bezier(.45,.05,.55,.95) infinite;transform-origin:50% 50%}
 
 /* v62: crank press has a tiny anticipation dip then ease — feels mechanical not just pulsing */
 @keyframes crankPulse{
@@ -7891,15 +7898,11 @@ function bowlChooseTier(tier){
   dd.doneAt=Date.now();
   setBowl(b);
 
+  /* v67: completion gets its OWN animation — fountain celebration, tier-coded.
+     The old path re-ran the draw shake (incl. a phantom dispense). Wrong emotional beat. */
   try{
-    if(typeof window._gbSetExcited==='function') window._gbSetExcited(null,1800,function(){});
-    window._ensureAudioReady(function(ctx){
-      var now=ctx.currentTime+0.02;
-      var o=ctx.createOscillator(),g=ctx.createGain();
-      o.type='sine';o.frequency.setValueAtTime(880,now);o.frequency.exponentialRampToValueAtTime(1200,now+0.12);
-      g.gain.setValueAtTime(0.25,now);g.gain.exponentialRampToValueAtTime(0.0001,now+0.4);
-      o.connect(g);g.connect(ctx.destination);o.start(now);o.stop(now+0.42);
-    });
+    if(typeof window._gbCelebrate==='function') window._gbCelebrate(tier);
+    else if(typeof window._gbSetExcited==='function') window._gbSetExcited(null,1800,function(){});
   }catch(e){}
 
   var tierEmoji={easy:"✅",medium:"🔥",hard:"⚡"};
@@ -7999,7 +8002,9 @@ function bowlRerollTheme(){
   _bowlAnimResume();
   try{ var _acR=_getAudioCtx(); if(_acR&&_acR.state==='suspended') _acR.resume().catch(function(){}); }catch(e){}
   if(typeof _playGumballCrank==='function') _playGumballCrank();
-  if(window._gbSetExcited){ window._gbSetExcited(null,2500,function(){}); }
+  /* v67: reroll = vortex remix, not the draw shake — each verb gets its own motion */
+  if(window._gbSwirl){ window._gbSwirl(2200); }
+  else if(window._gbSetExcited){ window._gbSetExcited(null,2500,function(){}); }
   else { if(typeof _playBallsShaking==='function') _playBallsShaking(2500); }
   var rerollsLeft=BOWL_REROLLS_PER_WEEK-(usedThisWeek+1);
   toast(rerollsLeft>0?('Rerolled! '+rerollsLeft+' reroll'+(rerollsLeft===1?'':'s')+' left this week.'):'Last weekly reroll used — pick your challenge below.');
@@ -12154,6 +12159,27 @@ window.finMonthNav = function(delta){
   var _shakeOffX = 0;  /* Mobile canvas-space shake offset */
   var _shakeOffY = 0;
   var _rumbleHushScheduled = false;  /* v62: pre-reveal rumble fade flag (reset each shake) */
+  /* ── v67: CELEBRATION mode (challenge completion) — distinct from draw shake ── */
+  var _celebrating = false;
+  var _celebrateStart = 0;
+  var _celebrateDur = 2200;
+  var _celebrateTier = 'easy';
+  var _sparkles = [];          /* twinkle particles inside globe */
+  var _rings = [];             /* expanding shockwave rings */
+  /* ── v67: SWIRL mode (reroll) — vortex remix, distinct from shake + celebrate ── */
+  var _swirling = false;
+  var _swirlStart = 0;
+  var _swirlDur = 2200;
+  var _swirlDir = 1;
+  /* ── v67: motion trail for the dispensed ball falling through the neck ── */
+  var _trail = [];
+  var _TRAIL_MAX = 5;
+  /* Tier-coded celebration colors — blue family for easy/medium, GOLD for hard (matches crank/reward) */
+  var _CELEB_COLS = {
+    easy:   {core:'rgba(150,210,255,', glow:'rgba(80,150,255,',  ring:'rgba(110,180,255,'},
+    medium: {core:'rgba(205,235,255,', glow:'rgba(120,190,255,', ring:'rgba(150,210,255,'},
+    hard:   {core:'rgba(255,228,150,', glow:'rgba(255,195,95,',  ring:'rgba(255,215,125,'}
+  };
 
   /* ── Pre-allocated sort buffer (avoids slice() every frame) ── */
   var _sortBuf = null;
@@ -12214,8 +12240,8 @@ window.finMonthNav = function(delta){
     }
     /* Intensity curve: gentle start -> peak at 60% -> strong finish */
     var exciteIntensity = isExcited ? (excitedProg < 0.3 ? excitedProg / 0.3 * 0.7 : excitedProg < 0.7 ? 0.7 + (excitedProg - 0.3) * 0.75 : 1.0) : 0;
-    var gravity = isExcited ? 0.18 + exciteIntensity * 0.22 : 0.05;
-    var damping = isExcited ? 0.930 + (1 - exciteIntensity) * 0.015 : 0.92;
+    var gravity = isExcited ? 0.18 + exciteIntensity * 0.22 : _celebrating ? 0.26 : _swirling ? 0.04 : 0.05;
+    var damping = isExcited ? 0.930 + (1 - exciteIntensity) * 0.015 : (_celebrating || _swirling) ? 0.976 : 0.92;
     /* Framerate-independent damping: raise to dtScale power */
     var dampFactor = dtScale === 1 ? damping : Math.pow(damping, dtScale);
 
@@ -12249,6 +12275,28 @@ window.finMonthNav = function(delta){
         b.vx += (Math.sin(_simTime*1.8 + ph)*0.006 + Math.sin(_simTime*2.8 + ph*0.7)*0.003) * dtScale;
         b.vy += (Math.cos(_simTime*2.0 + ph*1.4)*0.004 + Math.cos(_simTime*2.4 + ph*1.1)*0.002) * dtScale;
       }
+      /* ── v67: CELEBRATION fountain ──
+         Phase A (0–140ms): squat — gentle downward press, the crowd crouches.
+         Phase B: each ball launches at its own _launchAt time (center-out ripple wave). */
+      if(_celebrating){
+        var _ct = t - _celebrateStart;
+        if(_ct < 140){ b.vy += 0.30 * dtScale; }
+        if(b._launchAt && t >= b._launchAt){
+          b.vy -= 5.2 + Math.random() * 2.6;
+          b.vx += (b.x - GX) * 0.022 + (Math.random() - 0.5) * 1.4;
+          b._launchAt = 0;
+        }
+      }
+      /* ── v67: SWIRL vortex — tangential orbit + mild center pull, eased in/out ── */
+      if(_swirling){
+        var _sdx = b.x - GX, _sdy = b.y - GY, _sd = Math.hypot(_sdx, _sdy) || 1;
+        var _sp = (t - _swirlStart) / _swirlDur;
+        var _sStr = _sp < 0.15 ? _sp / 0.15 : _sp > 0.76 ? Math.max(0, 1 - (_sp - 0.76) / 0.24) : 1;
+        b.vx += (-_sdy / _sd) * 0.55 * _sStr * _swirlDir * dtScale;
+        b.vy += ( _sdx / _sd) * 0.55 * _sStr * _swirlDir * dtScale;
+        b.vx += (GX - b.x) * 0.0016 * _sStr * dtScale;
+        b.vy += (GY - b.y) * 0.0016 * _sStr * dtScale;
+      }
       /* v62: chosen-ball pre-reveal settling — extra damping + drift toward globe center
          so the building halo anchors to a calm point. Effect ramps up over last 400ms. */
       if(isExcited && i === _chosenBallIdx && _chosenSettleStrength > 0){
@@ -12262,14 +12310,26 @@ window.finMonthNav = function(delta){
         b.vy += (GY - b.y) * pullF * dtScale;
       }
       /* Velocity dead-zone: kill micro-jitter from collision settling */
-      if(!isExcited){
+      if(!isExcited && !_celebrating && !_swirling){
         var spd2 = b.vx*b.vx + b.vy*b.vy;
         if(spd2 < 0.002){ b.vx = 0; b.vy = 0; }
       }
       /* Speed cap -- prevents runaway velocity */
-      var maxSpd = isExcited ? 12 : 1.0;
+      var maxSpd = isExcited ? 12 : (_celebrating || _swirling) ? 9 : 1.0;
       var spd = Math.hypot(b.vx, b.vy);
       if(spd > maxSpd){ var sc = maxSpd/spd; b.vx *= sc; b.vy *= sc; }
+    }
+
+    /* ── v67: advance celebration sparkles (cheap — no collision, just drift + gravity) ── */
+    if(_celebrating && _sparkles.length){
+      for(var _spi = 0; _spi < _sparkles.length; _spi++){
+        var _s = _sparkles[_spi];
+        if(t < _s.born) continue;
+        _s.x += _s.vx * dtScale;
+        _s.y += _s.vy * dtScale;
+        _s.vy += 0.034 * dtScale;
+        _s.vx *= 0.986;
+      }
     }
 
     var PASSES = 2;  /* was isExcited?2:1 - idle needs >=2 passes so a packed pile converges instead of buzzing */
@@ -12283,8 +12343,8 @@ window.finMonthNav = function(delta){
         if(d>mx && d>0.01){
           var nx=dx/d, ny=dy/d;
           var dot=b.vx*nx+b.vy*ny;
-          if(isExcited){
-            /* shaking: original snappy wall - chaos hides the hard snap */
+          if(isExcited || _celebrating || _swirling){
+            /* shaking/celebrating/swirling: snappy wall - motion hides the hard snap */
             b.x=GX+nx*mx; b.y=GY+ny*mx;
             if(dot>0){
               var wallSpd=Math.hypot(b.vx,b.vy);
@@ -12359,7 +12419,7 @@ window.finMonthNav = function(delta){
                     if(ov>0){ b.x-=nx2*ov; b.y-=ny2*ov; c.x+=nx2*ov; c.y+=ny2*ov; }
                     var rel=b.vx*nx2+b.vy*ny2-(c.vx*nx2+c.vy*ny2);
                     if(rel>0){
-                      if((isExcited || _dispensing) && rel>0.8){
+                      if((isExcited || _dispensing || _celebrating || _swirling) && rel>0.8){
                         var _pKey = bi < ci ? bi+'_'+ci : ci+'_'+bi;
                         _triggerClank(_pKey, Math.min(1, rel*0.22));
                       }
@@ -12438,6 +12498,7 @@ window.finMonthNav = function(delta){
         cb.x += (GX - cb.x) * 0.20;
         cb.y += (_neckTopY - cb.y) * 0.18;
         cb.vx *= 0.5; cb.vy *= 0.5;
+        _trail.length = 0;  /* v67: fresh trail for this drop */
         cb._dispAlpha = 1;
         cb._dispScale = 1;
         cb._sqsh = 1; cb._strch = 1;
@@ -12470,6 +12531,9 @@ window.finMonthNav = function(delta){
         cb._sqsh = 1 + p2 * 0.10;       /* taller as it falls */
         /* Slightly shrink while passing through narrow neck */
         cb._dispScale = 1 - 0.10 * Math.sin(p2 * Math.PI);
+        /* v67: motion trail — ghost positions for speed-line feel on the drop */
+        _trail.push({x: cb.x, y: cb.y, r: cb.r * cb._dispScale});
+        if(_trail.length > _TRAIL_MAX) _trail.shift();
       }
       /* Phase 3: exit + tray bounce (900 → 1100ms) */
       else if(elapsed <= 1100){
@@ -13030,12 +13094,84 @@ window.finMonthNav = function(delta){
         drawBall(cb2, false);
       }
     }
+    /* ── v67: CELEBRATION layer — shockwave rings + twinkle sparks, clipped inside the glass ── */
+    if(_celebrating){
+      var _cc = _CELEB_COLS[_celebrateTier] || _CELEB_COLS.easy;
+      /* Expanding rings — staggered, fade as they grow */
+      for(var _ri = 0; _ri < _rings.length; _ri++){
+        var _rg = _rings[_ri];
+        var _rp = (t - _rg.born) / _rg.dur;
+        if(_rp < 0 || _rp > 1) continue;
+        var _re = 1 - Math.pow(1 - _rp, 2.4);  /* easeOut — fast expand, gentle finish */
+        var _rr2 = GR * 0.10 + _re * GR * 0.96;
+        var _ra = (1 - _rp) * 0.52;
+        ctx.save();
+        ctx.globalAlpha = _ra;
+        ctx.beginPath(); ctx.arc(GX, GY, _rr2, 0, Math.PI * 2);
+        ctx.strokeStyle = _cc.ring + '1)';
+        ctx.lineWidth = 2.6 - _rp * 1.6;
+        ctx.stroke();
+        ctx.restore();
+      }
+      /* Twinkle sparks — rising motes with sinusoidal shimmer; cross-flares on desktop */
+      for(var _si3 = 0; _si3 < _sparkles.length; _si3++){
+        var _sk = _sparkles[_si3];
+        var _age = t - _sk.born;
+        if(_age < 0 || _age > _sk.life) continue;
+        var _lp = _age / _sk.life;
+        var _tw = 0.55 + 0.45 * Math.sin(_simTime * 14 + _sk.tw);
+        var _sa = (_lp < 0.12 ? _lp / 0.12 : 1 - (_lp - 0.12) / 0.88) * _tw;
+        if(_sa <= 0.02) continue;
+        ctx.save();
+        ctx.globalAlpha = _sa;
+        var _sr = _sk.r * (1 + _lp * 0.4);
+        var _sg = ctx.createRadialGradient(_sk.x, _sk.y, 0, _sk.x, _sk.y, _sr * 3);
+        _sg.addColorStop(0, _cc.core + '0.95)');
+        _sg.addColorStop(0.35, _cc.glow + '0.35)');
+        _sg.addColorStop(1, _cc.glow + '0)');
+        ctx.beginPath(); ctx.arc(_sk.x, _sk.y, _sr * 3, 0, Math.PI * 2);
+        ctx.fillStyle = _sg; ctx.fill();
+        if(!_isMobile){
+          /* 4-point flare — the Disney sparkle */
+          ctx.strokeStyle = _cc.core + (_sa * 0.85).toFixed(3) + ')';
+          ctx.lineWidth = 0.8;
+          var _fl = _sr * 2.6 * _tw;
+          ctx.beginPath();
+          ctx.moveTo(_sk.x - _fl, _sk.y); ctx.lineTo(_sk.x + _fl, _sk.y);
+          ctx.moveTo(_sk.x, _sk.y - _fl); ctx.lineTo(_sk.x, _sk.y + _fl);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
     ctx.restore();
 
     /* Blit static over layer (glass, chrome rim, collar, dispenser, feet) */
     ctx.save(); ctx.setTransform(1,0,0,1,0,0);
     ctx.drawImage(_machineBgOver, 0, 0);
     ctx.restore();
+
+    /* ── v67: CELEBRATION rim flash — the whole globe blooms in tier color, then exhales ── */
+    if(_celebrating){
+      var _ce = (t - _celebrateStart) / _celebrateDur;
+      var _flash = _ce < 0.10 ? _ce / 0.10 : Math.max(0, 1 - (_ce - 0.10) / 0.55);
+      if(_flash > 0.01){
+        var _cc2 = _CELEB_COLS[_celebrateTier] || _CELEB_COLS.easy;
+        ctx.save();
+        ctx.globalAlpha = _flash * 0.55;
+        ctx.beginPath(); ctx.arc(GX, GY, GR + 1, 0, Math.PI * 2);
+        ctx.strokeStyle = _cc2.glow + '1)';
+        ctx.lineWidth = 2.5 + _flash * 4.5;
+        ctx.stroke();
+        ctx.globalAlpha = _flash * 0.13;
+        var _bloom = ctx.createRadialGradient(GX, GY, GR * 0.35, GX, GY, GR * 1.45);
+        _bloom.addColorStop(0, _cc2.glow + '1)');
+        _bloom.addColorStop(1, _cc2.glow + '0)');
+        ctx.beginPath(); ctx.arc(GX, GY, GR * 1.45, 0, Math.PI * 2);
+        ctx.fillStyle = _bloom; ctx.fill();
+        ctx.restore();
+      }
+    }
 
     /* ── v60: Slot flap overlay (animated open/close, paints over baked slot) ── */
     if(_dispensing && _slotOpenProg > 0.001){
@@ -13098,6 +13234,17 @@ window.finMonthNav = function(delta){
           var _slotTop = GY + GR + 2 + 14 + 16;  /* slot top */
           ctx.rect(GX - 10, _neckClipTop, 20, _slotTop - _neckClipTop + 9);
           ctx.clip();
+          /* v67: speed trail — ghost spheres fading behind the drop */
+          if(_trail.length > 1 && _chosenBallColor){
+            for(var _ti = 0; _ti < _trail.length - 1; _ti++){
+              var _tp = _trail[_ti];
+              ctx.globalAlpha = ((_ti + 1) / _trail.length) * 0.16;
+              ctx.beginPath(); ctx.arc(_tp.x, _tp.y, _tp.r * 0.92, 0, Math.PI * 2);
+              ctx.fillStyle = _chosenBallColor.mid;
+              ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+          }
           drawBall(cbT, false);
           ctx.restore();
         } else {
@@ -13270,6 +13417,16 @@ window.finMonthNav = function(delta){
         }catch(e){}
       }
     }
+    /* v67: celebration / swirl lifecycle */
+    if(_celebrating && t - _celebrateStart > _celebrateDur){
+      _celebrating = false;
+      _sparkles.length = 0;
+      _rings.length = 0;
+      for(var _ci = 0; _ci < _balls.length; _ci++) _balls[_ci]._launchAt = 0;
+    }
+    if(_swirling && t - _swirlStart > _swirlDur){
+      _swirling = false;
+    }
     if(_dispensing && t - _dispenseStart > _DISPENSE_TOTAL){
       _dispensing = false;
       var _db = _balls[_chosenBallIdx];
@@ -13285,6 +13442,7 @@ window.finMonthNav = function(delta){
       _chosenBallColor = null;
       _shakeOffX = 0;
       _shakeOffY = 0;
+      _trail.length = 0;  /* v67 */
     }
     if(_excited && t >= _excitedEnd){
       _excited = false;
@@ -13366,6 +13524,16 @@ window.finMonthNav = function(delta){
     _dispensing = false;
     _shakeActive = false;
     _shakeOffX = 0; _shakeOffY = 0;
+    /* v67: kill celebration / swirl state on page exit */
+    _celebrating = false;
+    _swirling = false;
+    _sparkles.length = 0;
+    _rings.length = 0;
+    _trail.length = 0;
+    try{
+      var _hwP = document.getElementById('bowl-machine-wrap');
+      if(_hwP) _hwP.classList.remove('celebrate-hop');
+    }catch(e){}
     if(!_isMobile && _shakeWrapCached){ _shakeWrapCached.style.transform = ''; }
     /* Release any scroll lock / busy flag left by an interrupted draw */
     try{
@@ -13517,14 +13685,24 @@ window.finMonthNav = function(delta){
       _balls[_chosenBallIdx].col = themeColor;
     }
 
-    /* Initial outward burst */
-    for(var j=0; j<_balls.length; j++){
-      var bk = _balls[j];
-      var adx = bk.x - GX, ady = bk.y - GY;
-      var ad = Math.hypot(adx, ady) || 1;
-      bk.vx += (adx/ad)*4.0 + (Math.random()-0.5)*6.0;
-      bk.vy += (ady/ad)*4.0 + (Math.random()-0.5)*6.0 - 2.5;
+    /* v67: ANTICIPATION INHALE — balls draw toward center for ~130ms, then the burst.
+       The crouch before the jump. Makes the explosion read twice as big. */
+    for(var j0=0; j0<_balls.length; j0++){
+      var bi0 = _balls[j0];
+      bi0.vx += (GX - bi0.x) * 0.045;
+      bi0.vy += (GY - bi0.y) * 0.045;
     }
+    setTimeout(function(){
+      if(!_excited) return;  /* draw was interrupted */
+      /* Outward burst — the exhale */
+      for(var j=0; j<_balls.length; j++){
+        var bk = _balls[j];
+        var adx = bk.x - GX, ady = bk.y - GY;
+        var ad = Math.hypot(adx, ady) || 1;
+        bk.vx += (adx/ad)*4.4 + (Math.random()-0.5)*6.0;
+        bk.vy += (ady/ad)*4.4 + (Math.random()-0.5)*6.0 - 2.5;
+      }
+    }, 130);
 
     /* v62: Periodic re-kicks — peak in middle, taper off, and HARD SKIP in last 600ms
        so the chosen ball settles into its halo build-up without getting smashed. */
@@ -13557,6 +13735,165 @@ window.finMonthNav = function(delta){
       }, reKickInterval);
     }
     scheduleReKick();
+  };
+
+  /* ── v67: CELEBRATION CHORD — rising arpeggio with sub-thump for weight.
+     Easy/Medium: C5–E5–G5. Hard: adds C6 crown + air shimmer. Routed via master compressor. */
+  function _playCelebrateChord(tier){
+    if(!window._isSoundEnabled()) return;
+    var _acNow = _getAC(); if(!_acNow) return;
+    window._ensureAudioReady(function(ac){
+      var now = ac.currentTime + 0.02;
+      var dest = _dest();
+      /* Sub-thump — the machine lands on its feet */
+      var sub = ac.createOscillator(); sub.type = 'triangle';
+      sub.frequency.setValueAtTime(150, now);
+      sub.frequency.exponentialRampToValueAtTime(58, now + 0.10);
+      var sg = ac.createGain();
+      sg.gain.setValueAtTime(0.30, now);
+      sg.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+      sub.connect(sg); sg.connect(dest);
+      sub.start(now); sub.stop(now + 0.18);
+      /* Ascending plucks — each note = sine fundamental + detuned triangle sheen */
+      var notes = [523.25, 659.25, 783.99];
+      if(tier === 'hard') notes.push(1046.5);
+      for(var ni = 0; ni < notes.length; ni++){
+        (function(freq, idx){
+          var t0 = now + 0.06 + idx * 0.095;
+          var o1 = ac.createOscillator(); o1.type = 'sine'; o1.frequency.value = freq;
+          var o2 = ac.createOscillator(); o2.type = 'triangle'; o2.frequency.value = freq * 2.003;
+          var g1 = ac.createGain();
+          var pk = idx === notes.length - 1 ? 0.22 : 0.16;
+          g1.gain.setValueAtTime(0.0001, t0);
+          g1.gain.exponentialRampToValueAtTime(pk, t0 + 0.012);
+          g1.gain.exponentialRampToValueAtTime(0.001, t0 + 0.42);
+          var g2 = ac.createGain();
+          g2.gain.setValueAtTime(0.0001, t0);
+          g2.gain.exponentialRampToValueAtTime(pk * 0.28, t0 + 0.012);
+          g2.gain.exponentialRampToValueAtTime(0.001, t0 + 0.30);
+          o1.connect(g1); g1.connect(dest);
+          o2.connect(g2); g2.connect(dest);
+          o1.start(t0); o1.stop(t0 + 0.46);
+          o2.start(t0); o2.stop(t0 + 0.34);
+        })(notes[ni], ni);
+      }
+      /* Hard tier: air shimmer — high filtered noise halo over the crown note */
+      if(tier === 'hard' && _noiseBuf){
+        var shSrc = ac.createBufferSource(); shSrc.buffer = _noiseBuf; shSrc.loop = true;
+        var shBp = ac.createBiquadFilter(); shBp.type = 'bandpass';
+        shBp.frequency.value = 7800; shBp.Q.value = 3.5;
+        var shG = ac.createGain();
+        var st = now + 0.30;
+        shG.gain.setValueAtTime(0.0001, st);
+        shG.gain.exponentialRampToValueAtTime(0.10, st + 0.06);
+        shG.gain.exponentialRampToValueAtTime(0.001, st + 0.55);
+        shSrc.connect(shBp); shBp.connect(shG); shG.connect(dest);
+        shSrc.start(st); shSrc.stop(st + 0.6);
+      }
+    });
+  }
+
+  /* ── v67: SWIRL WHOOSH — bandpass noise sweep, rises with the vortex then releases ── */
+  function _playSwirlWhoosh(durMs){
+    if(!window._isSoundEnabled()) return;
+    var _acNow = _getAC(); if(!_acNow) return;
+    window._ensureAudioReady(function(ac){
+      try{
+        var dur = Math.min(2.0, (durMs || 2000) / 1000 * 0.82);
+        var now = ac.currentTime + 0.02;
+        var bufLen = Math.floor(ac.sampleRate * dur);
+        var buf = ac.createBuffer(1, bufLen, ac.sampleRate);
+        var d = buf.getChannelData(0);
+        for(var i = 0; i < bufLen; i++) d[i] = (Math.random() * 2 - 1);
+        var src = ac.createBufferSource(); src.buffer = buf;
+        var bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 2.4;
+        bp.frequency.setValueAtTime(260, now);
+        bp.frequency.exponentialRampToValueAtTime(1500, now + dur * 0.55);
+        bp.frequency.exponentialRampToValueAtTime(380, now + dur);
+        var g = ac.createGain();
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.linearRampToValueAtTime(0.22, now + dur * 0.30);
+        g.gain.setValueAtTime(0.22, now + dur * 0.62);
+        g.gain.linearRampToValueAtTime(0.0001, now + dur);
+        src.connect(bp); bp.connect(g); g.connect(_dest());
+        src.start(now); src.stop(now + dur + 0.05);
+      }catch(e){}
+    });
+  }
+
+  /* ── v67: PUBLIC — challenge-completion celebration. Fountain + rings + sparks + hop.
+     NOT the draw shake: nothing dispenses, nothing morphs. Pure triumph. ── */
+  window._gbCelebrate = function(tier){
+    if(_gbPaused){ _gbPaused = false; _raf = requestAnimationFrame(loop); }
+    if(_dispensing) return;            /* never fight the dispense choreography */
+    _excited = false;                  /* cancel any stale shake state */
+    _swirling = false;
+    _celebrating = true;
+    _celebrateTier = (tier === 'medium' || tier === 'hard') ? tier : 'easy';
+    _celebrateStart = performance.now();
+    _celebrateDur = 2200;
+    /* Center-out ripple: each ball gets a launch time based on lateral distance from center.
+       The fountain reads as a wave, not a uniform pop. */
+    for(var i = 0; i < _balls.length; i++){
+      var b = _balls[i];
+      var lat = Math.min(1, Math.abs(b.x - GX) / GR);
+      b._launchAt = _celebrateStart + 150 + lat * 230 + Math.random() * 60;
+    }
+    /* Shockwave rings — two staggered; hard tier earns a third */
+    _rings.length = 0;
+    _rings.push({born: _celebrateStart + 150, dur: 620});
+    _rings.push({born: _celebrateStart + 330, dur: 740});
+    if(_celebrateTier === 'hard') _rings.push({born: _celebrateStart + 520, dur: 820});
+    /* Twinkle sparks — born staggered through the fountain window */
+    _sparkles.length = 0;
+    var sparkN = _isMobile ? 14 : 26;
+    for(var s = 0; s < sparkN; s++){
+      var a = Math.random() * Math.PI * 2;
+      var dd = Math.pow(Math.random(), 0.6) * GR * 0.72;
+      _sparkles.push({
+        x: GX + Math.cos(a) * dd,
+        y: GY + Math.sin(a) * dd * 0.62 + 12,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: -(1.1 + Math.random() * 2.3),
+        born: _celebrateStart + 170 + Math.random() * 520,
+        life: 680 + Math.random() * 620,
+        r: 0.9 + Math.random() * 1.6,
+        tw: Math.random() * Math.PI * 2
+      });
+    }
+    /* Machine hop — squash-and-stretch on the whole chassis (CSS, GPU-cheap) */
+    try{
+      var _hw = document.getElementById('bowl-machine-wrap');
+      if(_hw){
+        _hw.classList.remove('celebrate-hop');
+        void _hw.offsetWidth;  /* restart animation if re-triggered */
+        _hw.classList.add('celebrate-hop');
+        setTimeout(function(){ _hw.classList.remove('celebrate-hop'); }, 720);
+      }
+    }catch(e){}
+    /* Sound + haptic */
+    try{ _playCelebrateChord(_celebrateTier); }catch(e){}
+    try{ if(typeof _triggerHaptic === 'function') _triggerHaptic('heavy'); }catch(e){}
+  };
+
+  /* ── v67: PUBLIC — reroll vortex. Balls orbit, remix, settle. Random spin direction. ── */
+  window._gbSwirl = function(durationMs){
+    if(_gbPaused){ _gbPaused = false; _raf = requestAnimationFrame(loop); }
+    if(_dispensing) return;
+    _excited = false;
+    _celebrating = false;
+    _swirling = true;
+    _swirlStart = performance.now();
+    _swirlDur = durationMs || 2200;
+    _swirlDir = Math.random() < 0.5 ? -1 : 1;
+    /* Initial tangential kick so the orbit reads instantly */
+    for(var i = 0; i < _balls.length; i++){
+      var b = _balls[i];
+      var dx = b.x - GX, dy = b.y - GY, dd = Math.hypot(dx, dy) || 1;
+      b.vx += (-dy / dd) * 2.2 * _swirlDir;
+      b.vy += ( dx / dd) * 2.2 * _swirlDir;
+    }
+    try{ _playSwirlWhoosh(_swirlDur); }catch(e){}
   };
 
   /* ── Boot: do initial resize + first sync once page JS is ready ── */

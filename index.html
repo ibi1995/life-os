@@ -10174,6 +10174,16 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     if(p.bright){pg.addColorStop(0,'rgba(210,240,255,'+pa+')');pg.addColorStop(1,'rgba(210,240,255,0)');}
     else{pg.addColorStop(0,'rgba(120,180,250,'+pa+')');pg.addColorStop(1,'rgba(120,180,250,0)');}
     ctx.fillStyle=pg;ctx.fillRect(px-pr,py-pr,pr*2,pr*2);
+    /* bright motes twinkle as 4-point micro-stars in the beam */
+    if(p.bright && pa>0.05){
+      var cl=pr*1.6*(0.6+0.4*Math.sin(p.phase*1.3));
+      ctx.strokeStyle='rgba(225,244,255,'+(pa*0.9)+')';
+      ctx.lineWidth=0.6;ctx.lineCap='round';
+      ctx.beginPath();
+      ctx.moveTo(px-cl,py);ctx.lineTo(px+cl,py);
+      ctx.moveTo(px,py-cl);ctx.lineTo(px,py+cl);
+      ctx.stroke();
+    }
   }
 
   /* ─── BASE PLATFORM ─── */
@@ -10238,7 +10248,7 @@ function _fxDrawCashStack(ctx, W, H, t, state){
        • Beaded denticle ring as outer frame
      Tilt-responsive: the shell gains a polished sheen highlight
      when the coin is being inspected (matches real silver satin finish). */
-  function drawEmbossedMark(_cx,_cy,_rx,_ry,opacityScale,isFilled,tilt){
+  function drawEmbossedMark(_cx,_cy,_rx,_ry,opacityScale,isFilled,tilt,isHero){
     opacityScale=opacityScale==null?1:opacityScale;
     var ratio=_ry/_rx; /* oblique squish — y is compressed vs x */
 
@@ -10322,36 +10332,20 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     embossFill(pathBeads, 0.70, 0.62, {depth:1.6});
 
     /* === COMPASS POLESTAR - struck-silver faceted relief ===
-       Replaces the soft supernova. A bold, SYMMETRIC mariner's star: 4 long
-       cardinal rays + 4 short ordinal rays, each a folded facet that catches
-       light down its spine, a domed polished boss at the hub, framed by an
-       engraved compass tick ring. Bullion reads best with high-contrast
-       symmetric relief - sharp ridges + deep struck shadows - which is exactly
-       what the old turbulent blob lacked. Same perf pipeline as before: bake
-       the metal ONCE into an offscreen sprite, then per-frame composite the
-       sprite + a shaped cast shadow + a live tilt-tracking specular sweep. */
-    var starR=_rx*0.82;
+       Proof-coin cameo at near-full-face scale: the mirror medallion runs
+       right up to the bead ring so the art owns the coin. (The old engraved
+       tick ring is gone — at this scale it fought the beads for the same
+       2% annulus; the medallion's guilloché grooves carry that detail now.)
+       Same perf pipeline: bake the metal ONCE into an offscreen sprite, then
+       per-frame composite sprite + shaped cast shadow + live specular sweep. */
+    var starR=_rx*0.86;
 
-    /* --- Engraved compass tick ring (live, sits IN the satin field) --- */
-    (function(){
-      var ringRr=_rx*0.86, tickN=60;
-      function pathTicks(){
-        ctx.beginPath();
-        for(var ti=0;ti<tickN;ti++){
-          var ta=(ti/tickN)*Math.PI*2 - Math.PI/2;
-          var card=(ti%15===0);                       /* 4 cardinal ticks longer */
-          var inR=ringRr*(card?0.90:0.945), outR=ringRr*0.985;
-          var ca=Math.cos(ta), sa=Math.sin(ta);
-          ctx.moveTo(_cx+ca*inR,  _cy+sa*inR*ratio);
-          ctx.lineTo(_cx+ca*outR, _cy+sa*outR*ratio);
-        }
-      }
-      emboss(pathTicks, 1.0, 0.7, {depth:1.0, darkA:0.42, brightA:0.22});
-    })();
-
-    if(!state._emblemSprite || !state._emblemOutline){
-      /* normalized star outline: 8 tips (alternating long / short) + inner valleys */
-      var RL=0.95, RS=0.60, RV=0.28, ol=[];
+    if(!state._emblemSprite || !state._emblemOutline || state._emblemV!==4){
+      state._emblemV=4;
+      /* normalized star outline: 8 tips (alternating long / short) + inner valleys.
+         Slightly deeper valleys (RV .26) and shorter ordinals (RS .58) than v1 —
+         sharper, more jewel-like silhouette. */
+      var RL=0.95, RS=0.58, RV=0.26, ol=[];
       for(var tj=0;tj<8;tj++){
         var ang=-Math.PI/2 + tj*(Math.PI/4);
         var rr=(tj%2===0)?RL:RS;
@@ -10369,46 +10363,139 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       var lx=-0.55, ly=-0.78;                                   /* light from upper-left */
       function lp(){ o.beginPath();
         for(var i=0;i<O.length;i++){var X=C+O[i].x*LR,Y=C+O[i].y*LR; if(i===0)o.moveTo(X,Y);else o.lineTo(X,Y);} o.closePath(); }
+      function bh(n){var x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
 
-      /* -- base fill -- */
+      /* ═══ PROOF-COIN CAMEO — layer order matters ═══
+         1. Deep-mirror SUNRAY GUILLOCHÉ medallion (night-sky field)
+         2. Constellation of micro-stars scattered in the dark
+         3. Frosted GLORY STAR rotated 22.5° behind the hero (sunburst halo)
+         4. Diamond-faceted POLESTAR (hero) — high-contrast cut facets
+         5. Brilliant-cut GEM boss at the hub */
+
+      /* ── 1. SUNRAY MEDALLION — engine-turned mirror field ── */
+      var MR=LR*1.02;
+      o.save();
+      o.beginPath(); o.arc(C,C,MR,0,Math.PI*2); o.clip();
+      var mg=o.createLinearGradient(C+lx*MR,C+ly*MR,C-lx*MR,C-ly*MR);
+      mg.addColorStop(0.00,'#2e4a74'); mg.addColorStop(0.34,'#18294a');
+      mg.addColorStop(0.68,'#0b1530'); mg.addColorStop(1.00,'#04091c');
+      o.fillStyle=mg; o.fillRect(0,0,SP,SP);
+      /* sunray brushing — fine radial rays, lit side glints, dark side sinks */
+      o.lineCap='round';
+      for(var i=0;i<132;i++){
+        var ra=(i/132)*Math.PI*2;
+        var al=Math.cos(ra)*lx+Math.sin(ra)*ly, bb=0.5+0.5*al, hh=bh(i*3.7+5);
+        o.strokeStyle=(i&1)
+          ? 'rgba(150,198,255,'+(0.020+bb*0.105+hh*0.045)+')'
+          : 'rgba(3,7,18,'+(0.05+(1-bb)*0.13)+')';
+        o.lineWidth=0.7+hh*1.0;
+        o.beginPath();
+        o.moveTo(C+Math.cos(ra)*LR*0.05, C+Math.sin(ra)*LR*0.05);
+        o.lineTo(C+Math.cos(ra)*MR,      C+Math.sin(ra)*MR);
+        o.stroke();
+      }
+      /* concentric guilloché grooves near the medallion rim (record-groove ring) */
+      for(var gi=0;gi<5;gi++){
+        var gr=MR*(0.80+gi*0.044);
+        o.strokeStyle='rgba(6,12,28,0.50)'; o.lineWidth=1.2;
+        o.beginPath(); o.arc(C,C,gr,0,Math.PI*2); o.stroke();
+        o.strokeStyle='rgba(168,205,255,0.10)'; o.lineWidth=0.7;
+        o.beginPath(); o.arc(C-0.7,C-0.9,gr,0,Math.PI*2); o.stroke();
+      }
+      /* ── 2. CONSTELLATION — tiny stars in the mirror dark ── */
+      for(var ci=0;ci<18;ci++){
+        var c1=bh(ci*9.31+2.2), c2=bh(ci*4.77+8.9);
+        var ca=c1*Math.PI*2, cr=MR*(0.46+c2*0.44);
+        var sx=C+Math.cos(ca)*cr, sy=C+Math.sin(ca)*cr;
+        var ssz=0.7+c2*1.5, sal=0.40+c1*0.45;
+        var sg=o.createRadialGradient(sx,sy,0,sx,sy,ssz*3);
+        sg.addColorStop(0,'rgba(228,242,255,'+sal+')');
+        sg.addColorStop(1,'rgba(228,242,255,0)');
+        o.fillStyle=sg; o.fillRect(sx-ssz*3,sy-ssz*3,ssz*6,ssz*6);
+        if(c1>0.62){ /* a few get 4-point twinkle crosses */
+          o.strokeStyle='rgba(232,245,255,'+(sal*0.8)+')'; o.lineWidth=0.6;
+          o.beginPath();
+          o.moveTo(sx-ssz*3.4,sy); o.lineTo(sx+ssz*3.4,sy);
+          o.moveTo(sx,sy-ssz*3.4); o.lineTo(sx,sy+ssz*3.4);
+          o.stroke();
+        }
+      }
+      /* mirror vignette — deepens toward the rim like real proof fields */
+      var vg=o.createRadialGradient(C,C,MR*0.42,C,C,MR);
+      vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(1,4,12,0.55)');
+      o.fillStyle=vg; o.fillRect(0,0,SP,SP);
+      o.restore();
+      /* struck medallion edge — dark lower-right, ice upper-left */
+      o.beginPath(); o.arc(C+0.9,C+1.0,MR,0,Math.PI*2);
+      o.strokeStyle='rgba(2,6,16,0.62)'; o.lineWidth=2.0*sk; o.stroke();
+      o.beginPath(); o.arc(C-0.7,C-0.9,MR,0,Math.PI*2);
+      o.strokeStyle='rgba(190,218,255,0.30)'; o.lineWidth=1.0*sk; o.stroke();
+
+      /* ── 3. GLORY STAR — frosted halo layer rotated 22.5° ── */
+      function gloryPath(off){
+        o.beginPath();
+        for(var gj=0;gj<8;gj++){
+          var ga=-Math.PI/2 + Math.PI/8 + gj*(Math.PI/4);
+          var g1x=C+Math.cos(ga)*LR*0.86+off, g1y=C+Math.sin(ga)*LR*0.86+off*1.2;
+          var gva=ga+Math.PI/8;
+          var g2x=C+Math.cos(gva)*LR*0.20+off, g2y=C+Math.sin(gva)*LR*0.20+off*1.2;
+          if(gj===0)o.moveTo(g1x,g1y); else o.lineTo(g1x,g1y);
+          o.lineTo(g2x,g2y);
+        }
+        o.closePath();
+      }
+      gloryPath(2.2); o.fillStyle='rgba(2,6,16,0.45)'; o.fill();     /* cast shadow */
+      gloryPath(0);
+      var rg=o.createRadialGradient(C+lx*LR*0.25,C+ly*LR*0.25,0,C,C,LR*0.86);
+      rg.addColorStop(0.00,'rgba(168,200,245,0.60)');
+      rg.addColorStop(0.55,'rgba(110,142,195,0.36)');
+      rg.addColorStop(1.00,'rgba(64,90,140,0.18)');
+      o.fillStyle=rg; o.fill();
+      o.strokeStyle='rgba(185,215,255,0.25)'; o.lineWidth=0.9*sk; o.stroke();
+
+      /* ── 4. HERO POLESTAR — diamond-cut facets ── */
+      /* cast shadow under the hero star — lifts it off the mirror field */
+      o.save(); o.translate(2.6,3.2);
+      o.fillStyle='rgba(1,4,12,0.55)'; lp(); o.fill(); o.restore();
+
       o.save(); lp(); o.clip();
       var g=o.createLinearGradient(C+lx*LR,C+ly*LR,C-lx*LR,C-ly*LR);
-      g.addColorStop(0.00,'#f1f6fc'); g.addColorStop(0.32,'#cfdbec');
-      g.addColorStop(0.62,'#9fb0ca'); g.addColorStop(0.83,'#76879f'); g.addColorStop(1.00,'#586780');
+      g.addColorStop(0.00,'#ffffff'); g.addColorStop(0.28,'#dde8f7');
+      g.addColorStop(0.58,'#a9bbd6'); g.addColorStop(0.82,'#7c8ea9'); g.addColorStop(1.00,'#5a6a86');
       o.fillStyle=g; o.fillRect(0,0,SP,SP);
 
-      /* -- FACETS: fan of triangles from hub to each outline edge, shaded by how
-         the facet's outward direction aligns to the light -> folded-gem look -- */
+      /* FACETS — harder contrast curve than v1: true diamond-cut snap between
+         lit and shadow planes instead of soft metal rolloff */
       for(var i=0;i<O.length;i++){
         var a0=O[i], a1=O[(i+1)%O.length];
         var mx=(a0.x+a1.x)*0.5, my=(a0.y+a1.y)*0.5, ml=Math.hypot(mx,my)||1;
-        var nl=(mx/ml)*lx + (my/ml)*ly;            /* -1 (away) .. 1 (toward light) */
-        var br=0.5+0.5*nl;                          /* 0 dark .. 1 lit */
+        var nl=(mx/ml)*lx + (my/ml)*ly;
+        var br=0.5+0.5*nl;
         o.beginPath(); o.moveTo(C,C);
         o.lineTo(C+a0.x*LR, C+a0.y*LR);
         o.lineTo(C+a1.x*LR, C+a1.y*LR); o.closePath();
-        if(br>=0.5){ o.fillStyle='rgba(248,252,255,'+(0.10+(br-0.5)*0.64)+')'; }
-        else       { o.fillStyle='rgba(13,25,49,'+(0.10+(0.5-br)*0.78)+')'; }
+        if(br>=0.5){ o.fillStyle='rgba(252,254,255,'+(0.14+(br-0.5)*0.95)+')'; }
+        else       { o.fillStyle='rgba(8,18,40,'+(0.14+(0.5-br)*0.95)+')'; }
         o.fill();
       }
 
       /* anisotropic radial brushing - the minted-metal tell */
       var bcx=C+lx*LR*0.18, bcy=C+ly*LR*0.18; o.lineCap='round';
       for(var i=0;i<150;i++){
-        var bang=i*2.399963229+(Math.random()-0.5)*0.05;
-        var r0=LR*(0.02+Math.random()*0.04), r1=LR*(0.85+Math.random()*0.18);
+        var bang=i*2.399963229+(bh(i*1.3)-0.5)*0.05;
+        var r0=LR*(0.02+bh(i*2.1)*0.04), r1=LR*(0.85+bh(i*5.7)*0.18);
         var al=(Math.cos(bang)*lx+Math.sin(bang)*ly), bb=0.5+0.5*al;
-        o.strokeStyle=(i&1)?('rgba(255,255,255,'+(0.012+0.045*bb)+')'):('rgba(26,40,68,'+(0.014+0.04*(1-bb))+')');
-        o.lineWidth=0.5+Math.random()*0.6;
+        o.strokeStyle=(i&1)?('rgba(255,255,255,'+(0.012+0.05*bb)+')'):('rgba(26,40,68,'+(0.014+0.04*(1-bb))+')');
+        o.lineWidth=0.5+bh(i*7.7)*0.6;
         o.beginPath(); o.moveTo(bcx+Math.cos(bang)*r0,bcy+Math.sin(bang)*r0);
         o.lineTo(bcx+Math.cos(bang)*r1,bcy+Math.sin(bang)*r1); o.stroke();
       }
       /* frost micro-grain */
       var nC=document.createElement('canvas'); nC.width=nC.height=110;
       var nx2=nC.getContext('2d'), nim=nx2.createImageData(110,110), nd=nim.data;
-      for(var p=0;p<nd.length;p+=4){var v=176+(Math.random()*70|0); nd[p]=nd[p+1]=nd[p+2]=v; nd[p+3]=22;}
+      for(var p=0;p<nd.length;p+=4){var v=176+(Math.random()*70|0); nd[p]=nd[p+1]=nd[p+2]=v; nd[p+3]=20;}
       nx2.putImageData(nim,0,0);
-      o.save(); o.globalAlpha=0.45; o.globalCompositeOperation='overlay';
+      o.save(); o.globalAlpha=0.40; o.globalCompositeOperation='overlay';
       o.fillStyle=o.createPattern(nC,'repeat'); o.fillRect(0,0,SP,SP); o.restore();
       o.restore(); /* end fill clip */
 
@@ -10417,10 +10504,19 @@ function _fxDrawCashStack(ctx, W, H, t, state){
       for(var tj=0;tj<8;tj++){
         var tip=O[tj*2];
         var tx=C+tip.x*LR, ty=C+tip.y*LR; o.lineCap='round';
-        o.strokeStyle='rgba(8,16,38,0.50)';   o.lineWidth=2.4*sk;
+        o.strokeStyle='rgba(6,13,32,0.58)';   o.lineWidth=2.4*sk;
         o.beginPath(); o.moveTo(C-lx*vo,C-ly*vo); o.lineTo(tx-lx*vo,ty-ly*vo); o.stroke();
-        o.strokeStyle='rgba(250,253,255,0.55)'; o.lineWidth=1.5*sk;
+        o.strokeStyle='rgba(252,254,255,0.70)'; o.lineWidth=1.6*sk;
         o.beginPath(); o.moveTo(C+lx*vo,C+ly*vo); o.lineTo(tx+lx*vo,ty+ly*vo); o.stroke();
+        /* baked tip flare on the 4 long cardinals — jewelry-counter sparkle */
+        if(tj%2===0){
+          var fg=o.createRadialGradient(tx,ty,0,tx,ty,LR*0.075);
+          fg.addColorStop(0,'rgba(255,255,255,0.85)');
+          fg.addColorStop(0.45,'rgba(210,232,255,0.30)');
+          fg.addColorStop(1,'rgba(210,232,255,0)');
+          o.fillStyle=fg;
+          o.fillRect(tx-LR*0.075,ty-LR*0.075,LR*0.15,LR*0.15);
+        }
       }
 
       /* -- valley occlusion: soft dark pockets at the inner notches -- */
@@ -10429,31 +10525,56 @@ function _fxDrawCashStack(ctx, W, H, t, state){
         var val=O[vj*2+1];
         var vx=C+val.x*LR, vy=C+val.y*LR, vr=LR*0.10;
         var vd=o.createRadialGradient(vx,vy,0,vx,vy,vr);
-        vd.addColorStop(0,'rgba(4,10,24,0.34)'); vd.addColorStop(1,'rgba(4,10,24,0)');
+        vd.addColorStop(0,'rgba(3,8,20,0.38)'); vd.addColorStop(1,'rgba(3,8,20,0)');
         o.fillStyle=vd; o.fillRect(vx-vr,vy-vr,vr*2,vr*2);
       }
       o.restore();
 
       /* -- crisp struck edge (dark down-right, bright up-left) -- */
       o.save(); o.lineJoin='miter'; o.miterLimit=3;
-      o.translate(-lx*0.8,-ly*0.8); o.strokeStyle='rgba(6,14,30,0.55)';   o.lineWidth=1.4*sk; lp(); o.stroke(); o.restore();
+      o.translate(-lx*0.8,-ly*0.8); o.strokeStyle='rgba(4,10,24,0.60)';   o.lineWidth=1.4*sk; lp(); o.stroke(); o.restore();
       o.save(); o.lineJoin='miter'; o.miterLimit=3;
-      o.translate( lx*0.8, ly*0.8); o.strokeStyle='rgba(248,252,255,0.34)'; o.lineWidth=0.9*sk; lp(); o.stroke(); o.restore();
+      o.translate( lx*0.8, ly*0.8); o.strokeStyle='rgba(250,253,255,0.42)'; o.lineWidth=0.9*sk; lp(); o.stroke(); o.restore();
 
-      /* -- central polished boss (domed cabochon) -- */
-      var bR=LR*0.17;
-      o.beginPath(); o.arc(C,C,bR*1.18,0,Math.PI*2);
-      o.strokeStyle='rgba(6,14,30,0.50)'; o.lineWidth=2.2*sk; o.stroke();
-      o.beginPath(); o.arc(C-lx*0.6,C-ly*0.6,bR*1.18,0,Math.PI*2);
-      o.strokeStyle='rgba(245,250,255,0.30)'; o.lineWidth=1.0*sk; o.stroke();
-      var dome=o.createRadialGradient(C+lx*bR*0.5,C+ly*bR*0.5,bR*0.05,C,C,bR);
-      dome.addColorStop(0.00,'#fbfdff'); dome.addColorStop(0.45,'#cdd9ec');
-      dome.addColorStop(0.80,'#8496b0'); dome.addColorStop(1.00,'#4f5e78');
-      o.beginPath(); o.arc(C,C,bR,0,Math.PI*2); o.fillStyle=dome; o.fill();
-      var pipx=C+lx*bR*0.42, pipy=C+ly*bR*0.42;
-      var pip=o.createRadialGradient(pipx,pipy,0,pipx,pipy,bR*0.55);
+      /* ── 5. HUB GEM — brilliant-cut stone instead of plain dome ── */
+      var bR=LR*0.21;
+      /* setting ring */
+      o.beginPath(); o.arc(C+0.8,C+0.8,bR*1.20,0,Math.PI*2);
+      o.strokeStyle='rgba(4,10,24,0.55)'; o.lineWidth=2.2*sk; o.stroke();
+      o.beginPath(); o.arc(C-lx*0.7,C-ly*0.7,bR*1.20,0,Math.PI*2);
+      o.strokeStyle='rgba(245,250,255,0.34)'; o.lineWidth=1.0*sk; o.stroke();
+      /* 8 kite facets around an octagonal table — each plane snaps light or shadow */
+      for(var kf=0;kf<8;kf++){
+        var k0=kf*(Math.PI/4)-Math.PI/8, k1=k0+Math.PI/4, km=(k0+k1)/2;
+        var nlk=Math.cos(km)*lx+Math.sin(km)*ly, bk=0.5+0.5*nlk;
+        bk=Math.min(1,Math.max(0,bk+((kf&1)?0.10:-0.06)));   /* alternating cut */
+        var lum=Math.round(70+bk*185);
+        o.beginPath();
+        o.moveTo(C+Math.cos(k0)*bR, C+Math.sin(k0)*bR);
+        o.lineTo(C+Math.cos(k1)*bR, C+Math.sin(k1)*bR);
+        o.lineTo(C+Math.cos(km)*bR*0.46, C+Math.sin(km)*bR*0.46);
+        o.closePath();
+        o.fillStyle='rgb('+Math.round(lum*0.92)+','+Math.round(lum*0.97)+','+Math.min(255,Math.round(lum*1.06+8))+')';
+        o.fill();
+        o.strokeStyle='rgba(235,245,255,0.30)'; o.lineWidth=0.6; o.stroke();
+      }
+      /* octagonal table — polished mirror plane */
+      o.beginPath();
+      for(var tf=0;tf<8;tf++){
+        var ta2=tf*(Math.PI/4)-Math.PI/8;
+        var tX=C+Math.cos(ta2)*bR*0.46, tY=C+Math.sin(ta2)*bR*0.46;
+        if(tf===0)o.moveTo(tX,tY); else o.lineTo(tX,tY);
+      }
+      o.closePath();
+      var tbl=o.createLinearGradient(C+lx*bR*0.5,C+ly*bR*0.5,C-lx*bR*0.5,C-ly*bR*0.5);
+      tbl.addColorStop(0,'#ffffff'); tbl.addColorStop(0.5,'#cfdcf0'); tbl.addColorStop(1,'#8b9dbc');
+      o.fillStyle=tbl; o.fill();
+      o.strokeStyle='rgba(10,20,42,0.40)'; o.lineWidth=0.7; o.stroke();
+      /* hot pip — the gem's fire */
+      var pipx=C+lx*bR*0.34, pipy=C+ly*bR*0.34;
+      var pip=o.createRadialGradient(pipx,pipy,0,pipx,pipy,bR*0.50);
       pip.addColorStop(0,'rgba(255,255,255,0.95)'); pip.addColorStop(1,'rgba(255,255,255,0)');
-      o.fillStyle=pip; o.beginPath(); o.arc(pipx,pipy,bR*0.55,0,Math.PI*2); o.fill();
+      o.fillStyle=pip; o.beginPath(); o.arc(pipx,pipy,bR*0.50,0,Math.PI*2); o.fill();
 
       state._emblemSprite=oc;
     }
@@ -10490,6 +10611,34 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     spc.addColorStop(1.00,'rgba(226,240,255,0)');
     ctx.fillStyle=spc; ctx.fillRect(_cx-starR,_cy-starR*ratio,starR*2,starR*ratio*2);
     ctx.restore();
+
+    /* ─── LIVING TIP SPARKLE ─── a 4-point glint that hops between the long
+       cardinal rays. Hero (top) coin + inspected coin only — keeps the frame
+       budget flat while making the crown of the stack feel alive. */
+    if(isFilled && (isHero || tilt)){
+      var twP=t*0.8, twSeed=Math.floor(twP), twF=twP-twSeed;
+      var twEnv=Math.sin(twF*Math.PI);                       /* fade in → peak → out */
+      if(twEnv>0.05){
+        var hsh=Math.sin(twSeed*127.1+311.7)*43758.5453; hsh-=Math.floor(hsh);
+        var tip=O[[0,4,8,12][Math.floor(hsh*4)]];            /* one of 4 cardinal tips */
+        var tx2=_cx+tip.x*starR, ty2=_cy+tip.y*starR*ratio;
+        var twA=twEnv*(tilt?0.95:0.78)*opacityScale;
+        var twR=starR*0.17*(0.65+0.35*twEnv);
+        ctx.save();
+        ctx.strokeStyle='rgba(255,255,255,'+(twA*0.85)+')';
+        ctx.lineWidth=1;ctx.lineCap='round';
+        ctx.beginPath();
+        ctx.moveTo(tx2-twR,ty2);ctx.lineTo(tx2+twR,ty2);
+        ctx.moveTo(tx2,ty2-twR*0.75);ctx.lineTo(tx2,ty2+twR*0.75);
+        ctx.stroke();
+        var twG=ctx.createRadialGradient(tx2,ty2,0,tx2,ty2,twR*0.6);
+        twG.addColorStop(0,'rgba(255,255,255,'+twA+')');
+        twG.addColorStop(0.4,'rgba(205,230,255,'+(twA*0.40)+')');
+        twG.addColorStop(1,'rgba(205,230,255,0)');
+        ctx.fillStyle=twG;ctx.fillRect(tx2-twR,ty2-twR,twR*2,twR*2);
+        ctx.restore();
+      }
+    }
   }
 
   /* ─── FROSTED FIELD NOISE PATTERN (lazy-cached on state) ─── */
@@ -10565,6 +10714,16 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     bandVert.addColorStop(0.5,'rgba(255,255,255,0)');
     bandVert.addColorStop(1,'rgba(0,5,20,0.28)');
     ctx.fillStyle=bandVert;
+    ctx.fillRect(_cx-rx,cyTop,rx*2,_h);
+    /* drifting ice sheen — a narrow cool highlight slides along the band,
+       phase-offset per coin so the stack shimmers like stacked bullion under
+       a moving light, never in lockstep */
+    var shX=_cx+Math.sin(t*0.55+idx*0.55)*rx*0.45;
+    var ice=ctx.createLinearGradient(shX-rx*0.28,0,shX+rx*0.28,0);
+    ice.addColorStop(0,'rgba(190,230,255,0)');
+    ice.addColorStop(0.5,'rgba(190,230,255,'+(0.13*opacityScale)+')');
+    ice.addColorStop(1,'rgba(190,230,255,0)');
+    ctx.fillStyle=ice;
     ctx.fillRect(_cx-rx,cyTop,rx*2,_h);
     ctx.restore();
 
@@ -10699,15 +10858,7 @@ function _fxDrawCashStack(ctx, W, H, t, state){
     ctx.fillRect(_cx-rx,streakY-ry*0.55,rx*2,ry*1.1);
     ctx.restore();
 
-    /* Engraved inner ring — slightly softer than mirror version (satin loses some crisp) */
-    ctx.strokeStyle='rgba(8,18,38,'+(0.78*opacityScale)+')';
-    ctx.lineWidth=1.0;
-    ellipsePath(_cx,cyTop,rx*0.78,ry*0.78);
-    ctx.stroke();
-    ctx.strokeStyle='rgba(195,210,230,'+(0.32*opacityScale)+')';
-    ctx.lineWidth=0.7;
-    ellipsePath(_cx+0.3,cyTop-0.3,rx*0.78,ry*0.78);
-    ctx.stroke();
+    /* (Engraved inner ring removed — fully buried under the full-face medallion.) */
 
     /* ─── SATIN MICRO-TEXTURE ─── Cover the WHOLE face — satin has visible
        polish marks edge-to-edge, not just in the field. */
@@ -10727,10 +10878,10 @@ function _fxDrawCashStack(ctx, W, H, t, state){
 
     /* (Outer 16-tick ring removed — chronograph inscription is the only tick band.) */
 
-    /* Embossed center emblem — sunrise scene + chronograph ring */
+    /* Embossed center emblem — proof cameo + chronograph ring */
     if(ry>14){
       var isFilledCoin=(mintAnim>=1);
-      drawEmbossedMark(_cx,cyTop,rx*0.78,ry*0.78,opacityScale,isFilledCoin,tilt);
+      drawEmbossedMark(_cx,cyTop,rx*0.92,ry*0.92,opacityScale,isFilledCoin,tilt,idx===fullN-1);
     }
 
     /* ─── DIFFUSE SHEEN ─── Satin equivalent of specular sweep. Lower alpha,
@@ -10821,6 +10972,14 @@ function _fxDrawCashStack(ctx, W, H, t, state){
         gGrad.addColorStop(1,'rgba(180,220,255,0)');
         ctx.fillStyle=gGrad;
         ctx.fillRect(gx-rx*0.26,gy-rx*0.26,rx*0.52,rx*0.52);
+        /* 4-point star cross riding the glint — the jewelry-counter flash */
+        var gl=rx*0.20*gA;
+        ctx.strokeStyle='rgba(255,255,255,'+(gA*0.8)+')';
+        ctx.lineWidth=0.9;ctx.lineCap='round';
+        ctx.beginPath();
+        ctx.moveTo(gx-gl,gy);ctx.lineTo(gx+gl,gy);
+        ctx.moveTo(gx,gy-gl*0.65);ctx.lineTo(gx,gy+gl*0.65);
+        ctx.stroke();
         ctx.restore();
       } else if(gE>1){
         bill.glintT=null; /* one-shot — dormant after travel */
@@ -11006,6 +11165,18 @@ function _fxDrawCashStack(ctx, W, H, t, state){
         op = 1 - dimAmt;
       }
       if(op <= 0.01) continue;
+
+      /* Crown halo — soft breathing ice glow behind the TOP coin only.
+         One gradient per frame; sells "the summit is the prize". */
+      if(i===fullN-1 && !isReflection && op>0.5){
+        var hA=(0.13+0.05*Math.sin(t*1.4))*op;
+        var halo=ctx.createRadialGradient(cx+xOff,yTop,0,cx+xOff,yTop,rx*1.7);
+        halo.addColorStop(0,'rgba(150,205,255,'+hA+')');
+        halo.addColorStop(0.5,'rgba(115,175,245,'+(hA*0.45)+')');
+        halo.addColorStop(1,'rgba(115,175,245,0)');
+        ctx.fillStyle=halo;
+        ctx.fillRect(cx+xOff-rx*1.7,yTop-rx*1.7,rx*3.4,rx*3.4);
+      }
 
       drawCoin(cx+xOff,yTop,rx,ry,coinH,i,mintAnim,op,null);
     }

@@ -1867,9 +1867,130 @@ backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid r
 
 
 @media(max-width:360px){
-  .fx-hero-num{font-size:42px!important}
+  .fx-hero-num{font-size:35px!important}
   .fx-hero-stat-val{font-size:12px}
 }
+
+/* ════════════════════════════════════════════════════════════════
+   PREMIUM POLISH PASS (v67) — fx-hero iPhone proportions, Today page
+   refinement, reward strip redesign. Pure additive layer. ─────────── */
+
+/* ── 1. FX-HERO: wallet-card proportions on phones (was reading as a tall
+   square "box" — vertical rhythm compressed ~30%, type tightened) ── */
+@media(max-width:480px){
+  .fx-hero{border-radius:16px;margin-bottom:14px}
+  .fx-hero-inner{padding:16px 16px 14px}
+  .fx-hero-top{margin-bottom:10px}
+  .fx-hero-top button[onclick*="finMonthNav"]{width:28px!important;height:28px!important;border-radius:7px!important}
+  .fx-hero-month{font-size:12px}
+  .fx-settings-btn{width:33px;height:33px;border-radius:9px}
+  .fx-hero-label{font-size:9.5px;letter-spacing:2px;margin-bottom:3px}
+  .fx-hero-amount{margin-bottom:12px;gap:5px}
+  .fx-hero-cur{font-size:17px}
+  .fx-hero-num{font-size:40px;letter-spacing:-1.8px}
+  .fx-hero-row{padding:9px 0;border-radius:10px}
+  .fx-hero-stat-val{font-size:13px}
+  .fx-hero-divider{height:24px}
+  #fx-daily-budget{margin:2px 0 10px!important;padding:8px 12px!important}
+  #fx-daily-budget>div:first-child{margin-bottom:2px!important;font-size:9px!important}
+  #fx-daily-num{font-size:24px!important}
+}
+/* Sheen sweep — slow light pass across the balance card */
+.fx-hero::after{content:'';position:absolute;inset:0;border-radius:inherit;z-index:2;pointer-events:none;
+  background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.05) 47%,rgba(255,255,255,.11) 50%,rgba(255,255,255,.05) 53%,transparent 58%);
+  background-size:260% 100%;background-position:130% 0;animation:fx-hero-sheen 8s ease-in-out infinite;mix-blend-mode:screen}
+@keyframes fx-hero-sheen{0%,58%{background-position:130% 0}88%,100%{background-position:-70% 0}}
+@media(prefers-reduced-motion:reduce){.fx-hero::after{animation:none}}
+
+/* ── 2. TODAY GREETING — page header instead of a muted whisper ── */
+.tg-hdr{margin:2px 0 12px;padding:0 2px;transition:opacity .4s}
+.tg-greet{font-family:var(--font-ui);font-size:22px;font-weight:900;letter-spacing:-.6px;line-height:1.15;
+  background:linear-gradient(120deg,#fff 30%,var(--a2) 85%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  animation:tg-in .5s cubic-bezier(.22,.9,.36,1) both}
+.tg-date{font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-top:3px;
+  animation:tg-in .5s .06s cubic-bezier(.22,.9,.36,1) both}
+@keyframes tg-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── 3. PROGRESS CARD — glassier, live shimmer on the fill ── */
+.prog{border-radius:14px;background:linear-gradient(170deg,rgba(255,255,255,.11),rgba(255,255,255,.06));
+  box-shadow:var(--ssh),inset 0 1px 0 rgba(255,255,255,.12)}
+.prog-track{height:11px;background:rgba(0,0,0,.22);box-shadow:inset 0 1px 3px rgba(0,0,0,.3)}
+.prog-fill{position:relative;overflow:hidden}
+.prog-fill::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(105deg,transparent 25%,rgba(255,255,255,.4) 50%,transparent 75%);
+  background-size:220% 100%;animation:prog-shine 2.6s ease-in-out infinite}
+@keyframes prog-shine{0%{background-position:140% 0}100%{background-position:-120% 0}}
+@media(prefers-reduced-motion:reduce){.prog-fill::after{animation:none}}
+
+/* ── 4. HABIT LIST — softer shell, top highlight, staggered entrance ── */
+.hc-list{border-radius:16px;background:linear-gradient(176deg,rgba(255,255,255,.07),rgba(255,255,255,.035));
+  box-shadow:var(--ssh),inset 0 1px 0 rgba(255,255,255,.09)}
+.hc-list .hc:first-child .hc-main{border-radius:16px 16px 0 0}
+.hc-list .hc:last-child .hc-main{border-radius:0 0 16px 16px}
+.pg.active .hc-list .hc{animation:hc-in .38s cubic-bezier(.22,.9,.36,1) both}
+.pg.active .hc-list .hc:nth-child(1){animation-delay:.02s}
+.pg.active .hc-list .hc:nth-child(2){animation-delay:.05s}
+.pg.active .hc-list .hc:nth-child(3){animation-delay:.08s}
+.pg.active .hc-list .hc:nth-child(4){animation-delay:.11s}
+.pg.active .hc-list .hc:nth-child(5){animation-delay:.14s}
+.pg.active .hc-list .hc:nth-child(6){animation-delay:.17s}
+.pg.active .hc-list .hc:nth-child(n+7){animation-delay:.2s}
+@keyframes hc-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.pg.active .hc-list .hc{animation:none}}
+.hc-main:active{background:rgba(126,200,255,.05)}
+
+/* ── 5. STREAK TILES — icon chips + glass depth ── */
+.streak-bar{gap:9px}
+.streak-tile{border-radius:13px;padding:10px;gap:8px;
+  background:linear-gradient(172deg,rgba(255,255,255,.085),rgba(255,255,255,.04));
+  border:1px solid rgba(127,178,255,.16);box-shadow:var(--ssh),inset 0 1px 0 rgba(255,255,255,.1)}
+.streak-tile>span:first-child{width:28px;height:28px;border-radius:9px;flex-shrink:0;
+  background:rgba(126,200,255,.09);border:1px solid rgba(126,200,255,.14);
+  display:flex;align-items:center;justify-content:center;font-size:14px!important}
+.streak-tile>div{min-width:0}
+.streak-tile-val{font-size:14px;white-space:nowrap}
+.streak-tile-lbl{white-space:nowrap}
+#xp-inline-lvl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── 6. YESTERDAY + HEATMAP — radius harmonized with the new cards ── */
+#pg-today .ycard,#pg-today .heatmap-wrap{border-radius:14px;
+  box-shadow:var(--ssh),inset 0 1px 0 rgba(255,255,255,.09)}
+
+/* ── 7. REWARD STRIP (Today glimpse) — premium card, image ring, shimmer ── */
+.rwst{display:flex;align-items:center;gap:13px;padding:13px 14px;cursor:pointer;position:relative;overflow:hidden;
+  background:linear-gradient(170deg,rgba(126,200,255,.1),rgba(77,141,255,.04) 60%,rgba(255,255,255,.03));
+  border:1px solid rgba(126,200,255,.18);border-radius:14px;
+  box-shadow:var(--ssh),inset 0 1px 0 rgba(255,255,255,.1);
+  -webkit-tap-highlight-color:transparent;transition:transform .15s,border-color .2s}
+.rwst:active{transform:scale(.985)}
+.rwst.rwst-unlocked{border-color:rgba(255,217,125,.4);
+  box-shadow:0 0 24px rgba(255,217,125,.12),var(--ssh),inset 0 1px 0 rgba(255,255,255,.1)}
+.rwst-thumb{width:58px;height:58px;border-radius:12px;overflow:hidden;flex-shrink:0;position:relative;
+  background:rgba(8,14,38,.85);display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 0 0 1.5px rgba(126,200,255,.28),0 4px 14px rgba(5,15,60,.35)}
+.rwst.rwst-unlocked .rwst-thumb{box-shadow:inset 0 0 0 1.5px rgba(255,217,125,.5),0 4px 14px rgba(255,180,0,.2)}
+.rwst-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.rwst-thumb .rwst-gift,.rwst-thumb.rwst-noimg::before{font-size:26px;line-height:1;filter:drop-shadow(0 3px 10px rgba(77,141,255,.45))}
+.rwst-thumb.rwst-noimg::before{content:'🎁'}
+.rwst-name{font-family:var(--font-ui);font-size:13px;font-weight:800;color:#fff;letter-spacing:-.2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.rwst-status{font-family:var(--font-ui);font-size:9.5px;font-weight:800;letter-spacing:.6px;flex-shrink:0;white-space:nowrap}
+.rwst-track{height:7px;background:rgba(0,0,0,.28);border-radius:99px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.3)}
+.rwst-fill{height:100%;border-radius:99px;position:relative;overflow:hidden;transition:width .5s cubic-bezier(.4,0,.2,1);
+  background:linear-gradient(90deg,var(--a1),var(--a2))}
+.rwst-fill.gold{background:linear-gradient(90deg,var(--gold),#ffcc44)}
+.rwst-fill::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(105deg,transparent 25%,rgba(255,255,255,.45) 50%,transparent 75%);
+  background-size:220% 100%;animation:prog-shine 2.6s ease-in-out infinite}
+.rwst-meta{font-family:var(--font-ui);font-size:9px;font-weight:600;color:var(--muted);margin-top:5px;letter-spacing:.3px}
+.rwst-chev{font-size:18px;color:var(--muted);flex-shrink:0;transition:transform .15s}
+.rwst:active .rwst-chev{transform:translateX(2px)}
+
+/* Glass-Lite: decorative sweeps off — keeps the 60fps promise on weak GPUs */
+html.glass-lite .fx-hero::after,
+html.glass-lite .prog-fill::after,
+html.glass-lite .rwst-fill::after{animation:none;display:none}
+html.glass-lite .fx-hero-mesh{animation:none}
 
 /* ════════════════════════════════════════════════════════════════
    GLASS-LITE (perf mode) — caps heavy backdrop-blur for smooth mobile.
@@ -2263,6 +2384,7 @@ body::before{
 </div>
 
 <!-- ═══ COMPACT DASHBOARD: Progress + Streak + Finance ═══ -->
+<div id="time-greeting" class="tg-hdr"></div>
 <div class="prog">
 <div class="prog-lbl">Today</div>
 <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
@@ -2301,7 +2423,6 @@ body::before{
 <div style="font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Today's 3 Tasks</div>
 <div id="np-tasks"></div>
 </div>
-<div id="time-greeting" style="font-family:var(--font-ui);font-size:0.875rem;font-weight:700;color:var(--muted);letter-spacing:.2px;margin-bottom:8px;padding:0 2px;transition:opacity .4s"></div>
 <div class="day-mode-banner" id="day-mode-banner"><div class="dmb-icon"></div><div><div class="dmb-text" id="dmb-text"></div><div class="dmb-sub" id="dmb-sub"></div></div></div>
 <div class="hc-list">
 <div class="hc" id="hB"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'B')}"><div class="hc-chk" onclick="tickDone(event,'B')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Morning Walk — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'B')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">B</span><span class="hc-name">Morning Walk</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">7:05 AM</span></div><div class="hc-action">30 min outside. No phone. Silence resets the mind.</div></div></div></div>
@@ -3626,7 +3747,11 @@ function _getTimeGreeting(){
 function _applyTimeAwareness(){
   var t = _getTimeGreeting();
   var el = document.getElementById('time-greeting');
-  if(el) el.textContent = t.greet;
+  if(el){
+    var d=new Date();
+    var dateStr=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+    el.innerHTML='<div class="tg-greet">'+t.greet+'</div><div class="tg-date">'+dateStr+'</div>';
+  }
   /* Night mode warm tint */
   var body = document.body;
   body.classList.remove('time-night','time-morning','time-afternoon','time-evening');
@@ -5656,23 +5781,30 @@ function renderRewardStrip(){
   const dailyStreak=getRwDailyStreak();
   const a=rw.active;
   let imgSrc=a.imageData||a.imageUrl||'';
+  /* FIX: image now lives in the satellite key lifeOS_rwImg (moved out of reward.active
+     to shrink backups) — renderReward() had this fallback, the strip didn't. */
+  if(!imgSrc){ try{ imgSrc=localStorage.getItem('lifeOS_rwImg')||''; }catch(e){} }
   const statusColor=isUnlocked?'var(--gold)':dailyStreak>0?'var(--a2)':'var(--muted)';
   const statusLabel=isUnlocked?'🎉 CLAIM IT':dailyStreak>0?'🔥 '+dailyStreak+' day streak':'⚡ Pull the crank';
   el.style.display='block';
   el.innerHTML=
-    '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(107,182,255,.15);border-radius:10px;cursor:pointer" onclick="navTo(PAGE_IDS.indexOf(\'reward\'))">'
-    +(imgSrc?'<div style="width:64px;height:64px;border-radius:8px;overflow:hidden;flex-shrink:0;background:rgba(10,15,35,.8);display:flex;align-items:center;justify-content:center"><img src="'+imgSrc+'" style="max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(77,141,255,.2))" onerror="this.style.display=\'none\'"></div>':'<div style="width:64px;height:64px;border-radius:8px;background:rgba(77,141,255,.1);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">🎁</div>')
+    '<div class="rwst'+(isUnlocked?' rwst-unlocked':'')+'" onclick="navTo(PAGE_IDS.indexOf(\'reward\'))">'
+    +'<div class="rwst-thumb">'
+    +(imgSrc
+      ?'<img src="'+imgSrc+'" onerror="this.parentNode.classList.add(\'rwst-noimg\');this.remove()">'
+      :'<span class="rwst-gift">🎁</span>')
+    +'</div>'
     +'<div style="flex:1;min-width:0">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
-    +'<span style="font-family:var(--font-ui);font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55%">'+a.name+'</span>'
-    +'<span style="font-family:var(--font-ui);font-size:9.5px;font-weight:800;letter-spacing:.5px;color:'+statusColor+'">'+statusLabel+'</span>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px">'
+    +'<span class="rwst-name">'+a.name+'</span>'
+    +'<span class="rwst-status" style="color:'+statusColor+'">'+statusLabel+'</span>'
     +'</div>'
-    +'<div style="height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">'
-    +'<div style="height:100%;width:'+pct+'%;background:'+(isUnlocked?'linear-gradient(90deg,var(--gold),#ffcc44)':'linear-gradient(90deg,var(--a1),var(--a2))')+';border-radius:99px;transition:width .4s"></div>'
+    +'<div class="rwst-track">'
+    +'<div class="rwst-fill'+(isUnlocked?' gold':'')+'" style="width:'+pct+'%"></div>'
     +'</div>'
-    +'<div style="font-family:var(--font-ui);font-size:9px;color:var(--muted);margin-top:4px">'+pts+' / '+REWARD_LEVEL_TARGET+' pts · Level '+(a.levelNum||1)+'</div>'
+    +'<div class="rwst-meta">'+pts+' / '+REWARD_LEVEL_TARGET+' pts · Level '+(a.levelNum||1)+'</div>'
     +'</div>'
-    +'<div style="font-size:18px;color:var(--muted);flex-shrink:0">›</div>'
+    +'<div class="rwst-chev">›</div>'
     +'</div>';
 }
 

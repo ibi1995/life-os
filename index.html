@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-06-08-v67-aurora'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-06-11-v69-glyph'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Finance (home page) */
     localStorage.removeItem('lifeOS_activePage');
@@ -112,7 +112,7 @@ button:focus-visible,.tab:focus-visible,.bn-tab:focus-visible{border-radius:6px}
   --bdr:hsla(206,75%,70%,0.24);--div:hsla(206,72%,68%,0.14);
   --r:6px;--rs:6px;--rx:6px;
   --blur:blur(14px);--sh:0 8px 32px rgba(5,15,60,.28);--ssh:0 2px 16px rgba(5,15,60,.18);
-  --font-ui:'Outfit',sans-serif;--font-body:'DM Sans',sans-serif
+  --font-ui:'Outfit',-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif;--font-body:'DM Sans',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;--font-mono:'Roboto Mono',ui-monospace,SFMono-Regular,Menlo,monospace
 }
 
 
@@ -842,10 +842,10 @@ textarea.big:focus{border-bottom-color:var(--a2)}
 .tx-item{display:flex;justify-content:space-between;align-items:center;padding:11px 18px;border-bottom:1px solid var(--bt-border);transition:background .15s,transform .2s,opacity .2s;gap:10px}
 .tx-item:last-child{border-bottom:none}
 .tx-item:hover{background:var(--bt-hover)}
-.tx-name{font-family:'Roboto Mono',monospace;font-size:13px;font-weight:600;color:#e6edf3}
-.tx-meta{font-family:'Roboto Mono',monospace;font-size:11px;color:#8b949e;margin-top:2px}
-.tx-amt-pos{font-family:'Roboto Mono',monospace;font-size:14px;font-weight:800;color:var(--green);letter-spacing:-.2px}
-.tx-amt-neg{font-family:'Roboto Mono',monospace;font-size:14px;font-weight:800;color:var(--red);letter-spacing:-.2px}
+.tx-name{font-family:var(--font-mono);font-size:13px;font-weight:600;color:#e6edf3}
+.tx-meta{font-family:var(--font-mono);font-size:11px;color:#8b949e;margin-top:2px}
+.tx-amt-pos{font-family:var(--font-mono);font-size:14px;font-weight:800;color:var(--green);letter-spacing:-.2px}
+.tx-amt-neg{font-family:var(--font-mono);font-size:14px;font-weight:800;color:var(--red);letter-spacing:-.2px}
 
 .tx-add-row{padding:12px 14px 14px;border-top:1px solid var(--div);background:rgba(255,255,255,.03);display:flex;flex-direction:column;gap:8px}
 
@@ -1311,7 +1311,7 @@ textarea.auto-grow{overflow:hidden;resize:none}
 .fin-load-more{width:100%;background:rgba(255,255,255,.06);border:1px dashed var(--div);border-radius:var(--rs);color:var(--muted);font-family:var(--font-ui);font-size:12px;font-weight:600;padding:10px;cursor:pointer;transition:transform .18s,opacity .18s,color .18s,background-color .18s,border-color .18s,box-shadow .18s,border-radius .18s,filter .18s,fill .18s,stroke .18s,outline-color .18s;margin-top:4px}
 .fin-load-more:hover{background:rgba(255,255,255,.1);color:#fff}
 
-.tx-notes-line{font-family:'Roboto Mono',monospace;font-size:11px;color:#6e7681;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.tx-notes-line{font-family:var(--font-mono);font-size:11px;color:#6e7681;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
 
 
 .bt-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin:0 0 16px;border:1px solid var(--bt-border-strong);border-radius:var(--r);overflow:hidden;background:var(--bt-card);backdrop-filter:var(--blur)}
@@ -1350,18 +1350,18 @@ textarea.auto-grow{overflow:hidden;resize:none}
 .bt-table .bt-item td{padding:6px 12px 6px 34px;font-size:12.5px;color:var(--bt-muted);border-bottom:1px solid rgba(127,178,255,.1);font-family:var(--font-ui)}
 .bt-table .bt-item:hover td{background:var(--bt-hover)}
 .bt-table .bt-item .bt-note{font-size:10px;color:#6e7681;font-style:italic}
-.bt-table .mono{font-family:'Roboto Mono',monospace;font-size:12px;font-weight:600}
+.bt-table .mono{font-family:var(--font-mono);font-size:12px;font-weight:600}
 .bt-table .r{text-align:right}
 .bt-table .c{text-align:center}
-.bt-actual-in{width:72px;font-family:'Roboto Mono',monospace;font-size:12px;font-weight:600;padding:5px 8px;border:1px solid var(--bdr);background:rgba(255,255,255,.08);color:#fff;text-align:right;outline:none;border-radius:6px;transition:border-color .2s,background .2s;min-height:34px}
+.bt-actual-in{width:72px;font-family:var(--font-mono);font-size:12px;font-weight:600;padding:5px 8px;border:1px solid var(--bdr);background:rgba(255,255,255,.08);color:#fff;text-align:right;outline:none;border-radius:6px;transition:border-color .2s,background .2s;min-height:34px}
 .bt-actual-in:focus{border-color:var(--a2);background:rgba(255,255,255,.12);box-shadow:0 0 0 2px rgba(126,200,255,.2)}
 .bt-actual-in::placeholder{color:rgba(184,207,245,.35)}
-.bt-var{font-family:'Roboto Mono',monospace;font-size:12px;font-weight:600;min-width:58px;text-align:right;display:inline-block}
+.bt-var{font-family:var(--font-mono);font-size:12px;font-weight:600;min-width:58px;text-align:right;display:inline-block}
 .bt-var-under{color:var(--green)}
 .bt-var-over{color:var(--red)}
 .bt-var-exact{color:var(--muted)}
-.bt-table .bt-total td{padding:12px 12px;font-weight:800;font-size:13.5px;border-top:1px solid var(--bt-border-strong);background:var(--bt-head-bg);font-family:'Roboto Mono',monospace;color:#fff}
-.bt-table .bt-highlight td{padding:12px 12px;font-weight:800;font-size:13.5px;border-top:1px solid var(--bt-border);font-family:'Roboto Mono',monospace;background:var(--bt-card)}
+.bt-table .bt-total td{padding:12px 12px;font-weight:800;font-size:13.5px;border-top:1px solid var(--bt-border-strong);background:var(--bt-head-bg);font-family:var(--font-mono);color:#fff}
+.bt-table .bt-highlight td{padding:12px 12px;font-weight:800;font-size:13.5px;border-top:1px solid var(--bt-border);font-family:var(--font-mono);background:var(--bt-card)}
 
 
 .bt-split{border:1px solid rgba(74,222,128,.3);border-radius:var(--r);overflow:hidden;margin-bottom:16px;background:var(--bt-card);backdrop-filter:var(--blur)}
@@ -1971,7 +1971,7 @@ backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid r
 .rwst.rwst-unlocked .rwst-thumb{box-shadow:inset 0 0 0 1.5px rgba(255,217,125,.5),0 4px 14px rgba(255,180,0,.2)}
 .rwst-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .rwst-thumb .rwst-gift,.rwst-thumb.rwst-noimg::before{font-size:26px;line-height:1;filter:drop-shadow(0 3px 10px rgba(77,141,255,.45))}
-.rwst-thumb.rwst-noimg::before{content:'🎁'}
+.rwst-thumb.rwst-noimg::before{content:'';width:1em;height:1em;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22currentColor%22%20d%3D%22M20%206h-2.18c.11-.31.18-.65.18-1a2.996%202.996%200%200%200-5.5-1.65l-.5.67-.5-.68C10.96%202.54%2010.05%202%209%202%207.34%202%206%203.34%206%205c0%20.35.07.69.18%201H4c-1.11%200-1.99.89-1.99%202L2%2019c0%201.11.89%202%202%202h16c1.11%200%202-.89%202-2V8c0-1.11-.89-2-2-2zm-5-2c.55%200%201%20.45%201%201s-.45%201-1%201-1-.45-1-1%20.45-1%201-1zM9%204c.55%200%201%20.45%201%201s-.45%201-1%201-1-.45-1-1%20.45-1%201-1zm11%2015H4v-2h16v2zm0-5H4V8h5.08L7%2010.83%208.62%2012%2011%208.76l1-1.36%201%201.36L15.38%2012%2017%2010.83%2014.92%208H20v6z%22/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22currentColor%22%20d%3D%22M20%206h-2.18c.11-.31.18-.65.18-1a2.996%202.996%200%200%200-5.5-1.65l-.5.67-.5-.68C10.96%202.54%2010.05%202%209%202%207.34%202%206%203.34%206%205c0%20.35.07.69.18%201H4c-1.11%200-1.99.89-1.99%202L2%2019c0%201.11.89%202%202%202h16c1.11%200%202-.89%202-2V8c0-1.11-.89-2-2-2zm-5-2c.55%200%201%20.45%201%201s-.45%201-1%201-1-.45-1-1%20.45-1%201-1zM9%204c.55%200%201%20.45%201%201s-.45%201-1%201-1-.45-1-1%20.45-1%201-1zm11%2015H4v-2h16v2zm0-5H4V8h5.08L7%2010.83%208.62%2012%2011%208.76l1-1.36%201%201.36L15.38%2012%2017%2010.83%2014.92%208H20v6z%22/%3E%3C/svg%3E") center/contain no-repeat}
 .rwst-name{font-family:var(--font-ui);font-size:13px;font-weight:800;color:#fff;letter-spacing:-.2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .rwst-status{font-family:var(--font-ui);font-size:9.5px;font-weight:800;letter-spacing:.6px;flex-shrink:0;white-space:nowrap}
@@ -2191,9 +2191,7 @@ body::before{
     </symbol>
     
     <!-- Strength/Muscle icon -->
-    <symbol id="icon-strength" viewBox="0 0 24 24">
-      <path fill="currentColor" d="M9 4v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05l3.33 3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V15H6v3c0 1.1.9 2 2 2h10c1.66 0 3-1.34 3-3V4H9zm-1.11 6.41V8.26H6.77L4.76 6.25c.44-.35.94-.64 1.48-.85v3.11h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V13h-1.11v-.59zm10.02 2.44c0 .81-.44 1.54-1.14 1.93l-.61.3V11h-1.11v4.15c-.86-.28-1.53-.87-1.88-1.62l2.32-2.32c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0L12.5 12.1 10.2 9.8l1.79-1.79c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0L8.79 8.79 7.38 7.38c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0l-.71.71c-.39.39-.39 1.02 0 1.41l5.66 5.66c.39.39 1.02.39 1.41 0l5.66-5.66c.39-.39.39-1.02 0-1.41-.19-.2-.45-.29-.71-.29-.26 0-.51.1-.7.29l-2.83 2.83-.71-.71c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l4.24 4.24v3.44z"/>
-    </symbol>
+    <symbol id="icon-strength" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12 2.2c2.6 0 4.7 1.9 4.7 4.3 0 .6-.1 1.1-.4 1.6 1.7 1.3 2.8 3.3 2.8 5.6 0 2.1-.9 4-2.4 5.3.2.4.3.9.3 1.4 0 .5-.4.9-.9.9H7.9c-.5 0-.9-.4-.9-.9 0-.5.1-1 .3-1.4-1.5-1.3-2.4-3.2-2.4-5.3 0-2.3 1.1-4.3 2.8-5.6-.3-.5-.4-1-.4-1.6 0-2.4 2.1-4.3 4.7-4.3zm0 2.4c-1.3 0-2.3.9-2.3 1.9 0 .3.1.6.2.8.7-.2 1.4-.4 2.1-.4s1.4.2 2.1.4c.1-.2.2-.5.2-.8 0-1-1-1.9-2.3-1.9z"/></symbol>
     
     <!-- Calendar icon -->
     <symbol id="icon-calendar" viewBox="0 0 24 24">
@@ -2215,6 +2213,52 @@ body::before{
       <path fill="currentColor" d="M7 2v11h3v9l7-12h-4l4-8z"/>
     </symbol>
 
+    <symbol id="icon-gym" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10h2v4H3zM6 8h2.5v8H6zM15.5 8H18v8h-2.5zM19 10h2v4h-2zM8.5 11h7v2h-7z"/></symbol>
+    <symbol id="icon-bridge" viewBox="0 0 24 24" fill="currentColor"><path d="M2 9h20v2.4h-2.2v2.2c-1-2.6-4.1-4.4-7.8-4.4s-6.8 1.8-7.8 4.4v-2.2H2V9zm2.2 7.2c0-3 3.4-5.2 7.8-5.2s7.8 2.2 7.8 5.2V21h-2.6v-4.4c0-1.8-2.2-3.2-5.2-3.2s-5.2 1.4-5.2 3.2V21H4.2v-4.8z"/></symbol>
+    <symbol id="icon-lunge" viewBox="0 0 24 24" fill="currentColor"><circle cx="14.5" cy="4" r="2"/><path d="M13.2 7.2c.8-.4 1.8-.2 2.3.5l2.3 3.1 3.2.9-.5 1.9-4-1.1-1.4-1.8-.8 3.6 2.7 2.1V21h-2v-3.7l-2.6-2-1.5 3.2L7 21.6 5.6 20l3.2-2.8 1.7-4.4-2.3 1.2-1.5 2.7-1.7-1 1.9-3.4 6.3-3.1z"/></symbol>
+    <symbol id="icon-walk" viewBox="0 0 24 24" fill="currentColor"><circle cx="13.2" cy="4" r="2"/><path d="M9.8 8.9 7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.36-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7z"/></symbol>
+    <symbol id="icon-lotus" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="4.6" r="2.2"/><path d="M12 8c1.9 0 3.5 1.4 3.8 3.2l.4 2.6c-1.3-.4-2.7-.6-4.2-.6s-2.9.2-4.2.6l.4-2.6C8.5 9.4 10.1 8 12 8z"/><path d="M12 14.6c4.6 0 8.4 1.8 9.6 4.4.4.9-.3 2-1.3 2H3.7c-1 0-1.7-1.1-1.3-2 1.2-2.6 5-4.4 9.6-4.4z"/></symbol>
+    <symbol id="icon-chart" viewBox="0 0 24 24" fill="currentColor"><path d="M4 12h3.4v8H4zM10.3 4h3.4v16h-3.4zM16.6 9H20v11h-3.4z"/></symbol>
+    <symbol id="icon-calc" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h12c1.1 0 2 .9 2 2v16c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2zm1 3v3.4h10V5H7zm.4 6.2v2.2h2.2v-2.2H7.4zm3.5 0v2.2h2.2v-2.2h-2.2zm3.5 0v2.2h2.2v-2.2h-2.2zm-7 4v2.2h2.2v-2.2H7.4zm3.5 0v2.2h2.2v-2.2h-2.2zm3.5 0v2.2h2.2v-2.2h-2.2z"/></symbol>
+    <symbol id="icon-book" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6.3C10.6 5 8.6 4.2 6.5 4.2c-1.6 0-3.2.4-4.5 1.2v13.4c1.3-.8 2.9-1.2 4.5-1.2 2.1 0 4.1.8 5.5 2.1 1.4-1.3 3.4-2.1 5.5-2.1 1.6 0 3.2.4 4.5 1.2V5.4c-1.3-.8-2.9-1.2-4.5-1.2-2.1 0-4.1.8-5.5 2.1zm0 11.1c-1.4-.9-3.1-1.4-5-1.4-1 0-2 .1-3 .4V6.6c.9-.3 2-.4 3-.4 1.9 0 3.6.5 5 1.4v9.8zm10-1c-1-.3-2-.4-3-.4-1.9 0-3.6.5-5 1.4V7.6c1.4-.9 3.1-1.4 5-1.4 1 0 2 .1 3 .4v9.8z"/></symbol>
+    <symbol id="icon-db" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c4.4 0 8 1.34 8 3s-3.6 3-8 3-8-1.34-8-3 3.6-3 8-3zm-8 5.5c1.7 1.2 4.7 1.9 8 1.9s6.3-.7 8-1.9V12c0 1.66-3.6 3-8 3s-8-1.34-8-3V8.5zm0 6c1.7 1.2 4.7 1.9 8 1.9s6.3-.7 8-1.9V18c0 1.66-3.6 3-8 3s-8-1.34-8-3v-3.5z"/></symbol>
+    <symbol id="icon-dashboard" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></symbol>
+    <symbol id="icon-wrench" viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 18.2 13 9.6c.9-2.2.4-4.8-1.4-6.6-1.9-1.9-4.8-2.3-7.1-1.2L8.6 6 6 8.6 1.8 4.5C.7 6.8 1.1 9.7 3 11.6c1.8 1.8 4.4 2.3 6.6 1.4l8.6 8.6c.4.4 1 .4 1.4 0l1.9-1.9c.5-.5.5-1.1.1-1.5z"/></symbol>
+    <symbol id="icon-paw" viewBox="0 0 24 24" fill="currentColor"><circle cx="7" cy="8.2" r="2"/><circle cx="12" cy="6.4" r="2.1"/><circle cx="17" cy="8.2" r="2"/><path d="M12 11c2.8 0 5.4 2 6.1 4.7.4 1.5-.3 3.1-1.7 3.8-1.3.7-2.9.4-4-.5-.3-.2-.6-.2-.9 0-1.1.9-2.7 1.2-4 .5-1.4-.7-2.1-2.3-1.7-3.8C6.6 13 9.2 11 12 11z"/></symbol>
+    <symbol id="icon-camera" viewBox="0 0 24 24" fill="currentColor"><path d="M9.4 4 8 6H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-3l-1.4-2H9.4zM12 9.2c2.1 0 3.8 1.7 3.8 3.8S14.1 16.8 12 16.8 8.2 15.1 8.2 13 9.9 9.2 12 9.2zm0 1.8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></symbol>
+    <symbol id="icon-save" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></symbol>
+    <symbol id="icon-folder" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8.5 9h7v10h-7V9zM15.5 4l-1-1h-5l-1 1H5v2h14V4h-3.5z"/></symbol>
+    <symbol id="icon-edit" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
+    <symbol id="icon-palette" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c-5 0-9 4-9 9s4 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zM6.5 12c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></symbol>
+    <symbol id="icon-sound_on" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1-3.29-2.5-4.03v8.05c1.5-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.9.86 5 3.54 5 6.71s-2.1 5.85-5 6.71v2.06c4-.91 7-4.49 7-8.77s-3-7.86-7-8.77z"/></symbol>
+    <symbol id="icon-sound_off" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-3-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/></symbol>
+    <symbol id="icon-lock_open" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></symbol>
+    <symbol id="icon-fire" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 0.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.3 4.9c.4-.2.6-.7.5-1.1s-.6-.8-1.1-.8C6.8 3.1 3 7.1 3 12c0 5 4 9 9 9 3.8 0 7.1-2.4 8.4-5.9.2-.4 0-.9-.4-1.2-.4-.3-.9-.2-1.2.1-1 .9-2.3 1.4-3.7 1.4-3.1 0-5.7-2.5-5.7-5.7 0-1.9 1.1-3.8 2.9-4.8z"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 0 0-1.41 0c-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 0 0-1.41 0c-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 0 0 0-1.41.996.996 0 0 0-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 0 0 0-1.41.996.996 0 0 0-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></symbol>
+    <symbol id="icon-gem" viewBox="0 0 24 24" fill="currentColor"><path d="M7.2 2h9.6L21 8.2 12 22 3 8.2 7.2 2z"/></symbol>
+    <symbol id="icon-heart" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></symbol>
+    <symbol id="icon-person" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></symbol>
+    <symbol id="icon-cart" viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0 0 20 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></symbol>
+    <symbol id="icon-car" viewBox="0 0 24 24" fill="currentColor"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></symbol>
+    <symbol id="icon-bank" viewBox="0 0 24 24" fill="currentColor"><path d="M4 10h2.5v7H4zM10.75 10h2.5v7h-2.5zM2 19h20v3H2zM17.5 10H20v7h-2.5zM12 1 2 6v2h20V6l-10-5z"/></symbol>
+    <symbol id="icon-fuel" viewBox="0 0 24 24" fill="currentColor"><path d="M19.77 7.23 16.06 3.5l-1.06 1.06 2.11 2.11c-.94.36-1.61 1.26-1.61 2.33 0 1.38 1.12 2.5 2.5 2.5.36 0 .69-.08 1-.21v7.21c0 .55-.45 1-1 1s-1-.45-1-1V14c0-1.1-.9-2-2-2h-1V5c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v16h10v-7.5h1.5v5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V9c0-.69-.28-1.32-.73-1.77zM12 10H6V5h6v5zm6 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></symbol>
+    <symbol id="icon-phone" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H8C6.34 1 5 2.34 5 4v16c0 1.66 1.34 3 3 3h8c1.66 0 3-1.34 3-3V4c0-1.66-1.34-3-3-3zm-2 20h-4v-1h4v1zm3.25-3H6.75V4h10.5v14z"/></symbol>
+    <symbol id="icon-wifi" viewBox="0 0 24 24" fill="currentColor"><path d="M12 18.5c.9 0 1.7.7 1.7 1.7s-.8 1.7-1.7 1.7-1.7-.8-1.7-1.7.8-1.7 1.7-1.7zM12 14c2 0 3.8.8 5.1 2.1l-1.6 1.6c-.9-.9-2.1-1.4-3.5-1.4s-2.6.5-3.5 1.4L7 16.1C8.2 14.8 10 14 12 14zm0-4.6c3.2 0 6.2 1.3 8.3 3.4l-1.6 1.6c-1.7-1.7-4-2.8-6.7-2.8s-5 1-6.7 2.8L3.7 12.8c2.1-2.1 5.1-3.4 8.3-3.4zM12 5c4.5 0 8.6 1.8 11.6 4.8L22 11.4C19.4 8.8 15.9 7.2 12 7.2S4.6 8.8 2 11.4L.4 9.8C3.4 6.8 7.5 5 12 5z"/></symbol>
+    <symbol id="icon-doc" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></symbol>
+    <symbol id="icon-sparkle" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5 13.8 9 20 11l-6.2 2L12 19.5 10.2 13 4 11l6.2-2L12 2.5zM19.5 14.5l.94 3.06L23.5 18.5l-3.06.94-.94 3.06-.94-3.06L15.5 18.5l3.06-.94.94-3.06zM5 2l.7 2.3L8 5l-2.3.7L5 8l-.7-2.3L2 5l2.3-.7L5 2z"/></symbol>
+    <symbol id="icon-briefcase" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 0h-4V4h4v2z"/></symbol>
+    <symbol id="icon-umbrella" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6 2 11h9v8.5c0 .83-.67 1.5-1.5 1.5S8 20.33 8 19.5V19H6v.5C6 21.43 7.57 23 9.5 23s3.5-1.57 3.5-3.5V11h9c0-5-4.5-9-10-9z"/></symbol>
+    <symbol id="icon-box" viewBox="0 0 24 24" fill="currentColor"><path d="M20.54 5.23 19.15 3.55C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5 6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></symbol>
+    <symbol id="icon-coins" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="9.5" r="6.5"/><path fill-rule="evenodd" d="M15 8a6.8 6.8 0 1 1 0 13.6A6.8 6.8 0 0 1 15 8zm0 2.5a4.3 4.3 0 1 0 0 8.6 4.3 4.3 0 0 0 0-8.6z"/></symbol>
+    <symbol id="icon-gamepad" viewBox="0 0 24 24" fill="currentColor"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM11 13H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8zm.5-13H11v6l5.2 3.1.8-1.2-4.5-2.7V7z"/></symbol>
+    <symbol id="icon-replay" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></symbol>
+    <symbol id="icon-warning" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></symbol>
+    <symbol id="icon-party" viewBox="0 0 24 24" fill="currentColor"><path d="M2.5 21.5 8 6.8 17.2 16 2.5 21.5z"/><path d="m10.6 4.3 1.6-1.6 1.4 1.4-1.6 1.6-1.4-1.4zM15.8 8.1l2.6-.7.5 1.9-2.6.7-.5-1.9z"/><circle cx="14.6" cy="3.2" r="1.3"/><circle cx="20" cy="5.4" r="1.3"/><circle cx="20.6" cy="12.6" r="1.3"/></symbol>
   </defs>
 </svg>
 
@@ -2257,9 +2301,7 @@ body::before{
           <div class="fx-hero-month" id="fx-month-label">May 2026</div>
           <button onclick="finMonthNav(1)" aria-label="Next month" style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(127,178,255,.18);color:rgba(255,255,255,.55);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:all .15s">›</button>
         </div>
-        <button class="fx-settings-btn" onclick="fnxOpenEdit()" aria-label="Settings">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        </button>
+        <button class="fx-settings-btn" onclick="fnxOpenEdit()" aria-label="Settings"><svg class="svg-icon" style="width:18px;height:18px"><use href="#icon-settings"/></svg></button>
       </div>
       <div class="fx-hero-label">Remaining</div>
       <div class="fx-hero-amount">
@@ -2333,7 +2375,7 @@ body::before{
 <div class="pg-inner">
 <!-- Fix 5: Data backup notice (shown once per week) -->
 <div id="backup-notice" style="display:none;background:linear-gradient(135deg,rgba(77,141,255,.1),rgba(30,70,200,.07));border:1px solid rgba(107,182,255,.2);border-radius:6px;padding:11px 14px;margin-bottom:10px;align-items:center;gap:10px">
-  <span style="font-size:18px;flex-shrink:0">💾</span>
+  <span style="flex-shrink:0;display:flex;color:var(--a2)"><svg class="svg-icon" style="width:20px;height:20px;" aria-hidden="true"><use href="#icon-save"/></svg></span>
   <div style="flex:1;min-width:0">
     <div style="font-family:var(--font-ui);font-size:12px;font-weight:700;color:var(--sec);margin-bottom:2px">Your data lives in this browser only</div>
     <div style="font-size:11px;color:var(--muted);line-height:1.45">Export a backup to keep it safe — takes 2 seconds.</div>
@@ -2345,26 +2387,26 @@ body::before{
 </div>
 <!-- Fix 22: First-time use onboarding banner -->
 <div id="first-use-banner" style="display:none;background:linear-gradient(135deg,rgba(77,141,255,.15),rgba(100,180,255,.08));border:1px solid rgba(107,182,255,.3);border-radius:6px;padding:18px;margin-bottom:14px">
-  <div style="font-family:var(--font-ui);font-size:16px;font-weight:800;color:#fff;margin-bottom:6px">Welcome to My Life OS 👋</div>
-  <div style="font-size:13px;color:var(--sec);line-height:1.6;margin-bottom:14px">Tap the checkbox next to any habit. You'll be asked to rate your effort: ⚡ Bare min (1), ✅ Done right (2), or 🏆 Exceeded (3). Higher ratings build a bigger weekly score.</div>
+  <div style="font-family:var(--font-ui);font-size:16px;font-weight:800;color:#fff;margin-bottom:6px">Welcome to My Life OS</div>
+  <div style="font-size:13px;color:var(--sec);line-height:1.6;margin-bottom:14px">Tap the checkbox next to any habit. You'll be asked to rate your effort: <svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:3px;color:var(--gold);" aria-hidden="true"><use href="#icon-bolt"/></svg>Bare min (1), <svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:3px;color:#4ade80;" aria-hidden="true"><use href="#icon-check"/></svg>Done right (2), or <svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:3px;color:var(--gold);" aria-hidden="true"><use href="#icon-trophy"/></svg>Exceeded (3). Higher ratings build a bigger weekly score.</div>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
     <div style="background:rgba(255,255,255,.07);border-radius:6px;padding:10px 8px;text-align:center">
-      <div style="font-size:20px;margin-bottom:4px">☑️</div>
+      <div style="margin-bottom:4px;color:var(--a2)"><svg class="svg-icon" style="width:22px;height:22px;" aria-hidden="true"><use href="#icon-check"/></svg></div>
       <div style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--sec)">Tap to log</div>
       <div style="font-size:10px;color:var(--muted);margin-top:2px">Rate 1–3</div>
     </div>
     <div style="background:rgba(255,255,255,.07);border-radius:6px;padding:10px 8px;text-align:center">
-      <div style="font-size:20px;margin-bottom:4px">🔥</div>
+      <div style="margin-bottom:4px;color:#ff9d5c"><svg class="svg-icon" style="width:22px;height:22px;" aria-hidden="true"><use href="#icon-fire"/></svg></div>
       <div style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--sec)">Build streak</div>
       <div style="font-size:10px;color:var(--muted);margin-top:2px">Every day counts</div>
     </div>
     <div style="background:rgba(255,255,255,.07);border-radius:6px;padding:10px 8px;text-align:center">
-      <div style="font-size:20px;margin-bottom:4px">🎁</div>
+      <div style="margin-bottom:4px;color:var(--a2)"><svg class="svg-icon" style="width:22px;height:22px;" aria-hidden="true"><use href="#icon-gift"/></svg></div>
       <div style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--sec)">Earn rewards</div>
       <div style="font-size:10px;color:var(--muted);margin-top:2px">Set your prize</div>
     </div>
   </div>
-  <button onclick="document.getElementById('first-use-banner').style.display='none'" style="width:100%;background:linear-gradient(135deg,var(--a1),#3a7aff);border:none;border-radius:6px;color:#fff;font-family:var(--font-ui);font-size:13px;font-weight:700;padding:12px;cursor:pointer;min-height:44px">Got it — let's go! 🚀</button>
+  <button onclick="document.getElementById('first-use-banner').style.display='none'" style="width:100%;background:linear-gradient(135deg,var(--a1),#3a7aff);border:none;border-radius:6px;color:#fff;font-family:var(--font-ui);font-size:13px;font-weight:700;padding:12px;cursor:pointer;min-height:44px">Got it — let's go</button>
 </div>
 <!-- Comeback banner (2+ missed days) -->
 <div class="comeback-banner" id="comeback-banner" style="display:none">
@@ -2391,11 +2433,11 @@ body::before{
 <div class="prog-ct" id="prog-ct">0 / —</div>
 <button id="today-overflow-btn" onclick="document.getElementById('today-overflow-menu').classList.toggle('on')" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px 2px;margin-left:6px;flex-shrink:0" title="More options">⋯</button>
 <div id="today-overflow-menu" class="today-overflow" style="position:absolute;right:16px;top:52px;background:rgba(15,30,100,.96);border:1px solid var(--bdr);border-radius:6px;padding:6px;box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:50;backdrop-filter:blur(20px)">
-  <button onclick="resetDay();document.getElementById('today-overflow-menu').classList.remove('on')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--sec);font-family:var(--font-ui);font-size:12px;font-weight:600;padding:10px 14px;cursor:pointer;border-radius:6px;white-space:nowrap">🔄 Reset Today</button>
-  <button onclick="openEditDay();document.getElementById('today-overflow-menu').classList.remove('on')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--sec);font-family:var(--font-ui);font-size:12px;font-weight:600;padding:10px 14px;cursor:pointer;border-radius:6px;white-space:nowrap">✏️ Edit Past Day</button>
+  <button onclick="resetDay();document.getElementById('today-overflow-menu').classList.remove('on')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--sec);font-family:var(--font-ui);font-size:12px;font-weight:600;padding:10px 14px;cursor:pointer;border-radius:6px;white-space:nowrap"><svg class="svg-icon" style="width:13px;height:13px;vertical-align:-1.5px;margin-right:6px;" aria-hidden="true"><use href="#icon-replay"/></svg>Reset Today</button>
+  <button onclick="openEditDay();document.getElementById('today-overflow-menu').classList.remove('on')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--sec);font-family:var(--font-ui);font-size:12px;font-weight:600;padding:10px 14px;cursor:pointer;border-radius:6px;white-space:nowrap"><svg class="svg-icon" style="width:13px;height:13px;vertical-align:-2px;margin-right:6px" aria-hidden="true"><use href="#icon-edit"/></svg>Edit Past Day</button>
   <div style="height:1px;background:var(--div);margin:4px 8px"></div>
-  <button onclick="document.getElementById('today-overflow-menu').classList.remove('on');document.getElementById('imp-file-quick').click()" style="display:block;width:100%;text-align:left;background:none;border:none;color:#4ade80;font-family:var(--font-ui);font-size:12px;font-weight:600;padding:10px 14px;cursor:pointer;border-radius:6px;white-space:nowrap">📂 Import Backup</button>
-  <button onclick="exportData();document.getElementById('today-overflow-menu').classList.remove('on')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--a2);font-family:var(--font-ui);font-size:12px;font-weight:600;padding:10px 14px;cursor:pointer;border-radius:6px;white-space:nowrap">⬇️ Export Backup</button>
+  <button onclick="document.getElementById('today-overflow-menu').classList.remove('on');document.getElementById('imp-file-quick').click()" style="display:block;width:100%;text-align:left;background:none;border:none;color:#4ade80;font-family:var(--font-ui);font-size:12px;font-weight:600;padding:10px 14px;cursor:pointer;border-radius:6px;white-space:nowrap"><svg class="svg-icon" style="width:13px;height:13px;vertical-align:-2px;margin-right:6px" aria-hidden="true"><use href="#icon-folder"/></svg>Import Backup</button>
+  <button onclick="exportData();document.getElementById('today-overflow-menu').classList.remove('on')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--a2);font-family:var(--font-ui);font-size:12px;font-weight:600;padding:10px 14px;cursor:pointer;border-radius:6px;white-space:nowrap"><svg class="svg-icon" style="width:13px;height:13px;vertical-align:-1.5px;margin-right:6px;" aria-hidden="true"><use href="#icon-save"/></svg>Export Backup</button>
 <input accept=".json" id="imp-file-quick" onchange="importData(event)" style="display:none" type="file"/>
 </div>
 </div>
@@ -2404,14 +2446,14 @@ body::before{
   <div class="xp-strip-lvl" id="xp-strip-lvl">LVL 1 · RECRUIT</div>
   <div class="xp-strip-bar"><div class="xp-strip-fill" id="xp-strip-fill" style="width:0%"></div></div>
   <div class="xp-strip-amt" id="xp-strip-amt">0 XP</div>
-  <div class="xp-strip-tokens" id="xp-strip-tokens">🏅 0</div>
+  <div class="xp-strip-tokens" id="xp-strip-tokens"><svg class="svg-icon" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:3px;color:var(--gold);" aria-hidden="true"><use href="#icon-medal"/></svg>0</div>
 </div>
 <!-- Reward progress strip -->
 <div id="rw-strip" style="display:none;margin-bottom:10px"></div>
 <!-- Streak at risk banner -->
 <div id="sar-banner" style="display:none;background:linear-gradient(135deg,rgba(255,180,0,.12),rgba(255,140,0,.08));border:1px solid rgba(255,180,0,.22);border-radius:6px;padding:14px 16px;margin-bottom:12px">
 <div style="display:flex;align-items:center;gap:10px">
-<div style="font-size:22px">🔥</div>
+<div style="color:#ff9d5c;display:flex;align-items:center"><svg class="svg-icon" style="width:24px;height:24px;" aria-hidden="true"><use href="#icon-fire"/></svg></div>
 <div style="flex:1">
 <div style="font-size:12px;font-weight:800;color:#FFD97D" id="sar-title">Streak at risk</div>
 <div style="font-size:11px;color:rgba(255,220,100,.7)" id="sar-msg">Complete your habits before midnight.</div>
@@ -2425,29 +2467,29 @@ body::before{
 </div>
 <div class="day-mode-banner" id="day-mode-banner"><div class="dmb-icon"></div><div><div class="dmb-text" id="dmb-text"></div><div class="dmb-sub" id="dmb-sub"></div></div></div>
 <div class="hc-list">
-<div class="hc" id="hB"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'B')}"><div class="hc-chk" onclick="tickDone(event,'B')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Morning Walk — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'B')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">B</span><span class="hc-name">Morning Walk</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">7:05 AM</span></div><div class="hc-action">30 min outside. No phone. Silence resets the mind.</div></div></div></div>
+<div class="hc" id="hB"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'B')}"><div class="hc-chk" onclick="tickDone(event,'B')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Morning Walk — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'B')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">B</span><span class="hc-name">Morning Walk</span><span class="opt-badge"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:1px" aria-hidden="true"><use href="#icon-lock_open"/></svg>OPTIONAL</span><span class="hc-time">7:05 AM</span></div><div class="hc-action">30 min outside. No phone. Silence resets the mind.</div></div></div></div>
 
-<div class="hc" id="hD"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'D')}"><div class="hc-chk" onclick="tickDone(event,'D')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Brush and Face — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'D')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">D</span><span class="hc-name">Brush + Face</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">8:00 AM</span></div><div class="hc-action">2 min brush, wash face. One positive thing in the mirror.</div></div></div></div>
+<div class="hc" id="hD"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'D')}"><div class="hc-chk" onclick="tickDone(event,'D')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Brush and Face — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'D')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">D</span><span class="hc-name">Brush + Face</span><span class="opt-badge"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:1px" aria-hidden="true"><use href="#icon-lock_open"/></svg>OPTIONAL</span><span class="hc-time">8:00 AM</span></div><div class="hc-action">2 min brush, wash face. One positive thing in the mirror.</div></div></div></div>
 <div class="hc week-only" id="hE"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'E')}"><div class="hc-chk" onclick="tickDone(event,'E')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Set 3 Priorities — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'E')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">E</span><span class="hc-name">Set 3 Priorities</span><span class="hc-time">8:15 AM</span></div><div class="hc-action">Write 3 tasks on paper. If only these 3 — is today a win?</div></div></div></div>
 
-<div class="hc sat-only" id="hQ"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'Q')}"><div class="hc-chk" onclick="tickDone(event,'Q')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Weekly Preview — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'Q')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">Q</span><span class="hc-name">Weekly Preview</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">10:00 AM</span></div><div class="hc-action">Open calendar. Write 3 intentions for next week. 10 minutes only.</div></div></div></div>
-<div class="hc hide-fri" id="hG"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'G')}"><div class="hc-chk" onclick="tickDone(event,'G')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Mid-Morning Walk — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'G')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">G</span><span class="hc-name">Mid-Morning Walk</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">11:00 AM</span></div><div class="hc-action">20 min outside. No screens. Brain recharge block.</div></div></div></div>
+<div class="hc sat-only" id="hQ"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'Q')}"><div class="hc-chk" onclick="tickDone(event,'Q')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Weekly Preview — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'Q')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">Q</span><span class="hc-name">Weekly Preview</span><span class="opt-badge"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:1px" aria-hidden="true"><use href="#icon-lock_open"/></svg>OPTIONAL</span><span class="hc-time">10:00 AM</span></div><div class="hc-action">Open calendar. Write 3 intentions for next week. 10 minutes only.</div></div></div></div>
+<div class="hc hide-fri" id="hG"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'G')}"><div class="hc-chk" onclick="tickDone(event,'G')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Mid-Morning Walk — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'G')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">G</span><span class="hc-name">Mid-Morning Walk</span><span class="opt-badge"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:1px" aria-hidden="true"><use href="#icon-lock_open"/></svg>OPTIONAL</span><span class="hc-time">11:00 AM</span></div><div class="hc-action">20 min outside. No screens. Brain recharge block.</div></div></div></div>
 
 
-<div class="hc not-eid" id="hS"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'S')}"><div class="hc-chk" onclick="tickDone(event,'S')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Chest Stretch — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'S')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">S</span><span class="hc-name">Chest Stretch</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:15 PM</span></div><div class="hc-action">Doorframe stretch. Forearms on frame, elbows 90°. Lean forward. 30s × 3.</div></div></div></div>
-<div class="hc not-eid" id="hT"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'T')}"><div class="hc-chk" onclick="tickDone(event,'T')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Couch Stretch — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'T')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">T</span><span class="hc-name">Couch Stretch</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:18 PM</span></div><div class="hc-action">Back foot on couch/wall behind you, front knee down. Push hips forward, squeeze rear glute. 60s each side.</div></div></div></div>
-<div class="hc not-eid" id="hU"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'U')}"><div class="hc-chk" onclick="tickDone(event,'U')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Glute Bridges — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'U')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">U</span><span class="hc-name">Glute Bridges</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:21 PM</span></div><div class="hc-action">Lie back, knees bent, drive hips up. Squeeze hard at top. 15 reps × 2.</div></div></div></div>
-<div class="hc not-eid" id="hV"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'V')}"><div class="hc-chk" onclick="tickDone(event,'V')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Chin Tucks — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'V')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">V</span><span class="hc-name">Chin Tucks</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:23 PM</span></div><div class="hc-action">Pull chin straight back — double chin. Hold 5s, release. 10 reps × 3.</div></div></div></div>
-<div class="hc not-eid" id="hW"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'W')}"><div class="hc-chk" onclick="tickDone(event,'W')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Wall Angels — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'W')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">W</span><span class="hc-name">Wall Angels</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">5:25 PM</span></div><div class="hc-action">Back flat on wall, arms in goalpost. Slide up/down keeping contact. 10 reps × 2.</div></div></div></div>
+<div class="hc not-eid" id="hS"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'S')}"><div class="hc-chk" onclick="tickDone(event,'S')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Chest Stretch — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'S')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">S</span><span class="hc-name">Chest Stretch</span><span class="opt-badge"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:1px" aria-hidden="true"><use href="#icon-lock_open"/></svg>OPTIONAL</span><span class="hc-time">5:15 PM</span></div><div class="hc-action">Doorframe stretch. Forearms on frame, elbows 90°. Lean forward. 30s × 3.</div></div></div></div>
+<div class="hc not-eid" id="hT"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'T')}"><div class="hc-chk" onclick="tickDone(event,'T')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Couch Stretch — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'T')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">T</span><span class="hc-name">Couch Stretch</span><span class="opt-badge"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:1px" aria-hidden="true"><use href="#icon-lock_open"/></svg>OPTIONAL</span><span class="hc-time">5:18 PM</span></div><div class="hc-action">Back foot on couch/wall behind you, front knee down. Push hips forward, squeeze rear glute. 60s each side.</div></div></div></div>
+<div class="hc not-eid" id="hU"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'U')}"><div class="hc-chk" onclick="tickDone(event,'U')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Glute Bridges — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'U')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">U</span><span class="hc-name">Glute Bridges</span><span class="opt-badge"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:1px" aria-hidden="true"><use href="#icon-lock_open"/></svg>OPTIONAL</span><span class="hc-time">5:21 PM</span></div><div class="hc-action">Lie back, knees bent, drive hips up. Squeeze hard at top. 15 reps × 2.</div></div></div></div>
+<div class="hc not-eid" id="hV"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'V')}"><div class="hc-chk" onclick="tickDone(event,'V')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Chin Tucks — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'V')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">V</span><span class="hc-name">Chin Tucks</span><span class="opt-badge"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:1px" aria-hidden="true"><use href="#icon-lock_open"/></svg>OPTIONAL</span><span class="hc-time">5:23 PM</span></div><div class="hc-action">Pull chin straight back — double chin. Hold 5s, release. 10 reps × 3.</div></div></div></div>
+<div class="hc not-eid" id="hW"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'W')}"><div class="hc-chk" onclick="tickDone(event,'W')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Wall Angels — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'W')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">W</span><span class="hc-name">Wall Angels</span><span class="opt-badge"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:1px" aria-hidden="true"><use href="#icon-lock_open"/></svg>OPTIONAL</span><span class="hc-time">5:25 PM</span></div><div class="hc-action">Back flat on wall, arms in goalpost. Slide up/down keeping contact. 10 reps × 2.</div></div></div></div>
 
 
 <div class="hc" id="hH"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'H')}"><div class="hc-chk" onclick="tickDone(event,'H')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Psyllium Husk — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'H')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">H</span><span class="hc-name">Psyllium Husk</span><span class="hc-time">6:45 PM</span></div><div class="hc-action">1 tsp in a full glass of water, before dinner. Drink immediately — don't let it sit.</div></div></div></div>
 
 
-<div class="hc" id="hN"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'N')}"><div class="hc-chk" onclick="tickDone(event,'N')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Brush Teeth — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'N')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">N</span><span class="hc-name">Brush Teeth</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">10:30 PM</span></div><div class="hc-action">Brush, floss, wash face. Same time every night. Sleep cue.</div></div></div></div>
+<div class="hc" id="hN"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'N')}"><div class="hc-chk" onclick="tickDone(event,'N')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Brush Teeth — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'N')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">N</span><span class="hc-name">Brush Teeth</span><span class="opt-badge"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:1px" aria-hidden="true"><use href="#icon-lock_open"/></svg>OPTIONAL</span><span class="hc-time">10:30 PM</span></div><div class="hc-action">Brush, floss, wash face. Same time every night. Sleep cue.</div></div></div></div>
 <div class="hc" id="hM"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'M')}"><div class="hc-chk" onclick="tickDone(event,'M')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Magnesium Glycinate — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'M')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">M</span><span class="hc-name">Magnesium Glycinate</span><span class="hc-time">10:32 PM</span></div><div class="hc-action">400mg with water. Take after brushing — improves sleep quality and muscle recovery.</div></div></div></div>
-<div class="hc week-only" id="hX"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'X')}"><div class="hc-chk" onclick="tickDone(event,'X')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Export Data — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'X')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">X</span><span class="hc-name">Export Data</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">10:28 PM</span></div><div class="hc-action">Settings → Export backup. Takes 2 seconds. Your data, your insurance.</div></div></div></div>
-<div class="hc sat-only" id="hR"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'R')}"><div class="hc-chk" onclick="tickDone(event,'R')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Weekly Reset — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'R')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">R</span><span class="hc-name">Weekly Reset</span><span class="opt-badge">🔓 OPTIONAL</span><span class="hc-time">10:00 PM</span></div><div class="hc-action">Tidy workspace. Prep bag and clothes. 5-min review of last week done.</div></div></div></div>
+<div class="hc week-only" id="hX"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'X')}"><div class="hc-chk" onclick="tickDone(event,'X')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Export Data — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'X')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">X</span><span class="hc-name">Export Data</span><span class="opt-badge"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:1px" aria-hidden="true"><use href="#icon-lock_open"/></svg>OPTIONAL</span><span class="hc-time">10:28 PM</span></div><div class="hc-action">Settings → Export backup. Takes 2 seconds. Your data, your insurance.</div></div></div></div>
+<div class="hc sat-only" id="hR"><div class="hc-main" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(event,'R')}"><div class="hc-chk" onclick="tickDone(event,'R')" role="checkbox" aria-checked="false" tabindex="0" aria-label="Weekly Reset — mark complete" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tickDone(event,'R')}"><span class="hc-tick" aria-hidden="true">✓</span></div><div class="hc-info"><div class="hc-top"><span class="hc-badge">R</span><span class="hc-name">Weekly Reset</span><span class="opt-badge"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:1px" aria-hidden="true"><use href="#icon-lock_open"/></svg>OPTIONAL</span><span class="hc-time">10:00 PM</span></div><div class="hc-action">Tidy workspace. Prep bag and clothes. 5-min review of last week done.</div></div></div></div>
 
 </div><!-- /.hc-list -->
 
@@ -2506,7 +2548,7 @@ body::before{
     </div>
   </div>
   <div class="streak-tile">
-    <span style="font-size:20px">⚡</span>
+    <span style="display:inline-flex;color:var(--gold)"><svg class="svg-icon" style="width:20px;height:20px;" aria-hidden="true"><use href="#icon-bolt"/></svg></span>
     <div>
       <div class="streak-tile-lbl">XP</div>
       <div class="streak-tile-val" id="xp-inline-amt" style="color:var(--gold)">0 XP</div>
@@ -2531,7 +2573,7 @@ body::before{
 
   <!-- Crank + reroll — below machine -->
   <div class="bowl-crank-row" id="bowl-crank-row">
-    <button class="bowl-crank-btn" id="bowl-crank-btn" ontouchstart="if(window._getAudioCtx){var _c=window._getAudioCtx();if(_c&&_c.state==='suspended')_c.resume().catch(function(){});}" data-action="crank">
+    <button class="bowl-crank-btn" id="bowl-crank-btn" ontouchstart="if(window._getAudioCtx){var _c=window._getAudioCtx();if(_c&&_c.state!=='running'&&_c.state!=='closed')_c.resume().catch(function(){});}" data-action="crank">
       <svg class="svg-icon" style="font-size:18px"><use href="#icon-bowl"/></svg><span>Pull the Crank</span>
     </button>
     <div class="bowl-crank-hint" id="bowl-crank-hint">Pull to draw today's challenge.</div>
@@ -2560,7 +2602,7 @@ body::before{
 
   <!-- History -->
   <div class="bowl-history">
-    <div class="bowl-history-hdr">History <span id="bowl-hist-range" style="font-weight:600;letter-spacing:0;text-transform:none;font-size:10px;color:var(--a2)">Last 14 days</span> <button onclick="bowlJumpToDate()" style="margin-left:auto;background:rgba(255,217,125,.10);border:1px solid rgba(255,217,125,.25);color:var(--gold);font-family:var(--font-ui);font-size:10px;font-weight:700;cursor:pointer;padding:3px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:3px" title="Edit any past day, no 14-day cap">📅 Jump</button> <button onclick="bowlToggleHistRange()" id="bowl-hist-range-btn" style="background:none;border:none;color:var(--a2);font-family:var(--font-ui);font-size:10px;font-weight:700;cursor:pointer;padding:3px 8px;border-radius:5px;background:rgba(77,141,255,.12)">Show 30</button></div>
+    <div class="bowl-history-hdr">History <span id="bowl-hist-range" style="font-weight:600;letter-spacing:0;text-transform:none;font-size:10px;color:var(--a2)">Last 14 days</span> <button onclick="bowlJumpToDate()" style="margin-left:auto;background:rgba(255,217,125,.10);border:1px solid rgba(255,217,125,.25);color:var(--gold);font-family:var(--font-ui);font-size:10px;font-weight:700;cursor:pointer;padding:3px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:3px" title="Edit any past day, no 14-day cap"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;" aria-hidden="true"><use href="#icon-calendar"/></svg>Jump</button> <button onclick="bowlToggleHistRange()" id="bowl-hist-range-btn" style="background:none;border:none;color:var(--a2);font-family:var(--font-ui);font-size:10px;font-weight:700;cursor:pointer;padding:3px 8px;border-radius:5px;background:rgba(77,141,255,.12)">Show 30</button></div>
     <div class="bowl-history-row" id="bowl-history-row"></div>
   </div>
 
@@ -2601,7 +2643,7 @@ body::before{
       <div class="tc-cabinet-bot-chrome"></div>
     </div>
     <div class="tc-warning" id="tc-warning" style="display:none">
-      ⚠️ Miss a challenge — all balls shatter
+      <svg class="svg-icon" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:5px;" aria-hidden="true"><use href="#icon-warning"/></svg>Miss a challenge — all balls shatter
     </div>
   </div>
 
@@ -2611,7 +2653,7 @@ body::before{
 <div class="pg" id="pg-reward">
 <div class="pg-inner">
 <div class="pg-hdr">
-<div class="pg-title">🎁 Reward</div>
+<div class="pg-title"><svg class="svg-icon" style="width:20px;height:20px;vertical-align:-3px;margin-right:7px" aria-hidden="true"><use href="#icon-gift"/></svg>Reward</div>
 <div class="pg-sub" id="rw-week-label">Complete Bowl challenges daily — don't break the streak</div>
 </div>
 <div id="rw-content"><!-- rendered by JS --></div>
@@ -2621,7 +2663,7 @@ body::before{
 <div class="pg-inner">
 <div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding:0 2px">APPEARANCE</div>
 <div class="ss">
-<div class="ss-hdr">🎨 App Theme</div>
+<div class="ss-hdr"><svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:7px" aria-hidden="true"><use href="#icon-palette"/></svg>App Theme</div>
 <div style="padding:16px 18px">
 <div class="ss-lbl" style="margin-bottom:14px">Choose your color theme</div>
 <div id="theme-swatches" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
@@ -2651,21 +2693,21 @@ body::before{
 </div>
 <div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:20px 0 8px;padding:0 2px">PREFERENCES</div>
 <div class="ss">
-<div class="ss-hdr">🔊 Sound &amp; Haptics</div>
+<div class="ss-hdr"><svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:7px" aria-hidden="true"><use href="#icon-sound_on"/></svg>Sound &amp; Haptics</div>
 <div class="ss-row">
 <div><div class="ss-lbl">Habit completion sound</div><div class="ss-sub">Metallic chime on each check-off</div></div>
-<button id="sound-toggle-btn" onclick="toggleSound()" style="background:rgba(255,255,255,.09);border:1px solid var(--bdr);border-radius:6px;color:#fff;font-family:var(--font-ui);font-size:12px;font-weight:700;padding:8px 14px;cursor:pointer;white-space:nowrap;min-height:36px;transition:all .2s">🔊 Sound On</button>
+<button id="sound-toggle-btn" onclick="toggleSound()" style="background:rgba(255,255,255,.09);border:1px solid var(--bdr);border-radius:6px;color:#fff;font-family:var(--font-ui);font-size:12px;font-weight:700;padding:8px 14px;cursor:pointer;white-space:nowrap;min-height:36px;transition:all .2s"><svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:6px" aria-hidden="true"><use href="#icon-sound_on"/></svg>Sound On</button>
 </div>
 </div>
 <div class="ss">
-<div class="ss-hdr">💎 Display</div>
+<div class="ss-hdr"><svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:7px" aria-hidden="true"><use href="#icon-gem"/></svg>Display</div>
 <div class="ss-row">
 <div><div class="ss-lbl">Glass-Lite</div><div class="ss-sub">Lighter blur — smoother on mobile. Off = full frosted glass.</div></div>
-<button id="glass-toggle-btn" onclick="toggleGlass()" style="background:rgba(255,255,255,.09);border:1px solid var(--bdr);border-radius:6px;color:#fff;font-family:var(--font-ui);font-size:12px;font-weight:700;padding:8px 14px;cursor:pointer;white-space:nowrap;min-height:36px;transition:all .2s">✨ Glass-Lite</button>
+<button id="glass-toggle-btn" onclick="toggleGlass()" style="background:rgba(255,255,255,.09);border:1px solid var(--bdr);border-radius:6px;color:#fff;font-family:var(--font-ui);font-size:12px;font-weight:700;padding:8px 14px;cursor:pointer;white-space:nowrap;min-height:36px;transition:all .2s"><svg class="svg-icon" style="width:13px;height:13px;vertical-align:-1.5px;margin-right:5px;" aria-hidden="true"><use href="#icon-sparkle"/></svg>Glass-Lite</button>
 </div>
 </div>
 <div class="ss">
-<div class="ss-hdr">&#128336; Your Daily Schedule</div>
+<div class="ss-hdr"><svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:7px" aria-hidden="true"><use href="#icon-clock"/></svg>Your Daily Schedule</div>
 <div style="padding:16px 18px">
   <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.65">Slide to shift your whole day earlier or later. Habit times are <strong style="color:var(--sec)">gentle reminders</strong>, not hard deadlines &#8212; they all move together to match your real routine.</div>
   <div id="schedule-slider-wrap"></div>
@@ -2673,7 +2715,7 @@ body::before{
 </div>
 <div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:20px 0 8px;padding:0 2px">DATA & BACKUP</div>
 <div class="ss">
-<div class="ss-hdr">💾 Your Data</div>
+<div class="ss-hdr"><svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:7px" aria-hidden="true"><use href="#icon-save"/></svg>Your Data</div>
 <div id="storage-size-bar" style="padding:10px 18px 0;display:flex;align-items:center;gap:10px">
   <div style="flex:1">
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
@@ -2685,34 +2727,34 @@ body::before{
 </div>
 <div style="padding:16px 18px">
 <div class="import-banner">
-<div class="import-banner-title">⬆️ Restore from Netlify Backup</div>
+<div class="import-banner-title"><svg class="svg-icon" style="width:13px;height:13px;vertical-align:-1.5px;margin-right:6px;" aria-hidden="true"><use href="#icon-folder"/></svg>Restore from Netlify Backup</div>
 <div class="import-banner-sub">Have a <strong>lifeOS-backup-*.json</strong> file from your Netlify app? Import it here to bring across all your habits, streaks, finance data, journal entries, and goals instantly.</div>
-<button class="import-banner-btn" onclick="document.getElementById('imp-file').click()">📂 Choose Backup File (.json)</button>
+<button class="import-banner-btn" onclick="document.getElementById('imp-file').click()"><svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:7px" aria-hidden="true"><use href="#icon-folder"/></svg>Choose Backup File (.json)</button>
 </div>
 <input accept=".json" id="imp-file" onchange="importData(event)" style="display:none" type="file"/>
 </div>
 <div class="btn-row" style="padding-top:0">
-<button class="abtn p" onclick="exportData()">⬇️ Export Backup</button>
-<button class="abtn" onclick="document.getElementById('imp-file').click()">⬆️ Import Backup</button>
+<button class="abtn p" onclick="exportData()"><svg class="svg-icon" style="width:13px;height:13px;vertical-align:-1.5px;margin-right:6px;" aria-hidden="true"><use href="#icon-save"/></svg>Export Backup</button>
+<button class="abtn" onclick="document.getElementById('imp-file').click()"><svg class="svg-icon" style="width:13px;height:13px;vertical-align:-1.5px;margin-right:6px;" aria-hidden="true"><use href="#icon-folder"/></svg>Import Backup</button>
 </div>
 <div class="btn-row" style="padding-top:0">
-<button class="abtn" onclick="exportToExcel()" style="grid-column:span 2;background:linear-gradient(135deg,rgba(74,222,128,.18),rgba(77,141,255,.15));border-color:rgba(74,222,128,.4);color:#4ade80">📊 Export All Data to Excel (.xlsx)</button>
+<button class="abtn" onclick="exportToExcel()" style="grid-column:span 2;background:linear-gradient(135deg,rgba(74,222,128,.18),rgba(77,141,255,.15));border-color:rgba(74,222,128,.4);color:#4ade80"><svg class="svg-icon" style="width:13px;height:13px;vertical-align:-1.5px;margin-right:6px;" aria-hidden="true"><use href="#icon-chart"/></svg>Export All Data to Excel (.xlsx)</button>
 </div>
 </div>
-<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,139,139,.5);margin:24px 0 8px;padding:0 2px">⚠️ DANGER ZONE</div>
+<div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,139,139,.5);margin:24px 0 8px;padding:0 2px"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:5px;" aria-hidden="true"><use href="#icon-warning"/></svg>DANGER ZONE</div>
 <div class="ss" style="border-color:rgba(255,100,100,.15)">
-<div class="ss-hdr" style="color:#FF8B8B">⚠️ Danger Zone</div>
+<div class="ss-hdr" style="color:#FF8B8B"><svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:7px" aria-hidden="true"><use href="#icon-warning"/></svg>Danger Zone</div>
 <div class="btn-row">
-<button class="abtn d" onclick="clearAll()">🗑️ Clear All Data</button>
-<button class="abtn" onclick="resetDay()">🔄 Reset Today</button>
+<button class="abtn d" onclick="clearAll()"><svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:7px" aria-hidden="true"><use href="#icon-trash"/></svg>Clear All Data</button>
+<button class="abtn" onclick="resetDay()"><svg class="svg-icon" style="width:13px;height:13px;vertical-align:-1.5px;margin-right:6px;" aria-hidden="true"><use href="#icon-replay"/></svg>Reset Today</button>
 </div>
 <div class="btn-row">
-<button class="abtn" onclick="resetFinanceData()" style="grid-column:span 2;background:rgba(255,180,0,.15);border-color:rgba(255,180,0,.35);color:#FFD97D">💰 Reset Finance to My Saved Data</button>
+<button class="abtn" onclick="resetFinanceData()" style="grid-column:span 2;background:rgba(255,180,0,.15);border-color:rgba(255,180,0,.35);color:#FFD97D"><svg class="svg-icon" style="width:13px;height:13px;vertical-align:-1.5px;margin-right:6px;" aria-hidden="true"><use href="#icon-coins"/></svg>Reset Finance to My Saved Data</button>
 </div>
 </div>
 <div style="font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:20px 0 8px;padding:0 2px">BOWL</div>
 <div class="ss">
-<div class="ss-hdr">🎱 Bowl Challenges</div>
+<div class="ss-hdr"><svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:7px" aria-hidden="true"><use href="#icon-bowl"/></svg>Bowl Challenges</div>
 <div style="padding:4px 0 8px">
   <div class="bowl-lib-card" id="bowl-lib-card">
     <button class="bowl-lib-toggle" onclick="bowlToggleLibrary()">
@@ -2742,11 +2784,11 @@ body::before{
 <!-- ══════════════════════════════════════════════ SET REWARD MODAL -->
 <div class="modal-bg" id="rw-modal" role="dialog" aria-modal="true" aria-labelledby="rw-modal-title">
 <div class="modal" style="max-height:92vh;overflow-y:auto">
-<div class="modal-title" id="rw-modal-title">🎁 Set Your Reward</div>
+<div class="modal-title" id="rw-modal-title"><svg class="svg-icon" style="width:17px;height:17px;vertical-align:-3px;margin-right:7px" aria-hidden="true"><use href="#icon-gift"/></svg>Set Your Reward</div>
 
 <!-- Single reward -->
 <div class="rw-tier-section tier1">
-<div class="rw-tier-section-hdr">🎯 Your Reward <span style="font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.3px;text-transform:none">· What are you grinding for?</span></div>
+<div class="rw-tier-section-hdr"><svg class="svg-icon" style="width:13px;height:13px;vertical-align:-2px;margin-right:6px" aria-hidden="true"><use href="#icon-target"/></svg>Your Reward <span style="font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.3px;text-transform:none">· What are you grinding for?</span></div>
 <div class="modal-row" style="margin-bottom:8px">
 <div class="modal-label">Reward name *</div>
 <input class="fin-input" id="rw-t1-name" placeholder="e.g. Addiesdive AD2086" type="text" maxlength="60"/>
@@ -2760,7 +2802,7 @@ body::before{
 <input class="fin-input" id="rw-t1-why" placeholder="e.g. Earned it, no guilt purchase" type="text" maxlength="120"/>
 </div>
 <div class="rw-tier-img-row">
-<div class="rw-tier-thumb" id="rw-tier-thumb-t1" onclick="document.getElementById('rw-file-t1').click()" title="Tap to upload image">📷</div>
+<div class="rw-tier-thumb" id="rw-tier-thumb-t1" onclick="document.getElementById('rw-file-t1').click()" title="Tap to upload image"><svg class="svg-icon" style="width:24px;height:24px;" aria-hidden="true"><use href="#icon-camera"/></svg></div>
 <input type="file" id="rw-file-t1" accept="image/*" style="display:none" onchange="rwHandleTierUpload(this,'t1')"/>
 <input class="fin-input" id="rw-t1-imgurl" placeholder="Or paste image URL (https://…)" type="url" style="flex:1;font-size:10.5px" oninput="rwTierImgUrl(this.value,'t1')"/>
 </div>
@@ -2796,10 +2838,10 @@ body::before{
 <div class="epd-modal-bg" id="epd-modal-bg" onclick="if(event.target===this)epdClose()">
 <div class="epd-modal">
 <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px">
-<div class="epd-title">✏️ Edit a Past Day</div>
+<div class="epd-title"><svg class="svg-icon" style="width:15px;height:15px;vertical-align:-2.5px;margin-right:7px" aria-hidden="true"><use href="#icon-edit"/></svg>Edit a Past Day</div>
 <button class="modal-close-btn" onclick="epdClose()" aria-label="Close">✕</button>
 </div>
-<div class="epd-sub">Tap a habit to cycle: unchecked → 🥉 Bare Min → 🥈 Done Right → 🥇 Exceeded → unchecked.</div>
+<div class="epd-sub">Tap a habit to cycle: unchecked → <svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:3px;color:#cd9468" aria-hidden="true"><use href="#icon-medal"/></svg>Bare Min → <svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:3px;color:#b8c4d4" aria-hidden="true"><use href="#icon-medal"/></svg>Done Right → <svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:3px;color:#ffd97d" aria-hidden="true"><use href="#icon-medal"/></svg>Exceeded → unchecked.</div>
 <!-- Quick chips -->
 <div class="epd-quick-chips" id="epd-quick-chips">
   <button class="epd-chip" onclick="epdQuickLoad(1)">Yesterday</button>
@@ -2814,7 +2856,7 @@ body::before{
 </div>
 <div id="epd-body"></div>
 <div class="epd-btns" id="epd-btns" style="display:none">
-<button class="epd-save" onclick="epdSave()">💾 Save Changes</button>
+<button class="epd-save" onclick="epdSave()"><svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:7px" aria-hidden="true"><use href="#icon-save"/></svg>Save Changes</button>
 <button class="epd-cancel" onclick="epdClose()">Cancel</button>
 </div>
 </div>
@@ -2836,7 +2878,7 @@ body::before{
 <!-- Fix 9: Reset Day confirmation modal -->
 <div class="modal-bg" id="reset-confirm-modal">
   <div class="modal" style="max-width:100%;text-align:center">
-    <div style="font-size:32px;margin-bottom:12px">🔄</div>
+    <div style="margin-bottom:12px;color:var(--a2)"><svg class="svg-icon" style="width:34px;height:34px;" aria-hidden="true"><use href="#icon-replay"/></svg></div>
     <div class="modal-title" style="text-align:center;color:#FF8B8B">Reset today?</div>
     <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">This will clear all of today's habit completions. Your streak history stays intact.</div>
     <div class="modal-btns" style="justify-content:center">
@@ -2848,7 +2890,7 @@ body::before{
 <!-- Clear All Data confirmation modal -->
 <div class="modal-bg" id="clear-all-modal">
   <div class="modal" style="max-width:100%;text-align:center">
-    <div style="font-size:32px;margin-bottom:12px">🗑️</div>
+    <div style="margin-bottom:12px;color:#ff8b8b"><svg class="svg-icon" style="width:34px;height:34px;" aria-hidden="true"><use href="#icon-trash"/></svg></div>
     <div class="modal-title" style="text-align:center;color:#FF8B8B">Delete everything?</div>
     <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:8px">This permanently erases all habits, streaks, finance data, gym sessions, bowl progress — everything.</div>
     <div style="font-size:12px;color:rgba(74,222,128,.7);margin-bottom:20px;padding:8px 12px;background:rgba(74,222,128,.06);border-radius:6px;border:1px solid rgba(74,222,128,.15)">A backup will be exported first automatically.</div>
@@ -2861,7 +2903,7 @@ body::before{
 <!-- Reset Finance confirmation modal -->
 <div class="modal-bg" id="reset-finance-modal">
   <div class="modal" style="max-width:100%;text-align:center">
-    <div style="font-size:32px;margin-bottom:12px">💰</div>
+    <div style="margin-bottom:12px;color:var(--gold)"><svg class="svg-icon" style="width:34px;height:34px;" aria-hidden="true"><use href="#icon-coins"/></svg></div>
     <div class="modal-title" style="text-align:center;color:#FFD97D">Reset finance data?</div>
     <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">This resets all expense categories to zero. Transactions and goals are preserved. The page will reload.</div>
     <div class="modal-btns" style="justify-content:center">
@@ -3053,32 +3095,54 @@ function localKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart
 let todayKey = localKey(today);
 /* nav-date text set in gesture nav init block below */
 
-/* ── Midnight-crossing guard: refresh todayKey if page stays open overnight ── */
+/* ── Day-crossing guard ──
+   Two triggers share one rollover routine:
+   1. A midnight timer (works while the app is in the foreground overnight).
+   2. visibilitychange/pageshow (the common case: iOS suspends the PWA and its
+      timers overnight; on reopen next morning the timer hasn't fired yet, so
+      without this check the first taps would write against YESTERDAY's key —
+      stale crank lock, habits credited to the wrong day, etc.) */
 (function(){
+  var _navDays=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var _navMonths=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function _setNavDate(){
+    var nd=$id('nav-date');
+    if(nd) nd.textContent=_navDays[today.getDay()]+', '+_navMonths[today.getMonth()]+' '+today.getDate();
+  }
+  function _runDayRollover(){
+    let prev=todayKey;
+    today=new Date(); todayKey=localKey(today);
+    if(todayKey===prev) return false;
+    // New day — update schedule FIRST so STEPS reflects the new day
+    applyDaySchedule();
+    // Reset all possible habit cards (union of all day types)
+    ['B','C','D','E','G','S','T','U','V','W','I','H','K','M','X','N','O','Q','R'].forEach(function(st){ let el=document.getElementById('h'+st); if(el) el.classList.remove('done'); });
+    let s=gs(); if(!s.days) s.days={}; if(!s.days[todayKey]) s.days[todayKey]={}; ss(s,true);
+    initToday(); buildYesterday(); buildHeatmap(); renderFinStrip();
+    /* Refresh Bowl + Reward so crank resets and strip updates if page stays open */
+    _bowlDrawMap=null; _bowlDrawMapLen=-1; /* bust draw cache */
+    _bowlCrankBusy=false; /* unlock crank for new day */
+    if(typeof renderBowl==='function') try{ renderBowl(); }catch(e){}
+    if(typeof renderRewardStrip==='function') try{ renderRewardStrip(); }catch(e){}
+    if(typeof renderReward==='function') try{ renderReward(); }catch(e){}
+    _setNavDate();
+    return true;
+  }
   function msUntilMidnight(){ let n=new Date(); let m=new Date(n); m.setHours(24,0,0,0); return m-n; }
   function schedMidnight(){
     setTimeout(function(){
-      let prev=todayKey;
-      today=new Date(); todayKey=localKey(today);
-      if(todayKey!==prev){
-        // New day — update schedule FIRST so STEPS reflects the new day
-        applyDaySchedule();
-        // Reset all possible habit cards (union of all day types)
-        ['B','C','D','E','G','S','T','U','V','W','I','H','K','M','X','N','O','Q','R'].forEach(function(st){ let el=document.getElementById('h'+st); if(el) el.classList.remove('done'); });
-        let s=gs(); if(!s.days) s.days={}; if(!s.days[todayKey]) s.days[todayKey]={}; ss(s,true);
-        initToday(); buildYesterday(); buildHeatmap(); renderFinStrip();
-        /* Refresh Bowl + Reward so crank resets and strip updates if page stays open */
-        _bowlDrawMap=null; _bowlDrawMapLen=-1; /* bust draw cache */
-        _bowlCrankBusy=false; /* unlock crank for new day */
-        if(typeof renderBowl==='function') try{ renderBowl(); }catch(e){}
-        if(typeof renderRewardStrip==='function') try{ renderRewardStrip(); }catch(e){}
-        if(typeof renderReward==='function') try{ renderReward(); }catch(e){}
-        $id('nav-date').textContent=today.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-      }
+      _runDayRollover();
       schedMidnight();
     }, msUntilMidnight()+1000);
   }
   schedMidnight();
+  /* Foreground checks — run BEFORE the user can interact with stale state */
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden && localKey(new Date())!==todayKey) _runDayRollover();
+  });
+  window.addEventListener('pageshow', function(){
+    if(localKey(new Date())!==todayKey) _runDayRollover();
+  });
 })();
 
 /* ── Storage — safe read/write with corruption guard, quota handling, and in-memory cache ── */
@@ -3135,6 +3199,14 @@ function _doSave(s){
    iOS Safari may throttle/kill setTimeout when tab is backgrounded. */
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState === 'hidden' && _saveTimer){
+    clearTimeout(_saveTimer); _saveTimer=null;
+    if(_stateCache) _doSave(_stateCache);
+  }
+});
+/* pagehide covers the path visibilitychange can miss: app killed from the
+   switcher / page torn down while a debounced save is still pending. */
+window.addEventListener('pagehide', function(){
+  if(_saveTimer){
     clearTimeout(_saveTimer); _saveTimer=null;
     if(_stateCache) _doSave(_stateCache);
   }
@@ -3734,14 +3806,14 @@ document.addEventListener('keydown',function(e){
 /* ═══ TIME AWARENESS ═══ */
 function _getTimeGreeting(){
   var h = new Date().getHours();
-  if(h < 5)  return {greet:'Night owl mode 🦉', phase:'night'};
-  if(h < 9)  return {greet:'Good morning ☀️', phase:'morning'};
-  if(h < 12) return {greet:'Late morning 🌤', phase:'morning'};
+  if(h < 5)  return {greet:'Night owl mode <svg class=\"svg-icon\" style=\"width:.8em;height:.8em;vertical-align:-1px;margin-left:5px;color:#9db8e8\"><use href=\"#icon-moon\"/></svg>', phase:'night'};
+  if(h < 9)  return {greet:'Good morning <svg class=\"svg-icon\" style=\"width:.8em;height:.8em;vertical-align:-1px;margin-left:5px;color:#ffd97d\"><use href=\"#icon-sun\"/></svg>', phase:'morning'};
+  if(h < 12) return {greet:'Late morning <svg class=\"svg-icon\" style=\"width:.8em;height:.8em;vertical-align:-1px;margin-left:5px;color:#ffd97d\"><use href=\"#icon-sun\"/></svg>', phase:'morning'};
   if(h < 14) return {greet:'Good afternoon', phase:'afternoon'};
-  if(h < 17) return {greet:'Afternoon push 💪', phase:'afternoon'};
-  if(h < 20) return {greet:'Evening wind-down 🌅', phase:'evening'};
-  if(h < 23) return {greet:'Night routine 🌙', phase:'night'};
-  return {greet:'Late night 🌙', phase:'night'};
+  if(h < 17) return {greet:'Afternoon push <svg class=\"svg-icon\" style=\"width:.8em;height:.8em;vertical-align:-1px;margin-left:5px;color:var(--a2)\"><use href=\"#icon-strength\"/></svg>', phase:'afternoon'};
+  if(h < 20) return {greet:'Evening wind-down <svg class=\"svg-icon\" style=\"width:.8em;height:.8em;vertical-align:-1px;margin-left:5px;color:#ffd97d\"><use href=\"#icon-sun\"/></svg>', phase:'evening'};
+  if(h < 23) return {greet:'Night routine <svg class=\"svg-icon\" style=\"width:.8em;height:.8em;vertical-align:-1px;margin-left:5px;color:#9db8e8\"><use href=\"#icon-moon\"/></svg>', phase:'night'};
+  return {greet:'Late night <svg class=\"svg-icon\" style=\"width:.8em;height:.8em;vertical-align:-1px;margin-left:5px;color:#9db8e8\"><use href=\"#icon-moon\"/></svg>', phase:'night'};
 }
 
 function _applyTimeAwareness(){
@@ -3927,7 +3999,7 @@ function tickDone(e,st){
     clearTimeout(_rwStripTimer); _rwStripTimer=setTimeout(renderRewardStrip,250);
     if(st==='P'){
       const msg=getCompletionMsg();
-      toast(msg.icon+' '+msg.title+' '+msg.sub);
+      toast(msg.title+' '+msg.sub);
       _playPerfectDay();
     } else {
       _offerUndo(st);
@@ -3965,7 +4037,7 @@ function pickRating(e,st,rating){
   clearTimeout(_rwStripTimer); _rwStripTimer=setTimeout(renderRewardStrip,250);
   if(rating && st==='P'){
     const msg=getCompletionMsg();
-    toast(msg.icon+' '+msg.title+' '+msg.sub);
+    toast(msg.title+' '+msg.sub);
     _playPerfectDay(); _triggerHaptic('celebrate');
   } else {
     /* Fix 7: offer undo for all non-final habits */
@@ -4305,7 +4377,7 @@ function openEditTx(id){
     bucketRowEl.innerHTML=buckets.map(function(b){
       const sel=curBucket===b.id;
       return '<button class="tx-cat-chip'+(sel?' on':'')+'" data-bucket="'+b.id+'" onclick="editTxSetBucket(\''+b.id+'\',this)" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;font-size:10px">'+
-        '<span style="font-size:18px">'+b.icon+'</span>'+
+        lifeIcon(b.icon,18)+
         '<span>'+b.name+'</span></button>';
     }).join('');
   }
@@ -4373,7 +4445,7 @@ function saveEditTx(){
 /* Fix 15: Initialise sound button state on boot */
 (function(){
   const btn = $id('sound-toggle-btn');
-  if(btn) btn.textContent = _soundEnabled ? '🔊 Sound On' : '🔇 Sound Off';
+  if(btn) btn.innerHTML = _soundEnabled ? '<svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:6px" aria-hidden="true"><use href="#icon-sound_on"/></svg>Sound On' : '<svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:6px" aria-hidden="true"><use href="#icon-sound_off"/></svg>Sound Off';
 })();
 
 
@@ -4994,38 +5066,38 @@ function epdLoad(){
   if(isEidDay(epdDate)){
     // Eid: show only the 6 essentials as one group
     phases = [
-      { label:'🌙 Eid Essentials', steps: epdSteps }
+      { label:'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:#9db8e8;" aria-hidden="true"><use href="#icon-moon"/></svg>Eid Essentials', steps: epdSteps }
     ];
   } else if(!epdUniform && dow === 5){
     phases = [
-      { label:'☀️ Morning', steps: epdSteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
-      { label:'💼 Mid-Day', steps: epdSteps.filter(function(st){ return ['F','G','Q'].indexOf(st)>-1; }) },
-      { label:'🌆 Evening', steps: epdSteps.filter(function(st){ return ['S','T','U','V','W','I','H','K'].indexOf(st)>-1; }) },
-      { label:'🌙 Night',   steps: epdSteps.filter(function(st){ return ['N','O','M','X','R'].indexOf(st)>-1; }) }
+      { label:'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:#ffd97d;" aria-hidden="true"><use href="#icon-sun"/></svg>Morning', steps: epdSteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
+      { label:'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:#9db8e8;" aria-hidden="true"><use href="#icon-briefcase"/></svg>Mid-Day', steps: epdSteps.filter(function(st){ return ['F','G','Q'].indexOf(st)>-1; }) },
+      { label:'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:#9db8e8;" aria-hidden="true"><use href="#icon-star"/></svg>Evening', steps: epdSteps.filter(function(st){ return ['S','T','U','V','W','I','H','K'].indexOf(st)>-1; }) },
+      { label:'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:#9db8e8;" aria-hidden="true"><use href="#icon-moon"/></svg>Night',   steps: epdSteps.filter(function(st){ return ['N','O','M','X','R'].indexOf(st)>-1; }) }
     ].filter(function(ph){ return ph.steps.length > 0; });
   } else if(!epdUniform && dow === 6){
     phases = [
-      { label:'☀️ Morning', steps: epdSteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
-      { label:'🌤️ Mid-Day',  steps: epdSteps.filter(function(st){ return ['F','G','Q'].indexOf(st)>-1; }) },
-      { label:'🌆 Evening', steps: epdSteps.filter(function(st){ return ['S','T','U','V','W','I','H','K'].indexOf(st)>-1; }) },
-      { label:'🌙 Night',   steps: epdSteps.filter(function(st){ return ['N','O','M','X','R'].indexOf(st)>-1; }) }
+      { label:'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:#ffd97d;" aria-hidden="true"><use href="#icon-sun"/></svg>Morning', steps: epdSteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
+      { label:'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:#ffd97d;" aria-hidden="true"><use href="#icon-sun"/></svg>Mid-Day',  steps: epdSteps.filter(function(st){ return ['F','G','Q'].indexOf(st)>-1; }) },
+      { label:'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:#9db8e8;" aria-hidden="true"><use href="#icon-star"/></svg>Evening', steps: epdSteps.filter(function(st){ return ['S','T','U','V','W','I','H','K'].indexOf(st)>-1; }) },
+      { label:'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:#9db8e8;" aria-hidden="true"><use href="#icon-moon"/></svg>Night',   steps: epdSteps.filter(function(st){ return ['N','O','M','X','R'].indexOf(st)>-1; }) }
     ].filter(function(ph){ return ph.steps.length > 0; });
   } else {
     // Regular weekday — filter epdSteps
     phases = [
-      { label:'☀️ Morning', steps: epdSteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
-      { label:'💼 Office',  steps: epdSteps.filter(function(st){ return ['F','G'].indexOf(st)>-1; }) },
-      { label:'🌆 Evening', steps: epdSteps.filter(function(st){ return ['S','T','U','V','W','I','H','K'].indexOf(st)>-1; }) },
-      { label:'🌙 Night',   steps: epdSteps.filter(function(st){ return ['N','O','M','X'].indexOf(st)>-1; }) }
+      { label:'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:#ffd97d;" aria-hidden="true"><use href="#icon-sun"/></svg>Morning', steps: epdSteps.filter(function(st){ return ['A','B','D','E'].indexOf(st)>-1; }) },
+      { label:'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:#9db8e8;" aria-hidden="true"><use href="#icon-briefcase"/></svg>Office',  steps: epdSteps.filter(function(st){ return ['F','G'].indexOf(st)>-1; }) },
+      { label:'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:#9db8e8;" aria-hidden="true"><use href="#icon-star"/></svg>Evening', steps: epdSteps.filter(function(st){ return ['S','T','U','V','W','I','H','K'].indexOf(st)>-1; }) },
+      { label:'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:#9db8e8;" aria-hidden="true"><use href="#icon-moon"/></svg>Night',   steps: epdSteps.filter(function(st){ return ['N','O','M','X'].indexOf(st)>-1; }) }
     ].filter(function(ph){ return ph.steps.length > 0; });
   }
 
   let html = '';
   const dayLabel = epdDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short',year:'numeric'});
   let dayTypeBadge = '';
-  if(isEidDay(epdDate)) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">🌙 EID · '+epdSteps.length+' habits</span>';
-  else if(!epdUniform && dow===5) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">🎁 FRIDAY · 1.5× XP BONUS · '+epdSteps.length+' habits</span>';
-  else if(!epdUniform && dow===6) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">🎁 SATURDAY · 1.5× XP BONUS · '+epdSteps.length+' habits</span>';
+  if(isEidDay(epdDate)) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px"><svg class="svg-icon" style="width:10px;height:10px;vertical-align:-1.5px;margin-right:4px;" aria-hidden="true"><use href="#icon-moon"/></svg>EID · '+epdSteps.length+' habits</span>';
+  else if(!epdUniform && dow===5) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px"><svg class="svg-icon" style="width:10px;height:10px;vertical-align:-1.5px;margin-right:4px;" aria-hidden="true"><use href="#icon-gift"/></svg>FRIDAY · 1.5× XP BONUS · '+epdSteps.length+' habits</span>';
+  else if(!epdUniform && dow===6) dayTypeBadge = '<span style="display:inline-block;background:rgba(255,217,125,.12);color:var(--gold);border:1px solid rgba(255,217,125,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px"><svg class="svg-icon" style="width:10px;height:10px;vertical-align:-1.5px;margin-right:4px;" aria-hidden="true"><use href="#icon-gift"/></svg>SATURDAY · 1.5× XP BONUS · '+epdSteps.length+' habits</span>';
   else dayTypeBadge = '<span style="display:inline-block;background:rgba(77,141,255,.1);color:var(--a2);border:1px solid rgba(77,141,255,.2);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px">WEEKDAY · '+epdSteps.length+' habits</span>';
   html += '<div style="font-family:var(--font-ui);font-size:12px;font-weight:700;color:var(--a2);text-align:center;margin-bottom:12px;letter-spacing:.3px">'+dayLabel+' '+dayTypeBadge+'</div>';
 
@@ -5074,9 +5146,9 @@ function _epdHabitHTML(st, tier, isBonus){
 function _epdScoreHTML(dayData, daySteps){
   let done = daySteps.filter(function(st){ let v=dayData[st]; return v && v !== false; }).length;
   let pct = daySteps.length > 0 ? (done / daySteps.length * 100) : 0;
-  const badge = done === daySteps.length ? '<span class="epd-tier-badge t3">🥇 Perfect</span>'
-    : done >= Math.ceil(daySteps.length * 0.7) ? '<span class="epd-tier-badge t2">🥈 Solid</span>'
-    : done > 0 ? '<span class="epd-tier-badge t1">🥉 Partial</span>'
+  const badge = done === daySteps.length ? '<span class="epd-tier-badge t3"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:3px;color:#ffd97d" aria-hidden="true"><use href="#icon-medal"/></svg>Perfect</span>'
+    : done >= Math.ceil(daySteps.length * 0.7) ? '<span class="epd-tier-badge t2"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:3px;color:#b8c4d4" aria-hidden="true"><use href="#icon-medal"/></svg>Solid</span>'
+    : done > 0 ? '<span class="epd-tier-badge t1"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:3px;color:#cd9468" aria-hidden="true"><use href="#icon-medal"/></svg>Partial</span>'
     : '<span class="epd-tier-badge" style="background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--div)">Nothing logged</span>';
   return '<div class="epd-score-strip" id="epd-score-strip">'
     +'<div class="epd-score-num">'+done+'<span style="font-size:13px;color:var(--muted);font-weight:600">/'+daySteps.length+'</span></div>'
@@ -5513,11 +5585,11 @@ function rwTierImgUrl(url, tier){
   const thumb=document.getElementById('rw-tier-thumb-'+tier);
   if(!thumb) return;
   if(url&&url.startsWith('http')){
-    thumb.innerHTML='<img src="'+url+'" alt="" onerror="this.parentNode.innerHTML=\'📷\'" style="width:100%;height:100%;object-fit:cover;border-radius:6px">';
+    thumb.innerHTML='<img src="'+url+'" alt="" onerror="this.parentNode.innerHTML=window._CAM_ICO" style="width:100%;height:100%;object-fit:cover;border-radius:6px">';
     thumb._imgUrl=url;
     thumb._imgData=null;
   } else {
-    thumb.innerHTML='📷';
+    thumb.innerHTML=window._CAM_ICO;
     thumb._imgUrl=null;
   }
 }
@@ -5653,9 +5725,9 @@ function openRewardModal(isEdit){
       if(savedImg&&savedImg.startsWith('data:')){
         thumb.innerHTML='<img src="'+savedImg+'" style="width:100%;height:100%;object-fit:cover;border-radius:6px">'; thumb._imgData=savedImg; thumb._imgUrl=null;
       } else if(savedImg){
-        thumb.innerHTML='<img src="'+savedImg+'" onerror="this.parentNode.innerHTML=\'📷\'" style="width:100%;height:100%;object-fit:cover;border-radius:6px">'; thumb._imgUrl=savedImg; thumb._imgData=null;
+        thumb.innerHTML='<img src="'+savedImg+'" onerror="this.parentNode.innerHTML=window._CAM_ICO" style="width:100%;height:100%;object-fit:cover;border-radius:6px">'; thumb._imgUrl=savedImg; thumb._imgData=null;
       } else {
-        thumb.innerHTML='📷'; thumb._imgData=null; thumb._imgUrl=null;
+        thumb.innerHTML=window._CAM_ICO; thumb._imgData=null; thumb._imgUrl=null;
       }
     }
   } else {
@@ -5663,7 +5735,7 @@ function openRewardModal(isEdit){
     if(t1p) t1p.value='';
     if(t1l) t1l.value='';
     if(t1w) t1w.value='';
-    if(thumb){ thumb.innerHTML='📷'; thumb._imgData=null; thumb._imgUrl=null; }
+    if(thumb){ thumb.innerHTML=window._CAM_ICO; thumb._imgData=null; thumb._imgUrl=null; }
   }
   openModal('rw-modal');
 }
@@ -5680,7 +5752,7 @@ function renderReward(){
     if(!rw||!rw.active){
       if(lbl) lbl.textContent='Set a reward to start grinding';
       html='<div class="rw-empty">'
-        +'<div class="rw-empty-icon">🎁</div>'
+        +'<div class="rw-empty-icon" style="color:var(--a2);opacity:.8"><svg class="svg-icon" style="width:46px;height:46px;" aria-hidden="true"><use href="#icon-gift"/></svg></div>'
         +'<div class="rw-empty-title">No reward set</div>'
         +'<div class="rw-empty-sub">Pick something worth grinding for. Complete one Bowl challenge every day — don\'t break the streak.</div>'
         +'<button class="rw-btn p" onclick="openRewardModal(false)" style="margin-top:16px;width:100%;padding:14px;min-height:48px;font-size:14px">+ Set My Reward</button>'
@@ -5698,7 +5770,7 @@ function renderReward(){
     var streak=0;
     try{ streak=getRwDailyStreak()||0; }catch(e){ streak=0; }
 
-    if(lbl) lbl.textContent=isUnlocked?'🎉 Level complete — claim it!':'Keep the streak alive';
+    if(lbl) lbl.innerHTML=isUnlocked?'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:var(--gold);" aria-hidden="true"><use href="#icon-party"/></svg>Level complete — claim it!':'Keep the streak alive';
 
     /* Hero card */
     var imgSrc=a.imageData||a.imageUrl||'';
@@ -5712,7 +5784,7 @@ function renderReward(){
         +'</div>';
     } else {
       html+='<div style="position:relative;width:100%;height:150px;display:flex;align-items:center;justify-content:center;border-radius:8px 8px 0 0;background:radial-gradient(120% 110% at 50% 0%,rgba(77,141,255,.24),rgba(10,15,35,0) 70%),linear-gradient(180deg,rgba(126,200,255,.10),rgba(10,15,35,0));overflow:hidden">'
-        +'<div style="font-size:52px;line-height:1;filter:drop-shadow(0 6px 20px rgba(77,141,255,.5));opacity:.94">🎁</div>'
+        +'<div style="line-height:1;filter:drop-shadow(0 6px 20px rgba(77,141,255,.5));opacity:.94;color:var(--a2)"><svg class="svg-icon" style="width:52px;height:52px;" aria-hidden="true"><use href="#icon-gift"/></svg></div>'
         +'</div>';
     }
     html+='<div style="padding:14px 16px">'
@@ -5731,17 +5803,17 @@ function renderReward(){
       +'<div style="height:100%;border-radius:99px;background:linear-gradient(90deg,var(--a1),var(--a2));width:'+pct+'%;transition:width .5s ease"></div>'
       +'</div>';
     html+='<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">'
-      +'<span>🔥 '+streak+' day streak</span>'
+      +'<span style="color:#ff9d5c"><svg class="svg-icon" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:3px" aria-hidden="true"><use href="#icon-fire"/></svg>'+streak+' day streak</span>'
       +'<span>'+pct+'% complete</span>'
       +'</div>';
     html+='</div>';
 
     /* Action buttons */
     if(isUnlocked){
-      html+='<button class="rw-btn p" onclick="rwClaimReward()" style="width:100%;padding:16px;font-size:15px;min-height:52px;margin-bottom:10px">🏆 Claim Reward</button>';
+      html+='<button class="rw-btn p" onclick="rwClaimReward()" style="width:100%;padding:16px;font-size:15px;min-height:52px;margin-bottom:10px"><svg class="svg-icon" style="width:14px;height:14px;vertical-align:-1.5px;margin-right:6px;" aria-hidden="true"><use href="#icon-trophy"/></svg>Claim Reward</button>';
     }
     html+='<div class="rw-btn-row">'
-      +'<button class="rw-btn ghost" onclick="openRewardModal(true)">✏️ Edit</button>'
+      +'<button class="rw-btn ghost" onclick="openRewardModal(true)"><svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:5px;" aria-hidden="true"><use href="#icon-edit"/></svg>Edit</button>'
       +'<button class="rw-btn red" onclick="rwArchiveAndReset()">Archive</button>'
       +'</div>';
 
@@ -5762,7 +5834,7 @@ function renderReward(){
   }catch(e){
     console.error('[renderReward] error:', e);
     html='<div style="text-align:center;padding:30px;color:var(--muted)">'
-      +'<div style="font-size:32px;margin-bottom:12px">⚠️</div>'
+      +'<div style="margin-bottom:12px;color:#ff8b8b"><svg class="svg-icon" style="width:34px;height:34px;" aria-hidden="true"><use href="#icon-warning"/></svg></div>'
       +'<div style="font-size:13px;margin-bottom:16px">Couldn\'t load reward data.</div>'
       +'<button class="rw-btn p" onclick="renderReward()" style="padding:10px 20px">Retry</button>'
       +'</div>';
@@ -5785,14 +5857,14 @@ function renderRewardStrip(){
      to shrink backups) — renderReward() had this fallback, the strip didn't. */
   if(!imgSrc){ try{ imgSrc=localStorage.getItem('lifeOS_rwImg')||''; }catch(e){} }
   const statusColor=isUnlocked?'var(--gold)':dailyStreak>0?'var(--a2)':'var(--muted)';
-  const statusLabel=isUnlocked?'🎉 CLAIM IT':dailyStreak>0?'🔥 '+dailyStreak+' day streak':'⚡ Pull the crank';
+  const statusLabel=isUnlocked?'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:3px" aria-hidden="true"><use href="#icon-party"/></svg>CLAIM IT':dailyStreak>0?'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:3px" aria-hidden="true"><use href="#icon-fire"/></svg>'+dailyStreak+' day streak':'<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:3px" aria-hidden="true"><use href="#icon-bolt"/></svg>Pull the crank';
   el.style.display='block';
   el.innerHTML=
     '<div class="rwst'+(isUnlocked?' rwst-unlocked':'')+'" onclick="navTo(PAGE_IDS.indexOf(\'reward\'))">'
     +'<div class="rwst-thumb">'
     +(imgSrc
       ?'<img src="'+imgSrc+'" onerror="this.parentNode.classList.add(\'rwst-noimg\');this.remove()">'
-      :'<span class="rwst-gift">🎁</span>')
+      :'<span class="rwst-gift" style="display:inline-flex;color:var(--a2)"><svg class="svg-icon" style="width:16px;height:16px;" aria-hidden="true"><use href="#icon-gift"/></svg></span>')
     +'</div>'
     +'<div style="flex:1;min-width:0">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px">'
@@ -5823,8 +5895,11 @@ function initReward(){
 function toggleSound(){
   _soundEnabled = !_soundEnabled;
   localStorage.setItem('lifeOS_sound', _soundEnabled?'1':'0');
+  /* Switching OFF mid-shake: kill the looping rumble immediately —
+     it pre-dates the toggle check and would otherwise play to the end. */
+  if(!_soundEnabled && typeof window._gbKillAudio === 'function'){ try{ window._gbKillAudio(); }catch(e){} }
   const btn = $id('sound-toggle-btn');
-  if(btn) btn.textContent = _soundEnabled ? '🔊 Sound On' : '🔇 Sound Off';
+  if(btn) btn.innerHTML = _soundEnabled ? '<svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:6px" aria-hidden="true"><use href="#icon-sound_on"/></svg>Sound On' : '<svg class="svg-icon" style="width:14px;height:14px;vertical-align:-2.5px;margin-right:6px" aria-hidden="true"><use href="#icon-sound_off"/></svg>Sound Off';
   toast(_soundEnabled ? '🔊 Sound on' : '🔇 Sound off');
 }
 
@@ -5834,7 +5909,7 @@ function toggleSound(){
 function _syncGlassBtn(){
   var on = document.documentElement.classList.contains('glass-lite');
   var b = $id('glass-toggle-btn');
-  if(b) b.textContent = on ? '✨ Glass-Lite' : '💎 Full Glass';
+  if(b) b.innerHTML = on ? '<svg class="svg-icon" style="width:13px;height:13px;vertical-align:-2px;margin-right:5px" aria-hidden="true"><use href="#icon-sparkle"/></svg>Glass-Lite' : '<svg class="svg-icon" style="width:13px;height:13px;vertical-align:-2px;margin-right:5px" aria-hidden="true"><use href="#icon-gem"/></svg>Full Glass';
 }
 function toggleGlass(){
   var on = document.documentElement.classList.toggle('glass-lite');
@@ -6101,8 +6176,22 @@ window._chipDropSoundCheck = (function(){
 function _getAudioCtx(){
   if(!_audioCtx){
     try { _audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){}
+    /* Self-heal: iOS fires statechange when an interruption (call/Siri/alarm/
+       backgrounding) ends. Nudge resume so sound returns without needing a tap. */
+    if(_audioCtx && !_audioCtx._lifeosStateHook){
+      _audioCtx._lifeosStateHook = true;
+      try{
+        _audioCtx.addEventListener('statechange', function(){
+          if(_audioCtx && _audioCtx.state !== 'running' && _audioCtx.state !== 'closed'){
+            _audioCtx.resume().catch(function(){});
+          }
+        });
+      }catch(e){}
+    }
   }
-  if(_audioCtx && _audioCtx.state === 'suspended') _audioCtx.resume().catch(function(){});
+  /* 'interrupted' is an iOS-only state the old 'suspended' check missed —
+     it's why sound used to die after a phone call / app switch. */
+  if(_audioCtx && _audioCtx.state !== 'running' && _audioCtx.state !== 'closed') _audioCtx.resume().catch(function(){});
   return _audioCtx;
 }
 /* Expose so canvas engines share one AudioContext — guaranteed singleton */
@@ -6127,13 +6216,47 @@ window._ensureAudioReady = function(cb){
 (function(){
   function _unlockAudio(){
     var ctx = _getAudioCtx();
-    if(ctx && ctx.state === 'suspended'){
+    if(ctx && ctx.state !== 'running' && ctx.state !== 'closed'){
       ctx.resume().catch(function(){});
     }
   }
+  document.addEventListener('pointerdown', _unlockAudio, {passive:true});
   document.addEventListener('touchstart', _unlockAudio, {passive:true});
   document.addEventListener('touchend',   _unlockAudio, {passive:true});
   document.addEventListener('click',      _unlockAudio, {passive:true});
+})();
+
+/* ── Foreground audio recovery ──
+   iOS suspends/interrupts the AudioContext when the PWA is backgrounded.
+   On return: (1) nudge resume immediately, (2) verify the clock is actually
+   advancing — iOS can report 'running' on a dead ("zombie") context after a
+   long suspension. If frozen, rebuild the context and tell dependents
+   (gumball engine caches nodes) to re-acquire. */
+(function(){
+  function _rebuildAudioCtx(){
+    try{ if(_audioCtx) _audioCtx.close().catch(function(){}); }catch(e){}
+    _audioCtx = null;
+    _getAudioCtx(); /* recreate + re-hook statechange */
+    try{ window.dispatchEvent(new CustomEvent('lifeos:audio-rebuilt')); }catch(e){}
+  }
+  function _recoverAudio(){
+    if(!_audioCtx) return; /* nothing created yet — first gesture will handle it */
+    if(_audioCtx.state !== 'running' && _audioCtx.state !== 'closed'){
+      _audioCtx.resume().catch(function(){});
+    }
+    /* Zombie check: snapshot the clock, re-check shortly after */
+    var t0 = _audioCtx.currentTime;
+    setTimeout(function(){
+      if(!_audioCtx || document.hidden) return;
+      if(_audioCtx.state === 'running' && _audioCtx.currentTime === t0){
+        _rebuildAudioCtx();
+      }
+    }, 400);
+  }
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden) _recoverAudio();
+  });
+  window.addEventListener('pageshow', function(){ _recoverAudio(); });
 })();
 
 function _playTick(done){
@@ -6656,7 +6779,7 @@ function _playBallsShaking(durationMs){
     if(elapsed >= dur){ _stopBallSound(); return; }
     var actx = _getAudioCtx();
     if(!actx || !_soundEnabled){ _stopBallSound(); return; }
-    if(actx.state === 'suspended') actx.resume();
+    if(actx.state !== 'running' && actx.state !== 'closed') actx.resume();
 
     /* v62: Intensity curve REALIGNED with physics + re-kicks for unified crescendo.
        Three curves used to peak at different moments — now they all peak at ~65-75% and
@@ -6956,7 +7079,7 @@ updRwds = function(s){
   if(desc) desc.textContent = msg.sub;
   /* Also update icon */
   const ico = rPel.querySelector('.rw-icon');
-  if(ico) ico.textContent = msg.icon;
+  if(ico) ico.innerHTML = lifeIcon(msg.icon, 26);
 };
 
 /* ── Streak at risk ── */
@@ -6974,14 +7097,14 @@ function checkStreakAtRisk(){
   const streak = window._streakCur||0;
   const remaining = _ts.length - done;
   let title = streak > 0
-    ? '🔥 ' + streak + '-day streak at risk'
-    : '⚠️ Today is incomplete';
+    ? '<svg class="svg-icon" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:4px;color:#ff9d5c;" aria-hidden="true"><use href="#icon-fire"/></svg>' + streak + '-day streak at risk'
+    : '<svg class="svg-icon" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:4px;color:var(--gold);" aria-hidden="true"><use href="#icon-warning"/></svg>Today is incomplete';
   const msg = remaining === 1
     ? 'One habit left. Don\'t be the one who stopped here.'
     : remaining + ' habits left. You\'re not done yet.';
   const titleEl = document.getElementById('sar-title');
   const msgEl = document.getElementById('sar-msg');
-  if(titleEl) titleEl.textContent = title;
+  if(titleEl) titleEl.innerHTML = title;
   if(msgEl) msgEl.textContent = msg;
   banner.style.display = 'block';
 }
@@ -7171,7 +7294,7 @@ function _updateStreakBadges(cur, best, s){
   const sbb=document.getElementById('streak-best-badge');
   const stile=scb&&scb.closest('.streak-tile');
   if(scb){
-    scb.textContent = cur + (cur===1?' day':' days') + (cur>=7?' 🔥':'');
+    scb.innerHTML = cur + (cur===1?' day':' days') + (cur>=7?' '+'<svg class="svg-icon" style="width:13px;height:13px;vertical-align:-1.5px;color:#fb923c" aria-hidden="true"><use href="#icon-fire"/></svg>':'');
     scb.style.color = cur >= 21 ? '#FFD97D' : cur >= 7 ? '#fb923c' : '#fff';
     scb.style.textShadow = cur >= 7 ? '0 0 18px rgba(251,146,60,.55)' : '';
     if(stile) stile.style.borderColor = cur >= 7 ? 'rgba(251,146,60,.35)' : '';
@@ -7283,10 +7406,6 @@ initTheme();
     }
   }catch(e){}
 })();
-/* ── Always register SW for offline caching; also re-send schedule if notifs were enabled ── */
-(function(){
-
-})();
 /* ── Init gesture navigation ── */
 (function(){
   // Always start on Finance page (home). One clean init on load — no duplicates.
@@ -7315,8 +7434,9 @@ initTheme();
   const nd = $id('nav-date');
   if(nd) nd.textContent = days[today.getDay()]+', '+months[today.getMonth()]+' '+today.getDate();
   // Scroll-shadow on nav
+  const _navEl = document.querySelector('.nav');
   window.addEventListener('scroll', function(){
-    document.querySelector('.nav').classList.toggle('scrolled', window.scrollY > 4);
+    if(_navEl) _navEl.classList.toggle('scrolled', window.scrollY > 4);
   }, {passive:true});
 })();
 
@@ -7550,7 +7670,7 @@ function updateXPStrip(){
   el=document.getElementById('xp-strip-amt');
   if(el) el.textContent=totalXP+' XP';
   el=document.getElementById('xp-strip-tokens');
-  if(el) el.textContent='🏅 '+(bp.tokens||0);
+  if(el) el.innerHTML='<svg class="svg-icon" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:3px;color:var(--gold);" aria-hidden="true"><use href="#icon-medal"/></svg>'+(bp.tokens||0);
   /* Mirror into inline streak-bar XP tile */
   el=document.getElementById('xp-inline-lvl');
   if(el) el.textContent='LVL '+info.levelIdx+' · '+info.level.name;
@@ -7822,7 +7942,7 @@ function bowlManualDraw(){
   /* Audio unlock — do this first on the gesture */
   try{
     var _ac2 = _getAudioCtx();
-    if(_ac2 && _ac2.state==='suspended') _ac2.resume().catch(function(){});
+    if(_ac2 && _ac2.state!=='running' && _ac2.state!=='closed') _ac2.resume().catch(function(){});
   }catch(e){}
 
   /* ── Wipe check: scan all days from level start up to yesterday ── */
@@ -7919,7 +8039,7 @@ function bowlReplayAnimation(){
   /* Audio unlock on the user gesture */
   try{
     var _acR = _getAudioCtx();
-    if(_acR && _acR.state==='suspended') _acR.resume().catch(function(){});
+    if(_acR && _acR.state!=='running' && _acR.state!=='closed') _acR.resume().catch(function(){});
   }catch(e){}
 
   /* Need an existing draw to replay */
@@ -8037,9 +8157,8 @@ function bowlChooseTier(tier){
     else if(typeof window._gbSetExcited==='function') window._gbSetExcited(null,1800,function(){});
   }catch(e){}
 
-  var tierEmoji={easy:"✅",medium:"🔥",hard:"⚡"};
   var tierLabel={easy:"Easy",medium:"Medium",hard:"Hard"};
-  toast(tierEmoji[tier]+" "+tierLabel[tier]+" done! +"+dd.pts+" pts");
+  toast(tierLabel[tier]+" done! +"+dd.pts+" pts");
 
   var celTitle=document.getElementById("bowl-celebrate-title");
   var celSub=document.getElementById("bowl-celebrate-sub");
@@ -8132,7 +8251,7 @@ function bowlRerollTheme(){
   setBowl(b);
   /* Animate */
   _bowlAnimResume();
-  try{ var _acR=_getAudioCtx(); if(_acR&&_acR.state==='suspended') _acR.resume().catch(function(){}); }catch(e){}
+  try{ var _acR=_getAudioCtx(); if(_acR&&_acR.state!=='running'&&_acR.state!=='closed') _acR.resume().catch(function(){}); }catch(e){}
   if(typeof _playGumballCrank==='function') _playGumballCrank();
   /* v67: reroll = vortex remix, not the draw shake — each verb gets its own motion */
   if(window._gbSwirl){ window._gbSwirl(2200); }
@@ -8206,34 +8325,51 @@ function getBowlTierScore(){
   return {completed:score.completed, pts:pts, drawn:0, tier:pts>=REWARD_LEVEL_TARGET?3:pts>=1000?2:pts>=400?1:0, pct:pct};
 }
 
-/* ── Ball icon helper — maps emoji stored in ball.icon to an inline SVG from the sprite ──
-   Returns an HTML string: <svg>...<use href="#icon-..."/></svg>
-   Falls back to the bowl icon if the emoji isn't recognised. */
+/* ── Global icon runtime ──
+   One mapping from legacy emoji keys (stored in state defaults / user data)
+   to sprite symbol ids. Render-time translation: stored data never migrates,
+   unmapped custom emojis pass through untouched (user's deliberate choice). */
+var LIFE_ICON_MAP = {
+  '\u{1F3CB}\uFE0F':'gym','\u{1F3CB}':'gym','\u{1F4AA}':'strength','\u{1F9B5}':'bridge','\u{1F9BF}':'lunge',
+  '\u{1F6B6}':'walk','\u{1F6B6}\u200D\u2642\uFE0F':'walk','\u{1F6B6}\u200D\u2640\uFE0F':'walk',
+  '\u{1F9D8}':'lotus','\u{1F9D8}\u200D\u2642\uFE0F':'lotus','\u{1F9D8}\u200D\u2640\uFE0F':'lotus',
+  '\u{1F3C3}':'bolt','\u{1F3C3}\u200D\u2642\uFE0F':'bolt','\u{1F3C3}\u200D\u2640\uFE0F':'bolt',
+  '\u{1F4CA}':'chart','\u{1F4C8}':'chart','\u{1F9EE}':'calc','\u{1F4D6}':'book','\u{1F4DA}':'book',
+  '\u{1F4D3}':'book','\u{1F4D4}':'book','\u{1F4D2}':'book','\u{1F5C3}\uFE0F':'db','\u{1F5C3}':'db',
+  '\u{1F34C}':'dashboard','\u2699\uFE0F':'wrench','\u2699':'wrench','\u{1F431}':'paw',
+  '\u{1F3AF}':'target','\u{1F957}':'check','\u{1F959}':'check','\u{1F34E}':'check','\u{1F4A7}':'target','\u{1F964}':'target',
+  '\u{1F9F9}':'sparkle','\u{1F9FA}':'sparkle','\u{1F634}':'moon','\u{1F319}':'moon','\u2600\uFE0F':'sun','\u2600':'sun',
+  '\u{1F3C6}':'trophy','\u{1F947}':'medal','\u{1F948}':'medal','\u{1F949}':'medal','\u{1F396}\uFE0F':'medal','\u{1F396}':'medal','\u{1F3C5}':'medal',
+  '\u26A1':'bolt','\u{1F525}':'fire','\u{1F3B1}':'bowl','\u{1F3C0}':'bowl','\u26BD':'bowl',
+  '\u{1F4B0}':'coins','\u{1F4B8}':'coins','\u{1F48E}':'gem','\u{1F6E1}\uFE0F':'shield','\u{1F6E1}':'shield',
+  '\u2728':'sparkle','\u2B50':'star','\u{1F31F}':'star','\u{1F6AB}':'target',
+  '\u2764\uFE0F':'heart','\u2764':'heart','\u{1F491}':'heart','\u{1F469}':'person','\u{1F60A}':'person','\u{1F44B}':'person','\u{1F9D1}':'person',
+  '\u{1F6D2}':'cart','\u{1F697}':'car','\u{1F3E6}':'bank','\u26FD':'fuel','\u{1F4F1}':'phone','\u{1F4F6}':'wifi',
+  '\u{1F4C4}':'doc','\u{1F4BC}':'briefcase','\u{1F3D6}\uFE0F':'umbrella','\u{1F3D6}':'umbrella','\u{1F4E6}':'box',
+  '\u{1F50D}':'search','\u{1F3E0}':'home','\u{1F355}':'gamepad','\u{1F3AE}':'gamepad','\u{1F381}':'gift',
+  '\u{1F4F7}':'camera','\u{1F4BE}':'save','\u{1F4C2}':'folder','\u{1F5D1}\uFE0F':'trash','\u{1F5D1}':'trash',
+  '\u270F\uFE0F':'edit','\u270F':'edit','\u{1F3A8}':'palette','\u{1F50A}':'sound_on','\u{1F507}':'sound_off',
+  '\u{1F513}':'lock_open','\u{1F4C5}':'calendar','\u{1F389}':'party','\u26A0\uFE0F':'warning','\u26A0':'warning',
+  '\u{1F9E0}':'sparkle','\u{1F354}':'gamepad','\u2615':'clock','\u{1F48A}':'check','\u{1F6CD}\uFE0F':'cart','\u{1F6CD}':'cart'
+};
+function lifeIcon(key, sizePx, style){
+  var id = LIFE_ICON_MAP[key] || (key && key.indexOf('#')===0 ? key.slice(1) : null);
+  var sz = sizePx || 18;
+  if(!id){
+    /* unmapped custom emoji — pass through, sized to match */
+    return '<span style="font-size:'+Math.round(sz*0.92)+'px;line-height:1;'+(style||'')+'">'+(key||'')+'</span>';
+  }
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;fill:currentColor;'+(style||'')+'"><use href="#icon-'+id+'"/></svg>';
+}
+window.lifeIcon = lifeIcon;
+window._CAM_ICO = '<svg class="svg-icon" style="width:24px;height:24px;" aria-hidden="true"><use href="#icon-camera"/></svg>';
+
+/* ── Ball icon helper — delegates to the global map; white glyph inside colored balls ── */
 function bowlBallSvg(emoji, sizePx){
   var sz = sizePx || 22;
-  /* Map common emoji to existing sprite IDs */
-  var MAP = {
-    '🏋️':'gym', '🏋':'gym',
-    '🚶':'home', '🚶‍♂️':'home', '🚶‍♀️':'home',
-    '🎯':'target',
-    '📓':'flag', '📔':'flag', '📒':'flag',
-    '🧘':'target', '🧘‍♂️':'target', '🧘‍♀️':'target',
-    '🏃':'bolt', '🏃‍♂️':'bolt', '🏃‍♀️':'bolt',
-    '💪':'strength', '💪':'strength',
-    '🥗':'check', '🥙':'check', '🍎':'check',
-    '💧':'target', '🥤':'target',
-    '📚':'flag', '📖':'flag',
-    '🧹':'settings', '🧺':'settings',
-    '😴':'star', '🌙':'star',
-    '🏆':'trophy', '🥇':'trophy', '🎖️':'medal',
-    '⚡':'bolt', '🔥':'bolt',
-    '🎱':'bowl', '🏀':'bowl', '⚽':'bowl',
-    '📈':'finance', '💰':'finance', '⏳':'finance',
-    '🚫':'target', '⭐':'star',
-    '?': 'bowl'
-  };
-  var iconId = MAP[emoji] || 'bowl';
-  return '<svg xmlns="http://www.w3.org/2000/svg" width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" style="display:block;fill:currentColor"><use href="#icon-'+iconId+'"/></svg>';
+  var id = LIFE_ICON_MAP[emoji];
+  if(!id) return lifeIcon(emoji, sz, 'display:block');
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" style="display:block;fill:currentColor"><use href="#icon-'+id+'"/></svg>';
 }
 
 /* ─── Render bowl page ─── */
@@ -8272,7 +8408,7 @@ function renderBowl(){
     if(crankHint){
       if(dd.chosenTier){
         /* v61: even after picking a tier, allow replaying the animation */
-        crankHint.innerHTML='<div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap"><span style="font-family:var(--font-ui);font-size:11px;color:var(--muted);padding:4px 4px">Done for today.</span><button class="bowl-replay-btn" id="bowl-replay-btn" onclick="bowlReplayAnimation()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg><span class="replay-lbl">Replay animation</span></button></div>';
+        crankHint.innerHTML='<div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap"><span style="font-family:var(--font-ui);font-size:11px;color:var(--muted);padding:4px 4px">Done for today.</span><button class="bowl-replay-btn" id="bowl-replay-btn" onclick="bowlReplayAnimation()"><svg class="svg-icon" style="width:12px;height:12px"><use href="#icon-replay"/></svg><span class="replay-lbl">Replay animation</span></button></div>';
       } else {
         var rerollsLeft2=(typeof bowlRerollsLeftThisWeek==='function')?bowlRerollsLeftThisWeek():0;
         var _hintH='<div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap">';
@@ -8281,7 +8417,7 @@ function renderBowl(){
         } else {
           _hintH+='<span style="font-family:var(--font-ui);font-size:11px;color:var(--muted);padding:4px 8px">No rerolls left this week — pick below</span>';
         }
-        _hintH+='<button class="bowl-replay-btn" id="bowl-replay-btn" onclick="bowlReplayAnimation()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg><span class="replay-lbl">Replay</span></button>';
+        _hintH+='<button class="bowl-replay-btn" id="bowl-replay-btn" onclick="bowlReplayAnimation()"><svg class="svg-icon" style="width:12px;height:12px"><use href="#icon-replay"/></svg><span class="replay-lbl">Replay</span></button>';
         _hintH+='</div>';
         crankHint.innerHTML=_hintH;
       }
@@ -8385,7 +8521,7 @@ function renderBowl(){
             h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">';
             var _tierWeight=t==='hard'?'font-size:10px':'font-size:9.5px';
             h+='<span style="font-family:var(--font-ui);'+_tierWeight+';font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:'+m.color+'">'+m.label+'</span>';
-            h+='<div style="font-family:\'Roboto Mono\',monospace;font-size:15px;font-weight:700;color:'+m.color+';text-align:right;flex-shrink:0;line-height:1">+'+displayPts+bonusTag+'</div>';
+            h+='<div style="font-family:var(--font-mono);font-size:15px;font-weight:700;color:'+m.color+';text-align:right;flex-shrink:0;line-height:1">+'+displayPts+bonusTag+'</div>';
             h+='</div>';
             h+='<div style="font-size:11px;color:rgba(200,225,255,.72);line-height:1.35">'+td.desc+'</div>';
             h+='</button>';
@@ -8404,10 +8540,10 @@ function renderBowl(){
   if(pStat) pStat.textContent=cs.pts+' pts';
   if(pFill) pFill.style.width=cs.pct+'%';
   if(pSub){
-    if(cs.pts>=REWARD_LEVEL_TARGET) pSub.textContent='🎉 Level complete! '+cs.pts+' pts — claim your reward.';
-    else if(cs.pts>=1500) pSub.textContent='⚡ '+(REWARD_LEVEL_TARGET-cs.pts)+' pts to go — almost there!';
-    else if(cs.pts>=800) pSub.textContent='🔥 '+cs.pts+' / '+REWARD_LEVEL_TARGET+' pts · keep the streak alive.';
-    else pSub.textContent=cs.pts+' / '+REWARD_LEVEL_TARGET+' pts · every Hard counts.';
+    if(cs.pts>=REWARD_LEVEL_TARGET) pSub.innerHTML='<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:var(--gold);" aria-hidden="true"><use href="#icon-party"/></svg>Level complete! '+cs.pts+' pts — claim your reward.';
+    else if(cs.pts>=1500) pSub.innerHTML='<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:var(--gold);" aria-hidden="true"><use href="#icon-bolt"/></svg>'+(REWARD_LEVEL_TARGET-cs.pts)+' pts to go — almost there!';
+    else if(cs.pts>=800) pSub.innerHTML='<svg class="svg-icon" style="width:11px;height:11px;vertical-align:-1.5px;margin-right:4px;color:#ff9d5c;" aria-hidden="true"><use href="#icon-fire"/></svg>'+cs.pts+' / '+REWARD_LEVEL_TARGET+' pts · keep the streak alive.';
+    else pSub.innerHTML=cs.pts+' / '+REWARD_LEVEL_TARGET+' pts · every Hard counts.';
   }
 
   /* ── History — last 14 or 30 calendar days ── */
@@ -8463,7 +8599,7 @@ function renderBowl(){
     var covH='<div class="bowl-coverage" style="margin-top:12px;border-top:1px solid rgba(127,178,255,.12);padding-top:12px">';
     covH+='<div onclick="bowlToggleCov()" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">';
     covH+='Coverage <span style="font-weight:600;letter-spacing:0;text-transform:none;color:var(--a2)">'+_covLabel+'</span>';
-    if(anyCold&&!_covOpen) covH+='<span style="color:var(--gold);font-weight:700;letter-spacing:0;text-transform:none">⚠ '+BOWL_CAT_ORDER.filter(function(c){return cov[c].cold;}).length+' cold</span>';
+    if(anyCold&&!_covOpen) covH+='<span style="color:var(--gold);font-weight:700;letter-spacing:0;text-transform:none"><svg class="svg-icon" style="width:10px;height:10px;vertical-align:-1.5px;margin-right:4px;" aria-hidden="true"><use href="#icon-warning"/></svg>'+BOWL_CAT_ORDER.filter(function(c){return cov[c].cold;}).length+' cold</span>';
     covH+='<span style="margin-left:auto;font-size:13px;color:var(--a2)">'+(_covOpen?'▾':'▸')+'</span></div>';
 
     if(_covOpen){
@@ -8477,7 +8613,7 @@ function renderBowl(){
         var col=cold?'var(--gold)':'#fff';
         var subcol=cold?'rgba(255,200,100,.7)':'var(--muted)';
         covH+='<div style="display:flex;align-items:center;gap:10px;background:'+bg+';border:1px solid '+bd+';border-radius:8px;padding:8px 11px">';
-        covH+='<span style="font-size:15px">'+BOWL_CAT_META[c].icon+'</span>';
+        covH+=lifeIcon(BOWL_CAT_META[c].icon,15);
         covH+='<span style="font-family:var(--font-ui);font-size:13px;font-weight:700;color:'+col+'">'+c+'</span>';
         covH+='<span style="margin-left:auto;display:flex;align-items:center;gap:10px">';
         covH+='<span style="font-family:var(--font-ui);font-size:12px;font-weight:700;color:'+subcol+'">'+cov[c].count+'×</span>';
@@ -8680,7 +8816,7 @@ function bowlJumpToDate(){
   h+='</div>';
   h+='<input type="date" id="bowl-jump-date" value="'+todayKey2+'" min="'+minKey+'" max="'+todayKey2+'" style="width:100%;padding:13px;background:rgba(18,38,80,.7);border:1px solid rgba(107,182,255,.3);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:14px;font-weight:700;margin-bottom:12px;color-scheme:dark">';
   h+='<button onclick="bowlJumpToDateGo()" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(77,141,255,.25),rgba(107,182,255,.18));border:1px solid rgba(107,182,255,.45);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13px;font-weight:800;cursor:pointer;min-height:44px;letter-spacing:.3px">Open this day →</button>';
-  h+='<button onclick="bowlCloseDayDetail();setTimeout(bowlAuditHistory,150)" style="width:100%;margin-top:8px;padding:11px;background:rgba(255,217,125,.08);border:1px solid rgba(255,217,125,.28);border-radius:8px;color:var(--gold);font-family:var(--font-ui);font-size:12px;font-weight:700;cursor:pointer;min-height:42px;letter-spacing:.3px">🔍 Audit history — find anomalies</button>';
+  h+='<button onclick="bowlCloseDayDetail();setTimeout(bowlAuditHistory,150)" style="width:100%;margin-top:8px;padding:11px;background:rgba(255,217,125,.08);border:1px solid rgba(255,217,125,.28);border-radius:8px;color:var(--gold);font-family:var(--font-ui);font-size:12px;font-weight:700;cursor:pointer;min-height:42px;letter-spacing:.3px"><svg class="svg-icon" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:5px;" aria-hidden="true"><use href="#icon-search"/></svg>Audit history — find anomalies</button>';
   h+='<button onclick="bowlCloseDayDetail()" style="width:100%;margin-top:8px;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.12);border-radius:8px;color:var(--muted);font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;min-height:40px">Cancel</button>';
   h+='</div>';
   /* Reuse day-detail overlay */
@@ -8807,23 +8943,23 @@ function bowlAuditHistory(){
   }
 
   if(corruptPts.length){
-    h+='<div style="font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:rgba(255,160,150,.85);margin:14px 0 6px">⚠ Completions with 0 pts</div>';
+    h+='<div style="font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:rgba(255,160,150,.85);margin:14px 0 6px"><svg class="svg-icon" style="width:10px;height:10px;vertical-align:-1.5px;margin-right:4px;" aria-hidden="true"><use href="#icon-warning"/></svg>Completions with 0 pts</div>';
     corruptPts.slice(0,10).forEach(function(d){ h+=detailRow(d); });
     if(corruptPts.length>10) h+='<div style="font-size:10px;color:var(--muted);margin-top:4px">+'+(corruptPts.length-10)+' more</div>';
   }
   if(orphanedTheme.length){
-    h+='<div style="font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:rgba(255,160,150,.85);margin:14px 0 6px">⚠ Draws referencing deleted/missing themes</div>';
+    h+='<div style="font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:rgba(255,160,150,.85);margin:14px 0 6px"><svg class="svg-icon" style="width:10px;height:10px;vertical-align:-1.5px;margin-right:4px;" aria-hidden="true"><use href="#icon-warning"/></svg>Draws referencing deleted/missing themes</div>';
     orphanedTheme.slice(0,10).forEach(function(d){ h+=detailRow(d); });
     if(orphanedTheme.length>10) h+='<div style="font-size:10px;color:var(--muted);margin-top:4px">+'+(orphanedTheme.length-10)+' more</div>';
   }
   if(gaps.length){
-    h+='<div style="font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--gold);margin:14px 0 6px">📅 Recent gap days (tap to backfill)</div>';
+    h+='<div style="font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--gold);margin:14px 0 6px"><svg class="svg-icon" style="width:10px;height:10px;vertical-align:-1.5px;margin-right:4px;" aria-hidden="true"><use href="#icon-calendar"/></svg>Recent gap days (tap to backfill)</div>';
     gaps.slice(0,15).forEach(function(k){
       var dt=new Date(k+'T12:00:00');
       var lbl=dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
       h+='<button onclick="bowlCloseDayDetail();setTimeout(function(){bowlShowMissedDayModal(\''+k+'\')},150)" style="display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;background:rgba(255,217,125,.06);border:1px solid rgba(255,217,125,.18);border-radius:7px;color:#fff;font-family:var(--font-ui);font-size:11px;font-weight:600;cursor:pointer;text-align:left;margin-bottom:5px;min-height:36px"><span style="flex:1">'+lbl+'</span><span style="color:var(--gold);font-size:10px">Backfill →</span></button>';
     });
-    if(gaps.length>15) h+='<div style="font-size:10px;color:var(--muted);margin-top:4px">+'+(gaps.length-15)+' more — use 📅 Jump to find them</div>';
+    if(gaps.length>15) h+='<div style="font-size:10px;color:var(--muted);margin-top:4px">+'+(gaps.length-15)+' more — use <svg class="svg-icon" style="width:10px;height:10px;vertical-align:-1.5px;margin-right:3px;" aria-hidden="true"><use href="#icon-calendar"/></svg>Jump to find them</div>';
   }
 
   if(!corruptPts.length && !orphanedTheme.length && !gaps.length && !duplicates.length){
@@ -8887,7 +9023,7 @@ function bowlShowMissedDayModal(dateKey){
     var origBadge = isOrig ? '<span style="font-size:9px;color:rgba(255,217,125,.7);margin-left:auto;white-space:nowrap">prev draw</span>' : '';
     var origBdr = isOrig ? 'border-color:rgba(255,217,125,.35)' : '';
     h+='<button onclick="bowlMissedSelectBall(\''+ball.id+'\')" id="missed-ball-'+ball.id+'" style="display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;background:rgba(18,38,80,.6);border:1px solid rgba(107,182,255,.18);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:12px;font-weight:700;cursor:pointer;text-align:left;transition:border .15s;min-height:40px;'+origBdr+'">';
-    h+='<span style="font-size:17px">'+ball.icon+'</span>';
+    h+=bowlBallSvg(ball.icon,17);
     h+='<span>'+ball.name+'</span>';
     h+=origBadge;
     h+='</button>';
@@ -9524,7 +9660,7 @@ function tcShatterAnimation(){
   try{
     var ctx = window._getSharedAudioCtx ? window._getSharedAudioCtx() : (window._getAudioCtx ? window._getAudioCtx() : null);
     if(ctx && ctx.state !== 'closed'){
-      if(ctx.state === 'suspended') ctx.resume();
+      if(ctx.state !== 'running' && ctx.state !== 'closed') ctx.resume();
       var now = ctx.currentTime;
       /* Noise burst for glass crack */
       var bufSz = ctx.sampleRate * 0.15;
@@ -10023,7 +10159,7 @@ function _fxVialBootCanvas(){
     if(h <= 0) return false;
     /* avoid resizing if already at this size */
     if(c._cssW === w && c._cssH === h) return true;
-    var dpr = window.devicePixelRatio || 1;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2); /* cap @2x: 3x backing buffers on Pro iPhones = 2.25x the pixels for zero visible gain at these sizes */
     c.style.width = w + 'px';
     c.style.height = h + 'px';
     c.width = Math.round(w * dpr);
@@ -10082,7 +10218,7 @@ function _fxVialDraw(ts){
     if(w <= 0) return;
     var h = wrap.offsetHeight || Math.round(w / fallbackAspect);
     if(h <= 0) return;
-    var dpr = window.devicePixelRatio || 1;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2); /* cap @2x: 3x backing buffers on Pro iPhones = 2.25x the pixels for zero visible gain at these sizes */
     c.style.width = w + 'px';
     c.style.height = h + 'px';
     c.width = Math.round(w * dpr);
@@ -11634,7 +11770,7 @@ function fxRenderBottleLog(){
       +(e.note ? '<div style="font-family:var(--font-ui);font-size:11px;font-weight:600;color:rgba(255,255,255,.75);margin-top:1px">'+e.note+'</div>' : '')
       +'<div style="font-size:10px;color:var(--muted);margin-top:2px">'+e.date+' &nbsp;&middot;&nbsp; was '+(e.prev<0?'\u2212':'')+sar+Math.abs(Math.round(e.prev)).toLocaleString()+' &rarr; '+(e.next<0?'\u2212':'')+sar+Math.abs(Math.round(e.next)).toLocaleString()+'</div>'
       +'</div>'
-      +'<button onclick="fxEditBottleEntry('+eid+')" style="width:30px;height:30px;background:rgba(77,141,255,.12);border:1px solid rgba(107,182,255,.25);color:var(--a2);cursor:pointer;font-size:12px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s" title="Edit">✏️</button>'
+      +'<button onclick="fxEditBottleEntry('+eid+')" style="width:30px;height:30px;background:rgba(77,141,255,.12);border:1px solid rgba(107,182,255,.25);color:var(--a2);cursor:pointer;font-size:12px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s" title="Edit"><svg class="svg-icon" style="width:13px;height:13px;" aria-hidden="true"><use href="#icon-edit"/></svg></button>'
       +'<button onclick="fxDeleteBottleEntry('+eid+')" style="width:30px;height:30px;background:rgba(255,100,100,.1);border:1px solid rgba(255,100,100,.25);color:var(--red);cursor:pointer;font-size:13px;font-weight:700;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s" title="Delete">✕</button>'
       +'</div>';
   }).join('');
@@ -11662,8 +11798,8 @@ function fxRenderTxLog(f, mk){
     groups[k].push(t);
   });
   const keys = Object.keys(groups).sort().reverse();
-  const today = new Date().toISOString().slice(0,10);
-  const yest = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  const today = localKey(new Date());
+  const yest = localKey(new Date(Date.now()-86400000));
   let html = '';
   let txIdx = 0;
   keys.forEach(function(k){
@@ -11678,12 +11814,12 @@ function fxRenderTxLog(f, mk){
     const netCls = net>=0?'income':'';
     html += '<div class="fnx-tx-day">';
     html += '<div class="fnx-tx-day-hdr'+(noSpend?' nospend':'')+'">';
-    html += '<span>'+label+(noSpend?' · 🌱 no spend':'')+'</span>';
+    html += '<span>'+label+(noSpend?' · <svg class="svg-icon" style="width:10px;height:10px;vertical-align:-1.5px;margin-right:3px;color:#4ade80;" aria-hidden="true"><use href="#icon-sparkle"/></svg>no spend':'')+'</span>';
     html += '<span class="fnx-tx-day-net '+netCls+'">'+(net>=0?'+':'')+fnxFmt(Math.abs(net))+'</span>';
     html += '</div>';
     txs.forEach(function(t){
       const isIncome = t.type==='income';
-      const icon = fnxTxIcon(t);
+      const icon = lifeIcon(fnxTxIcon(t),16);
       const delay = Math.min(txIdx * 30, 300);
       html += '<div class="fnx-tx '+(isIncome?'income':'')+'" onclick="fnxEditTx('+t.id+')" style="animation-delay:'+delay+'ms">';
       html += '<div class="fnx-tx-icon">'+icon+'</div>';
@@ -11701,18 +11837,18 @@ function fxRenderTxLog(f, mk){
 }
 
 function fnxTxIcon(t){
-  if(t.type==='income') return '💰';
+  if(t.type==='income') return '#coins';
   const d = (t.desc||'').toLowerCase();
-  if(d.match(/petrol|gas|fuel/)) return '⛽';
-  if(d.match(/grocer|tamimi|panda|carrefour|lulu/)) return '🛒';
-  if(d.match(/food|lunch|dinner|breakfast|restaurant|burger/)) return '🍔';
-  if(d.match(/caf[eé]|coffee|starbuck/)) return '☕';
-  if(d.match(/pharma|medicine|health|doctor|clinic/)) return '💊';
-  if(d.match(/game|ps5|entertain|movie|netflix/)) return '🎮';
-  if(d.match(/shop|mall|amazon|aliexpress/)) return '🛍️';
-  if(d.match(/bill|electric|water|internet|phone|subscri/)) return '📱';
-  if(d.match(/rent|loan/)) return '🏠';
-  return '💸';
+  if(d.match(/petrol|gas|fuel/)) return '#fuel';
+  if(d.match(/grocer|tamimi|panda|carrefour|lulu/)) return '#cart';
+  if(d.match(/food|lunch|dinner|breakfast|restaurant|burger/)) return '#gamepad';
+  if(d.match(/caf[eé]|coffee|starbuck/)) return '#clock';
+  if(d.match(/pharma|medicine|health|doctor|clinic/)) return '#check';
+  if(d.match(/game|ps5|entertain|movie|netflix/)) return '#gamepad';
+  if(d.match(/shop|mall|amazon|aliexpress/)) return '#cart';
+  if(d.match(/bill|electric|water|internet|phone|subscri/)) return '#phone';
+  if(d.match(/rent|loan/)) return '#home';
+  return '#coins';
 }
 function fnxEditTx(id){
   if(typeof openEditTx==='function'){ openEditTx(id); return; }
@@ -11746,7 +11882,7 @@ function fnxRenderEditModal(){
   const leftEl = document.getElementById('fnx-edit-leftover');
   if(leftEl){
     leftEl.innerHTML = '<div class="fnx-modal-row">'
-      + '<div class="fnx-modal-row-icon">💎</div>'
+      + '<div class="fnx-modal-row-icon"><svg class="svg-icon" style="width:18px;height:18px;" aria-hidden="true"><use href="#icon-gem"/></svg></div>'
       + '<div style="flex:1;font-family:var(--font-ui);font-size:12px;font-weight:700;color:var(--sec)">Amount</div>'
       + '<input class="fnx-modal-row-amt" type="text" inputmode="decimal" value="'+(f.leftover||0)+'" oninput="fnxUpdateLeftover(this.value)" onfocus="this.select()" style="width:110px">'
       + '</div>';
@@ -11758,12 +11894,12 @@ function fnxRenderEditModal(){
     const target = eg ? (eg.target||0) : 0;
     const saved = eg ? (eg.saved||0) : 0;
     emEl.innerHTML = '<div class="fnx-modal-row">'
-      + '<div class="fnx-modal-row-icon">🎯</div>'
+      + '<div class="fnx-modal-row-icon"><svg class="svg-icon" style="width:18px;height:18px;" aria-hidden="true"><use href="#icon-target"/></svg></div>'
       + '<div style="flex:1;font-family:var(--font-ui);font-size:12px;font-weight:700;color:var(--sec)">Target</div>'
       + '<input class="fnx-modal-row-amt" type="text" inputmode="decimal" value="'+target+'" oninput="fnxUpdateEmergency(\'target\',this.value)" onfocus="this.select()">'
       + '</div>'
       + '<div class="fnx-modal-row">'
-      + '<div class="fnx-modal-row-icon">💰</div>'
+      + '<div class="fnx-modal-row-icon"><svg class="svg-icon" style="width:18px;height:18px;" aria-hidden="true"><use href="#icon-coins"/></svg></div>'
       + '<div style="flex:1;font-family:var(--font-ui);font-size:12px;font-weight:700;color:var(--sec)">Saved so far</div>'
       + '<input class="fnx-modal-row-amt" type="text" inputmode="decimal" value="'+saved+'" oninput="fnxUpdateEmergency(\'saved\',this.value)" onfocus="this.select()">'
       + '</div>';
@@ -11804,7 +11940,7 @@ window.fnxOpenVdp = function(bucketId){
     : {id:bucketId, name:bucketId, icon:'📦', budget:0, spent:0, txs:[]};
   var el = document.getElementById('fnx-vdp');
   if(!el) return;
-  document.getElementById('fnx-vdp-icon').textContent = bucket.icon || '📦';
+  document.getElementById('fnx-vdp-icon').innerHTML = lifeIcon(bucket.icon || '\u{1F4E6}', 22);
   document.getElementById('fnx-vdp-name').textContent = bucket.name || bucketId;
   var pct = bucket.budget > 0 ? Math.round((bucket.spent / bucket.budget) * 100) : 0;
   document.getElementById('fnx-vdp-state').textContent = bucket.budget > 0 ? pct + '% used' : 'No budget set';
@@ -12008,13 +12144,13 @@ window.finMonthNav = function(delta){
       </div>
 
       <div class="fnx-modal-section">
-        <div class="fnx-modal-section-lbl">💎 Monthly Leftover</div>
+        <div class="fnx-modal-section-lbl"><svg class="svg-icon" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:6px;" aria-hidden="true"><use href="#icon-gem"/></svg>Monthly Leftover</div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Your money after all bills are paid</div>
         <div id="fnx-edit-leftover"></div>
       </div>
 
       <div class="fnx-modal-section">
-        <div class="fnx-modal-section-lbl">🛡️ Savings</div>
+        <div class="fnx-modal-section-lbl"><svg class="svg-icon" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:6px;" aria-hidden="true"><use href="#icon-shield"/></svg>Savings</div>
         <div id="fnx-edit-emergency"></div>
       </div>
 
@@ -12028,7 +12164,7 @@ window.finMonthNav = function(delta){
   <div class="fnx-vdp" id="fnx-vdp" onclick="if(event.target===this)fnxCloseVdp()">
     <div class="fnx-vdp-card">
       <div class="fnx-vdp-handle"></div>
-      <div class="fnx-vdp-icon" id="fnx-vdp-icon">🏠</div>
+      <div class="fnx-vdp-icon" id="fnx-vdp-icon"><svg class="svg-icon" style="width:22px;height:22px;" aria-hidden="true"><use href="#icon-home"/></svg></div>
       <div class="fnx-vdp-name" id="fnx-vdp-name">Bucket</div>
       <div class="fnx-vdp-state" id="fnx-vdp-state">—</div>
       <div class="fnx-vdp-stats">
@@ -12099,8 +12235,8 @@ window.finMonthNav = function(delta){
     <div class="modal-row">
       <div class="modal-label">Type</div>
       <div style="display:flex;gap:6px;margin-top:6px">
-        <button class="tx-type-btn expense active" id="edit-txtype-exp" onclick="editTxSetType('expense')">💸 Expense</button>
-        <button class="tx-type-btn income" id="edit-txtype-inc" onclick="editTxSetType('income')">💰 Income</button>
+        <button class="tx-type-btn expense active" id="edit-txtype-exp" onclick="editTxSetType('expense')"><svg class="svg-icon" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:5px;" aria-hidden="true"><use href="#icon-cart"/></svg>Expense</button>
+        <button class="tx-type-btn income" id="edit-txtype-inc" onclick="editTxSetType('income')"><svg class="svg-icon" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:5px;" aria-hidden="true"><use href="#icon-coins"/></svg>Income</button>
       </div>
     </div>
     <div class="modal-row">
@@ -12115,7 +12251,7 @@ window.finMonthNav = function(delta){
       <button class="fin-btn" onclick="saveEditTx()">Save Changes</button>
       <button class="fin-btn ghost" onclick="closeModal('edit-tx-modal')">Cancel</button>
     </div>
-    <button onclick="deleteFromEditModal()" style="width:100%;margin-top:10px;background:rgba(255,100,100,.08);border:1px solid rgba(255,100,100,.2);border-radius:8px;color:#FF8B8B;font-family:var(--font-ui);font-size:12px;font-weight:700;padding:11px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;min-height:44px">🗑 Delete Transaction</button>
+    <button onclick="deleteFromEditModal()" style="width:100%;margin-top:10px;background:rgba(255,100,100,.08);border:1px solid rgba(255,100,100,.2);border-radius:8px;color:#FF8B8B;font-family:var(--font-ui);font-size:12px;font-weight:700;padding:11px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;min-height:44px"><svg class="svg-icon" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:5px;" aria-hidden="true"><use href="#icon-trash"/></svg>Delete Transaction</button>
   </div>
 </div>
 
@@ -12150,7 +12286,7 @@ window.finMonthNav = function(delta){
     var wrap = document.getElementById('bowl-machine-wrap');
     /* If the page is hidden, wrap.offsetWidth == 0 — skip and wait */
     if(!wrap || wrap.offsetWidth === 0) return;
-    var dpr = window.devicePixelRatio || 1;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2); /* cap @2x: 3x backing buffers on Pro iPhones = 2.25x the pixels for zero visible gain at these sizes */
     var cssW = wrap.offsetWidth;
     var cssH = Math.round(cssW * (390/340));
     /* Set CSS size */
@@ -12229,7 +12365,7 @@ window.finMonthNav = function(delta){
     if(!_ac){
       try{ _ac = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){}
     }
-    if(_ac && _ac.state === 'suspended'){
+    if(_ac && _ac.state !== 'running' && _ac.state !== 'closed'){
       _ac.resume().catch(function(){});
     }
     /* Create noise buffer once */
@@ -12266,6 +12402,16 @@ window.finMonthNav = function(delta){
 
   document.addEventListener('touchstart', function(){ _getAC(); }, {once:true, passive:true});
   document.addEventListener('click',      function(){ _getAC(); }, {once:true});
+  /* Shared context was rebuilt after a zombie iOS suspension — drop every
+     cached node so the next sound re-acquires on the fresh context. Old
+     refs would otherwise schedule onto a closed graph = permanent silence. */
+  window.addEventListener('lifeos:audio-rebuilt', function(){
+    _ac = null; _noiseBuf = null;
+    try{ if(_compressor) _compressor.disconnect(); }catch(e){}
+    _compressor = null;
+    _activeClanks = 0;
+    _rollNode = null; _rollGain = null;
+  });
 
   /* ── Mobile-optimized clank: reuse pre-baked noise + single ring oscillator ── */
   function _playClank(intensity){
@@ -13852,6 +13998,11 @@ window.finMonthNav = function(delta){
     _gbPaused = false;
     _raf = requestAnimationFrame(loop);
   };
+  /* Audio-only kill — used by the Settings sound toggle. Visuals keep running. */
+  window._gbKillAudio = function(){
+    try{ _stopRolling(); }catch(e){}
+    _stopBallSoundSafe();
+  };
   /* Helper: stop the older ball-shake sound interval if that path was used */
   function _stopBallSoundSafe(){ try{ if(typeof _stopBallSound==='function') _stopBallSound(); }catch(e){} }
 
@@ -14365,7 +14516,7 @@ window.finMonthNav = function(delta){
     try{
       var ac = window._getSharedAudioCtx ? window._getSharedAudioCtx()
              : (window._getAudioCtx ? window._getAudioCtx() : null);
-      if(ac && ac.state === 'suspended') ac.resume().catch(function(){});
+      if(ac && ac.state !== 'running' && ac.state !== 'closed') ac.resume().catch(function(){});
     }catch(_){}
     if(typeof bowlManualDraw === 'function') bowlManualDraw();
   });
@@ -14383,7 +14534,7 @@ window.finMonthNav = function(delta){
     try{
       var ac = window._getSharedAudioCtx ? window._getSharedAudioCtx()
              : (window._getAudioCtx ? window._getAudioCtx() : null);
-      if(ac && ac.state === 'suspended') ac.resume().catch(function(){});
+      if(ac && ac.state !== 'running' && ac.state !== 'closed') ac.resume().catch(function(){});
     }catch(_){}
     /* Note: onclick will also fire. bowlReplayAnimation has its own _bowlReplayBusy guard,
        so the duplicate call is a no-op — this just ensures iOS audio unlock happens. */

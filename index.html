@@ -18,7 +18,7 @@
    the new HTML actually takes effect on installed PWAs.
 ═══════════════════════════════════════════════════ */
 (function(){
-  var BUILD = 'lifeOS-2026-06-11-v69-glyph'; /* bump this on every update */
+  var BUILD = 'lifeOS-2026-06-11-v70-dispense'; /* bump this on every update */
   try {
     /* Always wipe the page-restore key so app boots on Finance (home page) */
     localStorage.removeItem('lifeOS_activePage');
@@ -2534,14 +2534,14 @@ body::before{
 <!-- Streak + Best + XP — below heatmap -->
 <div class="streak-bar" style="margin-top:12px">
   <div class="streak-tile">
-    <span style="font-size:20px">&#128293;</span>
+    <span style="display:inline-flex;color:#ff9d5c"><svg class="svg-icon" style="width:20px;height:20px;" aria-hidden="true"><use href="#icon-fire"/></svg></span>
     <div>
       <div class="streak-tile-lbl">Streak</div>
       <div class="streak-tile-val" id="streak-cur-badge" style="color:#fff">0 days</div>
     </div>
   </div>
   <div class="streak-tile">
-    <span style="font-size:20px">&#127942;</span>
+    <span style="display:inline-flex;color:var(--gold)"><svg class="svg-icon" style="width:20px;height:20px;" aria-hidden="true"><use href="#icon-trophy"/></svg></span>
     <div>
       <div class="streak-tile-lbl">Best</div>
       <div class="streak-tile-val" id="streak-best-badge" style="color:var(--gold)">0 days</div>
@@ -6571,13 +6571,18 @@ function _playBowlDispense(){
   });
 }
 
-/* ── v62: Slot flap clack — quick metallic plate impact (distinct from steel ball clanks).
-   open=true → sharper, slightly higher.  open=false → softer tick. */
+/* ── v62→v70: Slot door clack — quick metallic plate impact (distinct from steel ball clanks).
+   open=true  → fired at the burst: clack + hinge-weight thunk + rebound tick at +60ms.
+   open=false → fired when the close phase STARTS (door falls for ~126ms before hitting),
+                so the main clack is delayed to land on the visual impact, then a settle
+                tick rides the second visual bounce (~+70ms later). Keep these offsets in
+                sync with _doorClose() in the canvas module. */
 function _playSlotFlap(open){
   if(!_soundEnabled) return;
   window._ensureAudioReady(function(ctx){
     var dest = (window._gbAudioDest && window._gbAudioDest()) || ctx.destination;
     var now = ctx.currentTime + 0.005;
+    var hitT = open ? now : now + 0.125;   /* close: delay to the visual frame-hit */
     /* Noise transient — short, bandpass'd to a "plate" frequency */
     try{
       var len = Math.floor(ctx.sampleRate * 0.022);
@@ -6589,18 +6594,50 @@ function _playSlotFlap(open){
       bp.frequency.value = open ? 1850 : 1450;
       bp.Q.value = 4.8;
       var g = ctx.createGain();
-      g.gain.setValueAtTime(open ? 0.38 : 0.22, now);
-      g.gain.exponentialRampToValueAtTime(0.0001, now + (open ? 0.028 : 0.022));
-      src.connect(bp); bp.connect(g); g.connect(dest); src.start(now);
+      g.gain.setValueAtTime(open ? 0.38 : 0.24, hitT);
+      g.gain.exponentialRampToValueAtTime(0.0001, hitT + (open ? 0.028 : 0.024));
+      src.connect(bp); bp.connect(g); g.connect(dest); src.start(hitT);
     }catch(e){}
     /* Metallic ring tone — short, dies fast (~30ms) */
     var o = ctx.createOscillator(); var og = ctx.createGain();
     o.type = 'triangle';
-    o.frequency.setValueAtTime(open ? 1280 : 940, now);
-    o.frequency.exponentialRampToValueAtTime(open ? 720 : 540, now+0.04);
-    og.gain.setValueAtTime(open ? 0.14 : 0.085, now);
-    og.gain.exponentialRampToValueAtTime(0.0001, now + (open ? 0.045 : 0.035));
-    o.connect(og); og.connect(dest); o.start(now); o.stop(now + (open ? 0.05 : 0.04));
+    o.frequency.setValueAtTime(open ? 1280 : 940, hitT);
+    o.frequency.exponentialRampToValueAtTime(open ? 720 : 540, hitT+0.04);
+    og.gain.setValueAtTime(open ? 0.14 : 0.09, hitT);
+    og.gain.exponentialRampToValueAtTime(0.0001, hitT + (open ? 0.045 : 0.038));
+    o.connect(og); og.connect(dest); o.start(hitT); o.stop(hitT + (open ? 0.05 : 0.045));
+    if(open){
+      /* hinge weight — low thunk under the clack: this door has mass */
+      var lo = ctx.createOscillator(), log = ctx.createGain();
+      lo.type='sine';
+      lo.frequency.setValueAtTime(185, now);
+      lo.frequency.exponentialRampToValueAtTime(115, now+0.06);
+      log.gain.setValueAtTime(0.11, now);
+      log.gain.exponentialRampToValueAtTime(0.0001, now+0.08);
+      lo.connect(log); log.connect(dest); lo.start(now); lo.stop(now+0.09);
+      /* door hits its stop and rebounds — tiny second clack */
+      try{
+        var len2 = Math.floor(ctx.sampleRate * 0.014);
+        var b2 = ctx.createBuffer(1, len2, ctx.sampleRate);
+        var d2 = b2.getChannelData(0);
+        for(var k=0;k<len2;k++) d2[k] = (Math.random()*2-1) * Math.pow(1-k/len2, 4);
+        var s2 = ctx.createBufferSource(); s2.buffer = b2;
+        var bp2 = ctx.createBiquadFilter(); bp2.type='bandpass'; bp2.frequency.value=1600; bp2.Q.value=5;
+        var g2 = ctx.createGain();
+        g2.gain.setValueAtTime(0.12, now+0.06);
+        g2.gain.exponentialRampToValueAtTime(0.0001, now+0.078);
+        s2.connect(bp2); bp2.connect(g2); g2.connect(dest); s2.start(now+0.06);
+      }catch(e){}
+    } else {
+      /* settle tick — second, smaller bounce on the frame */
+      var o2 = ctx.createOscillator(); var og2 = ctx.createGain();
+      o2.type='triangle';
+      o2.frequency.setValueAtTime(760, hitT+0.07);
+      o2.frequency.exponentialRampToValueAtTime(470, hitT+0.10);
+      og2.gain.setValueAtTime(0.055, hitT+0.07);
+      og2.gain.exponentialRampToValueAtTime(0.0001, hitT+0.105);
+      o2.connect(og2); og2.connect(dest); o2.start(hitT+0.07); o2.stop(hitT+0.11);
+    }
   });
 }
 
@@ -6720,6 +6757,93 @@ function _playMorphShimmer(){
       var ng = ctx.createGain(); ng.gain.value = 0.22;
       src.connect(hp); hp.connect(ng); ng.connect(master); src.start(now);
     }catch(e){}
+  });
+}
+
+/* ── v70: Mechanism capture — soft ratchet grab as the carousel takes the winner.
+   Two filtered ticks + a low rotor swell. Quiet by design: it's a cue, not an event. ── */
+function _playMechCapture(){
+  if(!_soundEnabled) return;
+  window._ensureAudioReady(function(ctx){
+    var dest = (window._gbAudioDest && window._gbAudioDest()) || ctx.destination;
+    var now = ctx.currentTime + 0.005;
+    [0, 0.055].forEach(function(dt, i){
+      try{
+        var len = Math.floor(ctx.sampleRate * 0.012);
+        var b = ctx.createBuffer(1, len, ctx.sampleRate);
+        var d = b.getChannelData(0);
+        for(var j=0;j<len;j++) d[j] = (Math.random()*2-1) * Math.pow(1-j/len, 4);
+        var src = ctx.createBufferSource(); src.buffer = b;
+        var bp = ctx.createBiquadFilter(); bp.type='bandpass';
+        bp.frequency.value = i===0 ? 1500 : 1180; bp.Q.value = 5.5;
+        var g = ctx.createGain();
+        g.gain.setValueAtTime(0.14 - i*0.03, now+dt);
+        g.gain.exponentialRampToValueAtTime(0.0001, now+dt+0.020);
+        src.connect(bp); bp.connect(g); g.connect(dest); src.start(now+dt);
+      }catch(e){}
+    });
+    /* rotor swell underneath — the carousel wheel turning */
+    var o = ctx.createOscillator(), g2 = ctx.createGain();
+    o.type='sine';
+    o.frequency.setValueAtTime(92, now);
+    o.frequency.exponentialRampToValueAtTime(64, now+0.16);
+    g2.gain.setValueAtTime(0.0001, now);
+    g2.gain.linearRampToValueAtTime(0.075, now+0.04);
+    g2.gain.exponentialRampToValueAtTime(0.0001, now+0.18);
+    o.connect(g2); g2.connect(dest); o.start(now); o.stop(now+0.2);
+  });
+}
+
+/* ── v70: Chute rattle — THE gumball machine sound. The ball is hidden inside the body;
+   four muffled knocks tumble down the internal chute, descending in pitch and growing
+   in level as the ball nears the door ("it's getting closer"). Sample-accurate WebAudio
+   scheduling, no setTimeout drift. Offsets MUST mirror _KNOCK_TIMES in the canvas module
+   so the micro body-shake lands on each knock. ── */
+function _playChuteRattle(){
+  if(!_soundEnabled) return;
+  window._ensureAudioReady(function(ctx){
+    var dest = (window._gbAudioDest && window._gbAudioDest()) || ctx.destination;
+    var base = ctx.currentTime + 0.005;
+    var knocks = [
+      {at:0.000, lp:880, th:255, g:0.10},
+      {at:0.145, lp:740, th:222, g:0.135},
+      {at:0.265, lp:610, th:192, g:0.175},
+      {at:0.365, lp:520, th:168, g:0.22}
+    ];
+    knocks.forEach(function(k, i){
+      var t0 = base + k.at;
+      /* muffled body knock — noise through a lowpass: the cabinet wall between us and the ball */
+      try{
+        var len = Math.floor(ctx.sampleRate * 0.030);
+        var b = ctx.createBuffer(1, len, ctx.sampleRate);
+        var d = b.getChannelData(0);
+        for(var j=0;j<len;j++) d[j] = (Math.random()*2-1) * Math.pow(1-j/len, 2.6);
+        var src = ctx.createBufferSource(); src.buffer = b;
+        var lp = ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value = k.lp; lp.Q.value = 1.1;
+        var g = ctx.createGain();
+        g.gain.setValueAtTime(k.g, t0);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0+0.055);
+        src.connect(lp); lp.connect(g); g.connect(dest); src.start(t0);
+      }catch(e){}
+      /* low thump under it — cabinet resonance */
+      var o = ctx.createOscillator(), og = ctx.createGain();
+      o.type='sine';
+      o.frequency.setValueAtTime(k.th, t0);
+      o.frequency.exponentialRampToValueAtTime(k.th*0.72, t0+0.07);
+      og.gain.setValueAtTime(k.g*0.85, t0);
+      og.gain.exponentialRampToValueAtTime(0.0001, t0+0.09);
+      o.connect(og); og.connect(dest); o.start(t0); o.stop(t0+0.1);
+      /* final knock: faint metallic tic — the ball arriving against the door */
+      if(i === knocks.length-1){
+        var m = ctx.createOscillator(), mg = ctx.createGain();
+        m.type='triangle';
+        m.frequency.setValueAtTime(640, t0+0.012);
+        m.frequency.exponentialRampToValueAtTime(430, t0+0.05);
+        mg.gain.setValueAtTime(0.05, t0+0.012);
+        mg.gain.exponentialRampToValueAtTime(0.0001, t0+0.06);
+        m.connect(mg); mg.connect(dest); m.start(t0+0.012); m.stop(t0+0.07);
+      }
+    });
   });
 }
 
@@ -7047,16 +7171,16 @@ function initTheme(){
 
 /* ── Variable completion messages (rotate on perfect day) ── */
 const COMPLETION_MSGS = [
-  { icon:'🌟', title:'Day Complete.', sub:'One day closer to the life you designed.' },
-  { icon:'🔥', title:'You showed up.', sub:'This is what freedom looks like, built one habit at a time.' },
-  { icon:'💎', title:'Evidence logged.', sub:'Every complete day rewrites who you believe you are.' },
-  { icon:'⚡', title:'Full stack.', sub:'The version of you who plans — he showed up today.' },
-  { icon:'🏆', title:'Done.', sub:'You earned tonight\'s rest. Not given — earned.' },
-  { icon:'🌙', title:'Stack complete.', sub:'Sleep well. Tomorrow starts with this momentum.' },
-  { icon:'💪', title:'All 16.', sub:'Your future self is watching. He\'s proud.' },
-  { icon:'✦', title:'Perfect day.', sub:'One more vote cast for the identity you\'re building.' },
-  { icon:'🎯', title:'On target.', sub:'The gap between who you are and who you want to be — it just got smaller.' },
-  { icon:'🚀', title:'Locked in.', sub:'This is what discipline feels like from the inside.' }
+  { icon:'#star', title:'Day Complete.', sub:'One day closer to the life you designed.' },
+  { icon:'#fire', title:'You showed up.', sub:'This is what freedom looks like, built one habit at a time.' },
+  { icon:'#gem', title:'Evidence logged.', sub:'Every complete day rewrites who you believe you are.' },
+  { icon:'#bolt', title:'Full stack.', sub:'The version of you who plans — he showed up today.' },
+  { icon:'#trophy', title:'Done.', sub:'You earned tonight\'s rest. Not given — earned.' },
+  { icon:'#moon', title:'Stack complete.', sub:'Sleep well. Tomorrow starts with this momentum.' },
+  { icon:'#strength', title:'All 16.', sub:'Your future self is watching. He\'s proud.' },
+  { icon:'#sparkle', title:'Perfect day.', sub:'One more vote cast for the identity you\'re building.' },
+  { icon:'#target', title:'On target.', sub:'The gap between who you are and who you want to be — it just got smaller.' },
+  { icon:'#shield', title:'Locked in.', sub:'This is what discipline feels like from the inside.' }
 ];
 
 function getCompletionMsg(){
@@ -12582,25 +12706,45 @@ window.finMonthNav = function(delta){
   var _dispenseStart = 0;
   var _chosenBallIdx = -1;
   var _glowPhase = 0;
-  /* ── v60: full dispense choreography ── */
-  /* Total duration 2200ms, broken into phases:
-     0-200:    slot flap clanks open
-     200-900:  chosen ball travels down neck (curve trajectory)
-     900-1100: ball exits slot, vapor puff, lands in tray with bounce
-     1100-1900: ball morphs into card-shaped rect (color bleeds)
-     1900-2200: morph rect fades out as DOM card fades in (handoff)
-     2000-2200: slot flap clanks shut */
+  /* ── v70: full dispense choreography — the ball travels INSIDE the machine ── */
+  /* Total duration 2200ms (locked: page-level handoff fires at 1900ms / DOM card at 4900ms).
+     0-180:     CAPTURE — mechanism ratchets, chosen ball pulled to the funnel mouth
+     180-430:   SINK — ball descends into the funnel, recedes + dims, vanishes behind the rim
+     430-880:   HIDDEN TRANSIT — ball is inside the body; chute-rattle knocks + micro body
+                shake tell the story; glow leaks around the door seams (anticipation)
+     855-975:   DOOR BURST — flap pushed open from inside (easeOutBack overshoot)
+     880-995:   EMERGE — ball squeezes out through the aperture (clipped, swelling)
+     995-1100:  DROP + LAND — short free-fall into the catch tray, squash, settle
+     1100-1900: MORPH — ball→card rect (color bleeds), sphere hidden
+     1900-2200: DOOR SHUTS — gravity close with double-bounce clack; morph rect fades */
   var _DISPENSE_TOTAL = 2200;
+  var _KNOCK_TIMES = [430, 575, 695, 795]; /* ms after dispense start — MUST mirror _playChuteRattle offsets */
   var _chosenBallColor = null; /* {hi,mid,base,sh} captured at dispense start */
   var _chosenBallStartX = 0;
   var _chosenBallStartY = 0;
   var _chosenBallStartR = 0;
-  var _slotOpenProg = 0;       /* 0..1, current flap open amount */
+  var _slotOpenProg = 0;       /* 0..1(+overshoot), current door open amount */
   var _vaporPuffStart = -1;    /* timestamp of vapor puff fire */
   var _trayThudFired = false;
   var _slotClankFired = false;
-  var _slotCloseFired = false; /* v62: phase-5 flap-close sound trigger */
+  var _slotCloseFired = false; /* v62: door-close sound trigger */
   var _morphCardFired = false;
+  var _mechFired = false;      /* v70: capture-ratchet sound trigger */
+  var _rattleFired = false;    /* v70: chute-rattle schedule trigger */
+  /* v70: easeOutBack — single overshoot then settle; the door pushed past its stop */
+  function _backOut(p){
+    if(p <= 0) return 0; if(p >= 1) return 1;
+    var c1 = 1.85, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2);
+  }
+  /* v70: door gravity-close with two decaying bounces off the frame.
+     Hits at p=0.42 (≈126ms) — _playSlotFlap(false) delays its clack to match. */
+  function _doorClose(p){
+    if(p < 0.42){ var q = p / 0.42; return 1 - q * q; }
+    if(p < 0.66){ var q2 = (p - 0.42) / 0.24; return Math.sin(q2 * Math.PI) * 0.22; }
+    if(p < 0.84){ var q3 = (p - 0.66) / 0.18; return Math.sin(q3 * Math.PI) * 0.08; }
+    return 0;
+  }
   var _lastLoopT = 0;
   var _simTime = 0;
   var _shakeActive = false;
@@ -12909,120 +13053,138 @@ window.finMonthNav = function(delta){
 
     }
 
-    /* ── v62: Multi-phase dispense choreography (refined) ──
-       Replaces old "float to globe center then fade" logic.
-       Trajectory: globe interior → neck → slot exit → tray (with squash) → morph.
-       v62 changes over v60:
-         • Anticipation hold at neck top (180ms pause before drop accelerates)
-         • Squash-and-stretch on chosen ball at tray impact (Pixar fundamental)
-         • Slot flap uses dedicated metallic-plate sound, not ball-clank
-         • Vapor exit uses pneumatic whoosh, not ball-clank
-         • Tray landing uses warm woody tonk, not metallic clank
-         • Morph start has its own shimmer chord */
+    /* ── v70: Multi-phase dispense choreography — interior travel ──
+       Replaces v62's front-face "neck slide" (the ball visibly rode OVER the cabinet,
+       which read as fake). New truth: the ball sinks INTO the funnel, travels hidden
+       inside the body (sound + micro-shake carry it), pushes the door open from
+       inside, squeezes out through the aperture, and free-falls into the catch tray.
+       Phases 1100+ (morph/handoff) keep their absolute times — page timing depends on them. */
     if(_dispensing && _chosenBallIdx>=0 && _chosenBallIdx<_balls.length){
       var cb = _balls[_chosenBallIdx];
       var elapsed = t - _dispenseStart;
 
       /* Geometry anchors (must match the static draw — keep in sync if you move things) */
-      var _neckTopY = GY + GR * 0.55;        /* Where neck visually starts inside globe */
-      var _slotCenterY = GY + GR + 2 + 14 + 16 + 4.5;  /* dispenser slot center: colY+colH+slotY+slH/2 */
-      var _trayCenterY = GY + GR + 2 + 14 + 50 + 14;   /* below dispenser body, in tray zone */
+      var _funnelY   = GY + GR - 30;                  /* funnel mouth inside the globe floor */
+      var _sinkEndY  = GY + GR - 2;                   /* where the ball vanishes behind the glass rim */
+      var _slotCY    = GY + GR + 2 + 14 + 16 + 4.5;   /* dispenser door center: colY+colH+slotY+slH/2 */
+      var _trayRestY = GY + GR + 2 + 14 + 48;         /* ball resting center inside the catch tray */
 
-      /* Reset squash/stretch each phase entry (will be set in tray phase) */
       if(cb._sqsh === undefined){ cb._sqsh = 1; cb._strch = 1; }
 
-      /* Phase 1: slot flap opens (0 → 200ms). Ball stays in globe, gently floats toward neck */
-      if(elapsed <= 200){
-        var p1 = elapsed / 200;
-        /* v62: elastic-out easing for the flap — overshoots slightly then settles, like spring */
-        var _eo = 1 - Math.pow(1 - p1, 3);
-        var _elastic = _eo + Math.sin(p1 * Math.PI * 3) * (1 - p1) * 0.08;
-        _slotOpenProg = Math.min(1.05, _elastic);
+      /* Phase 1 — CAPTURE (0→180ms): mechanism grabs the winner, pulls it to the funnel
+         mouth. The door stays SHUT — the ball pushes it open from inside, later. */
+      if(elapsed <= 180){
+        var p1 = elapsed / 180;
+        var e1 = 1 - Math.pow(1 - p1, 3);
+        if(!_mechFired){
+          _mechFired = true;
+          try{ if(typeof _playMechCapture === 'function') _playMechCapture(); }catch(e){}
+        }
+        cb.x += (GX - cb.x) * (0.16 + 0.12 * e1);
+        cb.y += (_funnelY - cb.y) * (0.14 + 0.12 * e1);
+        cb.vx *= 0.5; cb.vy *= 0.5;
+        cb._dispAlpha = 1; cb._dispScale = 1;
+        cb._sqsh = 1; cb._strch = 1;
+        _slotOpenProg = 0;
+        _trail.length = 0;
+      }
+      /* Phase 2 — SINK (180→430ms): the ball descends into the funnel and disappears
+         behind the bottom rim of the glass. Recedes (scale) + dims (shadow) as it goes. */
+      else if(elapsed <= 430){
+        var p2 = (elapsed - 180) / 250;
+        var e2 = p2 * p2 * (3 - 2 * p2);  /* smoothstep */
+        cb.x = GX + Math.sin(p2 * Math.PI * 1.5) * 0.8;
+        cb.y = _funnelY + (_sinkEndY - _funnelY) * e2;
+        cb._dispScale = 1 - 0.26 * e2;                  /* receding into the mechanism */
+        cb._dispAlpha = 1 - 0.35 * Math.pow(p2, 2.2);   /* dimming into the shadow */
+        cb._sqsh = 1 + 0.05 * Math.sin(p2 * Math.PI);   /* soft elongation as it's pulled */
+        cb._strch = 1 - 0.04 * Math.sin(p2 * Math.PI);
+        _slotOpenProg = 0;
+      }
+      /* Phase 3 — HIDDEN TRANSIT (430→880ms): the ball is inside the machine.
+         Sound + knock-synced micro body-shake carry the story; the door seams glow.
+         At 855ms the door BURSTS open — pushed from inside, easeOutBack overshoot. */
+      else if(elapsed <= 880){
+        cb._dispAlpha = 0;
+        cb._sqsh = 1; cb._strch = 1;
+        cb.x = GX; cb.y = _slotCY;
+        if(!_rattleFired){
+          _rattleFired = true;
+          try{ if(typeof _playChuteRattle === 'function') _playChuteRattle(); }catch(e){}
+        }
+        /* Knock-synced micro shake — each knock thumps the cabinet a touch harder */
+        var _imp = 0;
+        for(var ki=0; ki<_KNOCK_TIMES.length; ki++){
+          var kd = elapsed - _KNOCK_TIMES[ki];
+          if(kd >= 0 && kd < 85){ _imp = Math.max(_imp, (1 - kd/85) * (0.45 + ki*0.14)); }
+        }
+        if(_imp > 0){
+          _shakeOffX = Math.sin(_simTime * 91) * _imp;
+          _shakeOffY = Math.cos(_simTime * 73) * _imp * 0.6;
+        } else { _shakeOffX = 0; _shakeOffY = 0; }
+        if(elapsed >= 855){
+          _slotOpenProg = _backOut(Math.min(1, (elapsed - 855) / 120));
+          if(!_slotClankFired){
+            _slotClankFired = true;
+            try{ if(typeof _playSlotFlap === 'function') _playSlotFlap(true); else _playClank(0.6); }catch(e){}
+          }
+        } else _slotOpenProg = 0;
+      }
+      /* Phase 4a — EMERGE (880→995ms): the ball squeezes out THROUGH the open door.
+         Rendered clipped to the aperture until it clears the front plane. */
+      else if(elapsed <= 995){
+        var p4 = (elapsed - 880) / 115;
+        var e4 = 1 - Math.pow(1 - p4, 3);
+        _slotOpenProg = _backOut(Math.min(1, (elapsed - 855) / 120));
         if(!_slotClankFired){
           _slotClankFired = true;
-          /* v62: dedicated metallic flap clack — sharper than ball-clank */
-          try{ if(typeof _playSlotFlap === 'function') _playSlotFlap(true); else _playClank(0.6); }catch(e){}
+          try{ if(typeof _playSlotFlap === 'function') _playSlotFlap(true); }catch(e){}
         }
-        /* Gently drift toward neck center, hold near globe bottom */
-        cb.x += (GX - cb.x) * 0.20;
-        cb.y += (_neckTopY - cb.y) * 0.18;
-        cb.vx *= 0.5; cb.vy *= 0.5;
-        _trail.length = 0;  /* v67: fresh trail for this drop */
-        cb._dispAlpha = 1;
-        cb._dispScale = 1;
-        cb._sqsh = 1; cb._strch = 1;
-      }
-      /* Phase 2a (v62): anticipation hold at neck top (200 → 380ms)
-         Ball settles at neck entry, charges up before the drop. Pixar anticipation. */
-      else if(elapsed <= 380){
-        _slotOpenProg = 1;
-        var pH = (elapsed - 200) / 180;
-        /* Subtle "loading" stretch — vertical 0.96, horizontal 1.04 — like compressed spring */
-        var compressP = Math.sin(pH * Math.PI);
-        cb._sqsh = 1 - compressP * 0.04;      /* vertical squish */
-        cb._strch = 1 + compressP * 0.05;     /* horizontal widen */
-        cb.x = GX;
-        cb.y = _neckTopY;
-        cb._dispAlpha = 1;
-        cb._dispScale = 1;
-      }
-      /* Phase 2b: drop through neck (380 → 900ms) — accelerating, with vertical stretch */
-      else if(elapsed <= 900){
-        _slotOpenProg = 1;
-        var p2 = (elapsed - 380) / 520;
-        var p2e = p2 * p2;  /* accelerate (gravity feel) */
-        cb.x = GX + Math.sin(p2 * Math.PI * 2.2) * 1.6;  /* damped wobble — more visible */
-        cb.y = _neckTopY + (_slotCenterY - _neckTopY) * p2e;
-        cb._dispAlpha = 1;
-        cb._dispScale = 1;
-        /* v62: vertical stretch as it accelerates (motion blur substitute) */
-        cb._strch = 1 - p2 * 0.10;      /* narrower as it falls */
-        cb._sqsh = 1 + p2 * 0.10;       /* taller as it falls */
-        /* Slightly shrink while passing through narrow neck */
-        cb._dispScale = 1 - 0.10 * Math.sin(p2 * Math.PI);
-        /* v67: motion trail — ghost positions for speed-line feel on the drop */
-        _trail.push({x: cb.x, y: cb.y, r: cb.r * cb._dispScale});
-        if(_trail.length > _TRAIL_MAX) _trail.shift();
-      }
-      /* Phase 3: exit + tray bounce (900 → 1100ms) */
-      else if(elapsed <= 1100){
-        _slotOpenProg = 1;
-        var p3 = (elapsed - 900) / 200;
-        /* Fire vapor whoosh at exit moment — v62 uses dedicated pneumatic sound */
         if(_vaporPuffStart < 0){
           _vaporPuffStart = t;
-          try{ if(typeof _playVaporWhoosh === 'function') _playVaporWhoosh(); else _playClank(0.45); }catch(e){}
+          try{ if(typeof _playVaporWhoosh === 'function') _playVaporWhoosh(); }catch(e){}
         }
-        /* Travel from slot to tray with bounce ease */
-        var bounceP = p3 < 0.7 ? (p3 / 0.7) : 1 - (p3 - 0.7) / 0.3 * 0.18;
         cb.x = GX;
-        cb.y = _slotCenterY + (_trayCenterY - _slotCenterY) * bounceP;
-        cb._dispScale = 1;
+        cb.y = _slotCY - 1.5 + 4.0 * e4;
+        cb._dispScale = 0.52 + 0.43 * e4;     /* swells as it pushes through */
         cb._dispAlpha = 1;
-        /* v62: squash on impact — at p3 ~= 0.5 (touchdown), ball squishes horizontally */
-        if(p3 > 0.48 && p3 < 0.85){
-          var sqProg = Math.sin((p3 - 0.48) / 0.37 * Math.PI);  /* 0 → 1 → 0 */
-          cb._sqsh  = 1 - sqProg * 0.28;      /* vertical → 0.72 */
-          cb._strch = 1 + sqProg * 0.22;      /* horizontal → 1.22 */
+        cb._sqsh = 1 + 0.10 * (1 - p4);       /* squeezing: tall+narrow → round */
+        cb._strch = 1 - 0.08 * (1 - p4);
+        _trail.length = 0;
+      }
+      /* Phase 4b — DROP + LAND (995→1100ms): clear of the door, gravity takes it
+         into the catch tray. Anticipation stretch, squash on impact, micro-rebound. */
+      else if(elapsed <= 1100){
+        _slotOpenProg = 1;
+        var p5 = (elapsed - 995) / 105;
+        var dropP = Math.min(1, p5 / 0.62);    /* airborne 995→1060 */
+        var dEase = dropP * dropP;             /* gravity */
+        var yStart = _slotCY + 2.5;
+        cb.x = GX;
+        cb.y = yStart + (_trayRestY - yStart) * dEase;
+        cb._dispScale = 0.95 + 0.05 * dropP;
+        cb._dispAlpha = 1;
+        if(dropP < 1){
+          cb._sqsh = 1 + 0.10 * dropP;         /* vertical stretch while falling */
+          cb._strch = 1 - 0.06 * dropP;
+          _trail.push({x: cb.x, y: cb.y, r: cb.r * cb._dispScale});
+          if(_trail.length > _TRAIL_MAX) _trail.shift();
         } else {
-          /* Pre-impact: tiny anticipation stretch (taller, thinner) */
-          if(p3 <= 0.48){
-            cb._sqsh = 1 + p3 * 0.10;
-            cb._strch = 1 - p3 * 0.06;
-          } else {
-            /* Post-impact recovery */
-            cb._sqsh = 1; cb._strch = 1;
+          /* impact + recover (1060→1100): squash out, tiny rebound, settle */
+          var ip = (p5 - 0.62) / 0.38;
+          var sq = Math.sin(Math.min(1, ip / 0.6) * Math.PI);
+          var rb = ip > 0.6 ? Math.sin((ip - 0.6) / 0.4 * Math.PI) * 0.05 : 0;
+          cb.y = _trayRestY;
+          cb._sqsh = 1 - sq * 0.26 + rb;
+          cb._strch = 1 + sq * 0.20 - rb * 0.8;
+          if(!_trayThudFired){
+            _trayThudFired = true;
+            try{ if(typeof _playTrayTonk === 'function') _playTrayTonk(0.72); else _playOneBallClank(_getAudioCtx(), 0.7); }catch(e){}
+            _shakeOffX = (Math.random()-0.5) * 3;
+            _shakeOffY = (Math.random()-0.5) * 3;
           }
         }
-        if(p3 > 0.5 && !_trayThudFired){
-          _trayThudFired = true;
-          /* v62: dedicated warm tonk for tray landing — woody, not metallic */
-          try{ if(typeof _playTrayTonk === 'function') _playTrayTonk(0.72); else _playOneBallClank(_getAudioCtx(), 0.7); }catch(e){}
-          /* Tiny screen shake on landing */
-          _shakeOffX = (Math.random()-0.5) * 3;
-          _shakeOffY = (Math.random()-0.5) * 3;
-        }
-        /* Decay shake offsets so landing shake settles in ~150ms */
+        /* Decay landing shake so it settles in ~150ms */
         if(_trayThudFired){
           _shakeOffX *= 0.78;
           _shakeOffY *= 0.78;
@@ -13030,27 +13192,24 @@ window.finMonthNav = function(delta){
           if(Math.abs(_shakeOffY) < 0.05) _shakeOffY = 0;
         }
       }
-      /* Phase 4: morph into card rect (1100 → 1900ms) — ball stretches into card shape */
+      /* Phase 5 — MORPH (1100→1900ms): ball→card handled in drawMachine; sphere hidden */
       else if(elapsed <= 1900){
         _slotOpenProg = 1;
         cb.x = GX;
-        cb.y = _trayCenterY;
-        /* Morph rect handled separately in drawMachine; hide the ball sphere */
+        cb.y = _trayRestY;
         cb._dispAlpha = 0;
         cb._sqsh = 1; cb._strch = 1;
         if(!_morphCardFired){
           _morphCardFired = true;
-          /* v62: shimmer chord layered with dispense pop for magical transformation feel */
           try{ if(typeof _playMorphShimmer === 'function') _playMorphShimmer(); }catch(e){}
           try{ _playBowlDispense(); }catch(e){}
         }
       }
-      /* Phase 5: slot closes + morph rect fades (1900 → 2200ms) */
+      /* Phase 6 — DOOR SWINGS SHUT (1900→2200ms): gravity close with double-bounce clack */
       else {
-        var p5 = (elapsed - 1900) / 300;
-        _slotOpenProg = 1 - p5 * p5;
+        var p6 = (elapsed - 1900) / 300;
+        _slotOpenProg = _doorClose(p6);
         cb._dispAlpha = 0;
-        /* v62: play softer flap-close tick at start of phase 5 */
         if(!_slotCloseFired){
           _slotCloseFired = true;
           try{ if(typeof _playSlotFlap === 'function') _playSlotFlap(false); }catch(e){}
@@ -13502,12 +13661,9 @@ window.finMonthNav = function(delta){
       if(isChosen) continue;
       drawBall(b, false);
     }
-    /* v62: chosen-ball halo — TWO phases:
+    /* v62→v70: chosen-ball halo — TWO phases:
        (A) Pre-dispense build-up during last 600ms of shake — anchors viewer eye to the "winner"
-           so the reveal feels predestined, not random. Halo grows from 0 → 0.55, ball stays
-           continuous through phase boundary into dispense phase 1.
-       (B) Phase 1 (slot opening, 0–200ms after dispense start) — halo peaks at 0.65,
-           handoff from build-up. */
+       (B) Dispense capture + sink (0→430ms) — halo peaks then fades as ball descends into funnel */
     if(_chosenBallIdx>=0 && _chosenBallIdx<_balls.length){
       var cb2 = _balls[_chosenBallIdx];
       var haloAlpha = 0;
@@ -13515,15 +13671,19 @@ window.finMonthNav = function(delta){
         /* (A) Last 600ms of shake → build-up */
         var msToEnd = _excitedEnd - t;
         if(msToEnd <= 600 && msToEnd >= 0){
-          var buildP = 1 - (msToEnd / 600);  /* 0 → 1 over last 600ms */
-          /* easeInQuad — slow start, accelerating into reveal */
+          var buildP = 1 - (msToEnd / 600);
           haloAlpha = buildP * buildP * 0.55;
         }
       } else if(_dispensing){
         var _dElapsed = t - _dispenseStart;
-        if(_dElapsed <= 200){
-          var pProg = Math.min(1, _dElapsed / 200);
-          haloAlpha = 0.55 + pProg * 0.10;  /* continuous from 0.55 → 0.65 */
+        if(_dElapsed <= 180){
+          /* Capture: peak at 0.65 */
+          var pProg = Math.min(1, _dElapsed / 180);
+          haloAlpha = 0.55 + pProg * 0.10;
+        } else if(_dElapsed <= 430){
+          /* Sink: fade from 0.65 → 0 as ball recedes */
+          var sinkP = (_dElapsed - 180) / 250;
+          haloAlpha = 0.65 * (1 - sinkP * sinkP);
         }
       }
       if(haloAlpha > 0.01){
@@ -13666,48 +13826,71 @@ window.finMonthNav = function(delta){
       ctx.restore();
     }
 
-    /* ── v60: Chosen ball traveling through neck/slot/tray (drawn ABOVE chrome) ── */
+    /* ── v70: Door-seam glow during hidden transit — light leaks around the shut door,
+       pulsing in time with the chute knocks: "something is coming" anticipation cue ── */
+    if(_dispensing && _chosenBallIdx >= 0){
+      var _htE = t - _dispenseStart;
+      if(_htE > 430 && _htE <= 880){
+        var colY_g = GY + GR + 2, colH_g = 14;
+        var dbY_g = colY_g + colH_g - 1;
+        var slW_g = 54, slH_g = 9;
+        var slX_g = GX - slW_g / 2, slY_g = dbY_g + 16;
+        /* Base glow ramps up; knocks spike it */
+        var _htP = (_htE - 430) / 450;
+        var baseG = 0.04 + _htP * 0.12;
+        var _knockBoost = 0;
+        for(var _kb = 0; _kb < _KNOCK_TIMES.length; _kb++){
+          var _kd2 = _htE - _KNOCK_TIMES[_kb];
+          if(_kd2 >= 0 && _kd2 < 100) _knockBoost = Math.max(_knockBoost, (1 - _kd2 / 100) * 0.18);
+        }
+        ctx.save();
+        ctx.globalAlpha = baseG + _knockBoost;
+        var _seamG = ctx.createRadialGradient(GX, slY_g + slH_g / 2, 1, GX, slY_g + slH_g / 2, slW_g * 0.52);
+        _seamG.addColorStop(0, 'rgba(170,215,255,0.85)');
+        _seamG.addColorStop(0.55, 'rgba(100,170,255,0.30)');
+        _seamG.addColorStop(1, 'rgba(40,100,220,0)');
+        rr(slX_g - 3, slY_g - 2, slW_g + 6, slH_g + 4, 6);
+        ctx.fillStyle = _seamG; ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    /* ── v70: Chosen ball EMERGE + DROP — drawn ABOVE chrome, after the ball pushes through ── */
     if(_dispensing && _chosenBallIdx >= 0 && _chosenBallIdx < _balls.length){
       var _dElapsed2 = t - _dispenseStart;
       var cbT = _balls[_chosenBallIdx];
-      /* Only render when ball is outside globe (phases 2–4) and visible */
-      if(_dElapsed2 > 200 && _dElapsed2 <= 1100 && cbT._dispAlpha > 0.01){
-        /* Phase 2 (neck): clip to neck shape so ball is partly hidden behind chrome edges
-           Phase 3 (exit): no clip, full visibility */
-        if(_dElapsed2 <= 900){
-          /* Soft clip to a vertical band roughly the neck width */
-          ctx.save();
-          ctx.beginPath();
-          /* Neck region: roughly GX-9 to GX+9, top GY-GR+2 to bY+bH where bY+bH ~= GY+GR */
-          var _neckClipTop = GY + GR * 0.55;
-          var _slotTop = GY + GR + 2 + 14 + 16;  /* slot top */
-          ctx.rect(GX - 10, _neckClipTop, 20, _slotTop - _neckClipTop + 9);
-          ctx.clip();
-          /* v67: speed trail — ghost spheres fading behind the drop */
-          if(_trail.length > 1 && _chosenBallColor){
-            for(var _ti = 0; _ti < _trail.length - 1; _ti++){
-              var _tp = _trail[_ti];
-              ctx.globalAlpha = ((_ti + 1) / _trail.length) * 0.16;
-              ctx.beginPath(); ctx.arc(_tp.x, _tp.y, _tp.r * 0.92, 0, Math.PI * 2);
-              ctx.fillStyle = _chosenBallColor.mid;
-              ctx.fill();
-            }
-            ctx.globalAlpha = 1;
-          }
-          drawBall(cbT, false);
-          ctx.restore();
-        } else {
-          /* Out of slot → draw directly + add small landing dust ring */
-          drawBall(cbT, false);
-        }
+      /* Emerge phase (880→995ms): ball squeezes out through the aperture, clipped to slot rect */
+      if(_dElapsed2 > 880 && _dElapsed2 <= 995 && cbT._dispAlpha > 0.01){
+        ctx.save();
+        ctx.beginPath();
+        /* Clip to the slot opening — the door is open, ball pushes through this hole */
+        var _slotClipY = GY + GR + 2 + 14 + 16 - 1;
+        rr(GX - 27, _slotClipY, 54, 12, 4.5);
+        ctx.clip();
+        drawBall(cbT, false);
+        ctx.restore();
       }
-      /* Vapor puff at slot exit — v62: 3-particle impressionistic burst instead of single radial */
+      /* Drop + land phase (995→1100ms): ball is clear of the door, draw directly with trail */
+      else if(_dElapsed2 > 995 && _dElapsed2 <= 1100 && cbT._dispAlpha > 0.01){
+        /* Speed trail ghosts */
+        if(_trail.length > 1 && _chosenBallColor){
+          for(var _ti = 0; _ti < _trail.length - 1; _ti++){
+            var _tp = _trail[_ti];
+            ctx.globalAlpha = ((_ti + 1) / _trail.length) * 0.14;
+            ctx.beginPath(); ctx.arc(_tp.x, _tp.y, _tp.r * 0.92, 0, Math.PI * 2);
+            ctx.fillStyle = _chosenBallColor.mid;
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+        drawBall(cbT, false);
+      }
+      /* Vapor puff at emerge — 3-particle impressionistic burst */
       if(_vaporPuffStart > 0){
         var vpAge = t - _vaporPuffStart;
         if(vpAge < 700){
           var vpProg = vpAge / 700;
           var vpY = GY + GR + 2 + 14 + 16 + 4.5;
-          /* Three particles drifting out — center bigger, sides smaller, spread sideways */
           var vpParticles = [
             { dx:  0,    spread: 0,   sizeMul: 1.00, alphaMul: 1.00 },
             { dx: -7,    spread: 14,  sizeMul: 0.62, alphaMul: 0.70 },
@@ -13718,7 +13901,7 @@ window.finMonthNav = function(delta){
             var pp = vpParticles[vpi];
             var pR = (8 + vpProg * 26) * pp.sizeMul;
             var pX = GX + pp.dx + pp.spread * vpProg;
-            var pY2 = vpY + vpProg * 8 - vpProg * vpi * 2;  /* center drifts down slower */
+            var pY2 = vpY + vpProg * 8 - vpProg * vpi * 2;
             var pAlpha = (1 - vpProg) * 0.55 * pp.alphaMul;
             if(pAlpha <= 0.01) continue;
             ctx.globalAlpha = pAlpha;
@@ -13749,7 +13932,7 @@ window.finMonthNav = function(delta){
         /* Start: ball at tray (small circle ~18px wide). End: rounded card ~280×80px */
         var startR = _chosenBallStartR || 9;
         var startCx = GX;
-        var startCy = GY + GR + 2 + 14 + 50 + 14;
+        var startCy = GY + GR + 2 + 14 + 48;   /* v70: _trayRestY — where the ball actually rests */
         var endW = Math.min(W * 0.86, 300);
         var endH = 78;
         var endCx = GX;
@@ -13888,6 +14071,8 @@ window.finMonthNav = function(delta){
       _slotClankFired = false;
       _slotCloseFired = false;
       _morphCardFired = false;
+      _mechFired = false;      /* v70 */
+      _rattleFired = false;    /* v70 */
       _chosenBallColor = null;
       _shakeOffX = 0;
       _shakeOffY = 0;

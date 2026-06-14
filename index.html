@@ -5200,6 +5200,10 @@ function epdSave(){
   buildHeatmap();
   buildYesterday();
   updStreaks(s);
+  /* v70: refresh XP + reward UI — past day habit edits must reflect immediately */
+  if(typeof recalcTotalXP==='function') recalcTotalXP();
+  if(typeof updateXPStrip==='function') setTimeout(updateXPStrip, 100);
+  if(typeof renderRewardStrip==='function') setTimeout(renderRewardStrip, 150);
   var _epdSavedKey=epdState.key;
   epdClose();
   toast('✓ '+_epdSavedKey+' updated');
@@ -5405,12 +5409,10 @@ const REWARD_LEVEL_TARGET = 2000;
 var _rwScoreCache = null;
 var _rwScoreCacheKey = null;
 
-/* Get current level pts from all Bowl daily draws since levelStartDate */
+/* Get current level pts from all Bowl daily draws + habit bonuses since levelStartDate */
 function getRwLevelScore(){
-  /* Cache key: levelStartDate + dailyDraws length + MAX doneAt across all
-     draws. Old version only sampled the last entry's doneAt — retro-completing
-     a past day didn't touch the last entry, so the cache returned stale pts
-     and the progress bar wouldn't move. Scanning for max doneAt fixes that. */
+  /* Cache key: levelStartDate + dailyDraws length + MAX doneAt + habitBonus count.
+     v70: habitBonus count added so completing all habits (no bowl change) busts the cache. */
   var rw=getReward();
   var b=getBowl();
   var levelStart=(rw.active&&rw.active.levelStartDate)||'none';
@@ -5419,7 +5421,9 @@ function getRwLevelScore(){
     var _d=b.dailyDraws[_i];
     if(_d && _d.doneAt && _d.doneAt>maxDoneAt) maxDoneAt=_d.doneAt;
   }
-  var cacheKey=levelStart+'|'+b.dailyDraws.length+'|'+maxDoneAt;
+  var _hbKeys=b.habitBonus?Object.keys(b.habitBonus):[];
+  var _hbCount=_hbKeys.length;
+  var cacheKey=levelStart+'|'+b.dailyDraws.length+'|'+maxDoneAt+'|'+_hbCount;
   if(_rwScoreCache && _rwScoreCacheKey===cacheKey) return _rwScoreCache;
 
   var todayKey2=localKey(today);
@@ -5435,6 +5439,19 @@ function getRwLevelScore(){
     completed++;
     pts+=dd.pts||0;
   });
+  /* v70: count habit-day bonuses stored independently (numeric values only).
+     Legacy entries (true) were already baked into dd.pts — skip them. */
+  if(b.habitBonus){
+    var _wipeDate=(rw.active&&rw.active.wipeDate)||null;
+    Object.keys(b.habitBonus).forEach(function(dk){
+      var val=b.habitBonus[dk];
+      if(typeof val!=='number' || val<=0) return;  /* skip legacy true / cleared false */
+      if(dk>todayKey2) return;
+      if(ls && dk<ls) return;
+      if(_wipeDate && dk<_wipeDate) return;
+      pts+=val;
+    });
+  }
   /* Legacy draws backward compat */
   b.tripleDraws&&b.tripleDraws.forEach(function(td){
     if(ls && td.date<ls) return;
@@ -5519,12 +5536,14 @@ function rwCheckStreakIntegrity(){
   }
 }
 
-/* ── Habit Perfect Day Bonus — +5 pts toward reward level ──
-   Rules:
-   - Challenge must be completed that day (real tier, not skipped/bonus)
-   - All scheduled habits must be done that day
+/* ── v70: Habit Perfect Day Bonus — +5 pts toward reward level ──
+   Decoupled from Bowl challenge — completing all habits earns +5 pts
+   even if you haven't done the bowl challenge yet that day.
+   - Challenge pts (10/30/60) come from dailyDraws[].pts (bowl side)
+   - Habit bonus (+5) comes from habitBonus[dateKey] (habit side)
+   - getRwLevelScore sums BOTH — no double-counting
    - Only once per day (habitBonus flag)
-   - Date must be on or after wipeDate (if a wipe happened, pre-wipe days blocked)
+   - Date must be on or after wipeDate / levelStartDate
    - Works for today and past days via EPD
 */
 function _grantHabitBonus(dateKey){
@@ -5538,11 +5557,8 @@ function _grantHabitBonus(dateKey){
   if(levelStart && dateKey<levelStart) return;
   var b=getBowl();
   if(!b.habitBonus) b.habitBonus={};
-  /* Already granted */
-  if(b.habitBonus[dateKey]===true) return;
-  /* Challenge must be completed that day */
-  var dd=b.dailyDraws.find(function(x){ return x.date===dateKey; });
-  if(!dd||!dd.chosenTier||dd.chosenTier==='skipped'||dd.chosenTier==='bonus') return;
+  /* Already granted (true = legacy pre-v70, numeric = v70+) */
+  if(b.habitBonus[dateKey]) return;
   /* All habits must be done that day */
   var s=gs();
   var dayData=s.days&&s.days[dateKey];
@@ -5552,9 +5568,8 @@ function _grantHabitBonus(dateKey){
   if(!stepsForDay.length) return;
   var allDone=stepsForDay.every(function(st){ return !!dayData[st]; });
   if(!allDone) return;
-  /* Grant it — immediate write, no debounce on bonus points */
-  b.habitBonus[dateKey]=true;
-  dd.pts=(dd.pts||0)+5;
+  /* Grant it — store pts value (5) so getRwLevelScore counts it independently */
+  b.habitBonus[dateKey]=5;
   _rwScoreCache=null; _rwScoreCacheKey=null;
   let _s=gs(); _s.bowl=b; ss(_s,true);
   if(typeof renderRewardStrip==='function') setTimeout(renderRewardStrip,200);
@@ -8313,11 +8328,8 @@ function bowlUndoTier(dateKey){
   dd.pts=0;
   dd.xp=0;
   dd.doneAt=null;
-  /* Reverse habit bonus if it was granted for this day */
-  if(b.habitBonus && b.habitBonus[targetDate]){
-    b.habitBonus[targetDate]=false;
-    /* The +5 bonus was already baked into dd.pts above (now 0), so no separate subtraction needed */
-  }
+  /* v70: habit bonus is independent of challenge tier — don't wipe it on tier undo.
+     The user earned those +5 pts by completing habits, not the challenge. */
   setBowl(b);
   var tierLabels={easy:'Easy',medium:'Medium',hard:'Hard',skipped:'Skip'};
   toast('↩ '+(tierLabels[tier]||tier)+' undone — pick again.');

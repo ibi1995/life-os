@@ -742,7 +742,7 @@ textarea.big:focus{border-bottom-color:var(--a2)}
 .nh-name{font-family:var(--font-ui);font-size:12.5px;font-weight:600;color:var(--sec)}
 .nh-time{font-size:10.5px;color:var(--muted);margin-top:1px}
 .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 18px}
-.abtn{display:flex;align-items:center;justify-content:center;gap:7px;background:rgba(255,255,255,.09);border:1px solid var(--bdr);border-radius:var(--rs);color:#fff;font-family:var(--font-ui);font-size:13px;font-weight:600;padding:12px 14px;cursor:pointer;transition:transform .2s,opacity .2s,color .2s,background-color .2s,border-color .2s,box-shadow .2s,border-radius .2s,filter .2s,fill .2s,stroke .2s,outline-color .2s;width:100%;letter-spacing:.1px}
+.abtn{display:flex;align-items:center;justify-content:center;gap:7px;background:rgba(255,255,255,.09);border:1px solid var(--bdr);border-radius:var(--rs);color:#fff;font-family:var(--font-ui);font-size:13px;font-weight:600;padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .2s,opacity .2s,color .2s,background-color .2s,border-color .2s,box-shadow .2s,border-radius .2s,filter .2s,fill .2s,stroke .2s,outline-color .2s;width:100%;letter-spacing:.1px}
 .abtn:hover{background:rgba(255,255,255,.16);border-color:rgba(127,178,255,.4)}
 .abtn.p{background:linear-gradient(135deg,var(--a1),#3a7aff);border-color:var(--a1);box-shadow:0 4px 16px rgba(77,141,255,.3)}
 .abtn.p:hover{background:linear-gradient(135deg,var(--a2),var(--a1))}
@@ -4045,7 +4045,8 @@ function pickRating(e,st,rating){
   }
   checkStreakAtRisk();
   const todayAllDone=STEPS.every(function(x){ return !!(s.days[todayKey]||{})[x]; });
-  if(todayAllDone){ clearTimeout(_rwSwTimer); _rwSwTimer=setTimeout(sendRewardToSW,800); }
+  if(todayAllDone){ clearTimeout(_rwSwTimer); _rwSwTimer=setTimeout(sendRewardToSW,800); _playAllHabitsDone(); _triggerHaptic('celebrate'); }
+  if(todayAllDone){ setTimeout(function(){ _grantHabitBonus(todayKey); },500); }
   /* ── XP Popup + Milestone Check (Battle Pass) ── */
   if(typeof showXPPopup==='function'&&typeof NH_MAP!=='undefined'){
     const _h=NH_MAP[st];
@@ -4185,6 +4186,8 @@ function confirmResetDay(){
   if(modal) modal.classList.remove('on');
   let s=gs();
   if(s.days) s.days[todayKey]={};
+  /* v71: revoke habit bonus so it can be re-earned after re-completing habits */
+  try{ var _rb=getBowl(); if(_rb.habitBonus&&_rb.habitBonus[todayKey]){ delete _rb.habitBonus[todayKey]; setBowl(_rb); } }catch(e){}
   STEPS.forEach(function(st){
     let el=document.getElementById('h'+st);
     if(el){
@@ -5271,123 +5274,370 @@ const BOWL_TIER_GOLD = 450;
 const BOWL_DEFAULT_LIBRARY = [
 
   /* ═══ PHYSICAL ═══ */
-  {id:'t_pushups', name:'Pushups', icon:'💪', tone:'strawberry', weight:5,
-    easy:{desc:'15 pushups. Drop and do them right now.',pts:10},
-    medium:{desc:'3 sets of 10, right now. Rest 60 sec between sets.',pts:30},
-    hard:{desc:'Max reps in one set, rest 2 min, repeat × 3. Log your numbers. Beat it next time.',pts:60}},
+  {id:'t_bodyweight', name:'Bodyweight Circuit', icon:'💪', tone:'strawberry', weight:6,
+    easy:{desc:[
+      '15 pushups. Floor. Now.',
+      '20 glute bridges. Squeeze hard at the top.',
+      '12 split squats per leg. Hand on wall if needed.',
+      '30-second plank. Just hold. Breathe.',
+      '20 air squats. Full depth, controlled.',
+      '10 diamond pushups. Slow on the way down.',
+      '15 lunges per leg. Alternating, steady pace.'
+    ],pts:10},
+    medium:{desc:[
+      '3 \u00d7 10 pushups, 60s rest. Then 20 bridges.',
+      '3 \u00d7 12 split squats per leg, slow 3-sec descent.',
+      'Superset: 10 pushups \u2192 15 bridges \u2192 10 squats/leg. Three rounds.',
+      '2 \u00d7 15 pushups + 2 \u00d7 20 bridges + 60-sec plank. No rest between exercises, 90s between rounds.',
+      '3 \u00d7 15 air squats + 3 \u00d7 10 lunges/leg. 45s rest between sets.',
+      'Tabata bodyweight: 20s work / 10s rest. Alternate pushups and squats. 8 rounds total.'
+    ],pts:30},
+    hard:{desc:[
+      'Full circuit: 4\u00d715 pushups, 3\u00d715 bridges, 3\u00d712 split squats. Film one set for form.',
+      '100 pushups total \u2014 break however you want. Time it. Then 50 bridges.',
+      '4 \u00d7 12 split squats each leg, 3-sec pause at bottom. Then 25 single-leg bridges each side.',
+      '5 rounds: 10 pushups + 15 squats + 10 lunges/leg + 30-sec plank. 60s rest between rounds.',
+      'Pyramid: 1 pushup, 1 squat\u2026 up to 10 of each\u2026 back down to 1. No rest until done.',
+      'Lower body blitz: 4\u00d720 air squats + 3\u00d715 bridges + 3\u00d712 split squats + 2-min wall sit finisher.'
+    ],pts:60}},
 
-  {id:'t_glute_bridges', name:'Glute Bridges', icon:'🦵', tone:'strawberry', weight:5,
-    easy:{desc:'20 glute bridges right now. Floor, no equipment.',pts:10},
-    medium:{desc:'3 × 20 with a 2-second hold at the top. Feel the squeeze.',pts:30},
-    hard:{desc:'4 × 25 + 10 single-leg each side. Your posterior chain will know about this.',pts:60}},
+  {id:'t_walk', name:'Zone 2 Walk', icon:'🚶', tone:'strawberry', weight:5,
+    easy:{desc:[
+      '15 min walk. Doesn\u2019t matter where \u2014 apartment, stairs, outside.',
+      '10 min walk right now. Don\u2019t change clothes, don\u2019t plan. Just go.',
+      'Walk to the nearest shop and back. Buy nothing. Just move.',
+      'Pace your apartment for 10 min while listening to a podcast.',
+      '5 trips up and down your building stairs. That counts.'
+    ],pts:10},
+    medium:{desc:[
+      '30 min Zone 2. HR in zone, no phone distractions.',
+      '25 min walk + pick one flight of stairs and do 3 trips up/down at the midpoint.',
+      '20 min brisk walk. Faster than normal. Push the pace without running.',
+      '30 min walk with Safa. No phones. Just talk.',
+      '25 min walk. Pick a direction you\u2019ve never walked before.'
+    ],pts:30},
+    hard:{desc:[
+      '40 min Zone 2 \u2014 outside if daylight, apartment pacing or stairs if not. HR in zone, no phone.',
+      '40 min Zone 2 + pick one flight of stairs and do 5 trips up/down at the midpoint.',
+      '45 min walk. Last 10 minutes: deliberately increase pace to upper Zone 2. Finish strong.',
+      '60 min long walk. Audiobook or podcast. This is your Zone 2 session for the week.',
+      '40 min walk + 5-min cool-down stretch after. Log your HR data.'
+    ],pts:60}},
 
-  {id:'t_walk', name:'Zone 2 Walk', icon:'🚶', tone:'blueberry', weight:5,
-    easy:{desc:'15 min walk — apartment laps, hallway, stairs, whatever. Just move.',pts:10},
-    medium:{desc:'30 min apartment pacing or stairs. Arms swinging, ~120 BPM. AirPods tracking.',pts:30},
-    hard:{desc:'40 min Zone 2 — outside if it\'s daylight, stairs/apartment if not. Log average HR.',pts:60}},
+  {id:'t_cardio', name:'Cardio Burst', icon:'\u26a1', tone:'strawberry', weight:4,
+    easy:{desc:[
+      '3 rounds: 20 high knees + 10 mountain climbers. Rest 30s between. Done in 4 min.',
+      'Tabata: 20s fast air squats / 10s rest \u00d7 4 rounds. Two minutes.',
+      '5 \u00d7 30-sec wall sit. Rest 20s between.',
+      '2 min jumping jacks. Just do it without stopping.',
+      '30 high knees + 20 butt kicks + 10 squat jumps. One round, done.',
+      '3 \u00d7 20-sec sprint in place. Go absolutely all out. Rest 40s between.'
+    ],pts:10},
+    medium:{desc:[
+      '4 rounds: 15 burpees (step-back version) + 20 high knees. 60s rest.',
+      'EMOM 10 min: odd minutes = 10 pushups, even minutes = 15 squats.',
+      'Stair sprints: 6 trips up your building stairs, walk down. No stairs? 6 \u00d7 30-sec sprint-in-place.',
+      '3 rounds: 30 high knees + 15 mountain climbers + 10 squat jumps. 45s rest between.',
+      '12 min: 40s work / 20s rest. Rotate: jumping jacks, high knees, air squats, mountain climbers.',
+      'Deck of cards: hearts=squats, diamonds=high knees, clubs=burpees, spades=mountain climbers. Pull 15 cards.'
+    ],pts:30},
+    hard:{desc:[
+      '6 rounds: 10 burpees + 20 high knees + 10 mountain climbers. 60s rest between.',
+      '20-min AMRAP: 5 pushups, 10 squats, 15 high knees. Count rounds. Beat it next time.',
+      'Tabata \u00d7 4 exercises, 4 rounds each: squats / pushups / mountain climbers / high knees. 16 min total.',
+      '5 rounds: 200m sprint equivalent (40-sec all-out in place) + 10 burpees. Rest 90s between.',
+      'The 100s: 100 high knees + 100 air squats + 100 mountain climbers. Time the whole thing.',
+      '25-min circuit: 5 exercises, 45s each, 15s rest. 5 rounds. Pick any 5 bodyweight moves. Don\u2019t repeat the easy ones.'
+    ],pts:60}},
 
+  {id:'t_mobility', name:'Mobility', icon:'🧘', tone:'strawberry', weight:4,
+    easy:{desc:[
+      'Couch stretch, 2 min each leg. That\u2019s it.',
+      '90/90 hip switch \u00d7 10 per side + 60-sec pigeon each leg.',
+      'Thoracic spine: lie on foam roller (or rolled towel) for 3 min. Arms overhead.',
+      'Neck rolls + shoulder circles + wrist circles. 2 min. Loosen everything above the chest.',
+      'Standing quad stretch + calf stretch against a wall. 90s each side.',
+      'Cat-cow: 15 reps. Slow. Breathe into each position.'
+    ],pts:10},
+    medium:{desc:[
+      '15 min hip opener flow: pigeon, 90/90, frog stretch, couch stretch. Hold each 60s.',
+      '15 min upper body: wall slides, band pull-aparts, doorway chest stretch, cat-cow. 10 reps each.',
+      'Follow a 10-15 min YouTube mobility routine. Pick one you haven\u2019t tried.',
+      'Deep squat hold: accumulate 3 min total in a deep squat. Break into sets if needed.',
+      '10 min full-body: ankles, hips, T-spine, shoulders. 90s per area.'
+    ],pts:30},
+    hard:{desc:[
+      '30 min full mobility flow. YouTube follow-along or your own sequence. Every major joint.',
+      '20 min focused hip opener: pigeon, 90/90, couch stretch, frog stretch. Hold each 90s. Deep breathing.',
+      'Thoracic spine + shoulders: foam roller T-spine extensions, wall slides, band pull-aparts. 25 min.',
+      '30 min yoga flow. Sun salutations + warrior sequence + hip openers. Full session.',
+      '20 min lower body: ankles (banded), knees (wall slides), hips (90/90 + pigeon + frog), hamstrings (PNF stretch).'
+    ],pts:60}},
 
-  {id:'t_mobility', name:'Mobility', icon:'🧘', tone:'cotton', weight:4,
-    easy:{desc:'Couch stretch 2 min each leg. Right now on the floor.',pts:10},
-    medium:{desc:'Hip flexors + thoracic rotation + couch stretch. 15 min.',pts:30},
-    hard:{desc:'30 min full mobility session. Find a YouTube follow-along and do the whole thing.',pts:60}},
+  /* ═══ LEARNING ═══ */
+  {id:'t_pl300', name:'PL-300 Study', icon:'\ud83d\udcca', tone:'grape', weight:10,
+    easy:{desc:[
+      '5 flashcards or re-read one concept page.',
+      'Write one CALCULATE measure from memory. Verify.',
+      'Write one SQL query on paper. One JOIN, one WHERE.',
+      'Review one Power Query transform: data types, merge, or append.',
+      'Pick one DAX function you haven\u2019t used. Read the docs. Write one example.',
+      'Quiz yourself: name 3 things ALL() does. Check the answer.',
+      'Open a practice dataset. Build one visual. Format it properly.'
+    ],pts:10},
+    medium:{desc:[
+      'Micro-session: concept \u2192 analogy \u2192 trap \u2192 quiz. 25 min.',
+      'Write 3 DAX measures from memory. Time yourself.',
+      'Build a Power Query transform: merge two tables, clean types, handle nulls.',
+      'SQL practice: write a query with a window function. ROW_NUMBER, RANK, or running total.',
+      'Build a report page from scratch: data model + 3 visuals + 1 slicer. 25 min.',
+      'Write CALCULATE with 3 different filter modifiers. Test each. Explain the difference to yourself.'
+    ],pts:30},
+    hard:{desc:[
+      'Full practice exam section. 60 min. Grade yourself honestly.',
+      'Build a DAX pattern you haven\u2019t used before: time intelligence, semi-additive, or dynamic segmentation.',
+      'Full SQL analysis pipeline: CTE chain \u2192 window functions \u2192 write-up. Real data.',
+      'Build a Power Automate flow end-to-end. Trigger, condition, action, test.',
+      'Build a complete report page with RLS, bookmarks, and drillthrough. Test every path.',
+      'Recreate a real dashboard from your work using sample data. Full model + measures + visuals.'
+    ],pts:60}},
 
+  {id:'t_banana', name:'BANANA Sprint', icon:'\ud83c\udf4c', tone:'banana', weight:5,
+    easy:{desc:[
+      'Open portfolio file. Update one metric, fix one label, improve one visual. 10 min.',
+      'Browse 3 Upwork/Fiverr dashboard gigs. Screenshot the briefs. Note what you\u2019d price.',
+      'Pick one chart in your portfolio. Make it 10% better. Better title, better colors, better layout.',
+      'Write one bullet point for your freelance profile. Just one. Make it sharp.',
+      'Find one real dataset online (Kaggle, gov sites). Download it. You\u2019ll use it later.'
+    ],pts:10},
+    medium:{desc:[
+      'Build or polish one dashboard section for 30 min. Ship something visible.',
+      'Write a cold outreach message or LinkedIn post about a dashboard insight. Draft, don\u2019t overthink.',
+      'Build a mock client brief and estimate hours + price. Practice the business side.',
+      'Take a portfolio screenshot, annotate it with what the client would care about. Make it pitch-ready.',
+      'Research one niche (real estate, logistics, healthcare). Find 3 public datasets for it. Bookmark them.'
+    ],pts:30},
+    hard:{desc:[
+      '60 min deep sprint: pick the hardest piece of the current portfolio dashboard and finish it.',
+      'Build a sample from scratch for a new niche. Data \u2192 model \u2192 visuals \u2192 screenshot. Full loop.',
+      'Record a 2-min Loom walkthrough of your best dashboard. Explain the business value, not the tech.',
+      'Write a case study: problem \u2192 approach \u2192 result. Even if the "result" is a portfolio piece, frame it like a real engagement.',
+      'Build an AR/AP aging dashboard section from scratch. Use your MasterPayment data patterns.'
+    ],pts:60}},
 
-  {id:'t_gym', name:'Gym Session', icon:'🏋️', tone:'strawberry', weight:5,
-    easy:{desc:'Pick two machines if you go, or 3×15 pushups + 3×20 glute bridges at home. Minimum viable session.',pts:10},
-    medium:{desc:'Full split — lat pulldown, chest press, leg press, leg curl. All 4.',pts:30},
-    hard:{desc:'Full split + 15 min Zone 2 walk after. Extra credit, no excuses.',pts:60}},
-
-  {id:'t_split_squats', name:'Split Squats', icon:'🦿', tone:'strawberry', weight:5,
-    easy:{desc:'10 split squats each leg. Bodyweight, hand on a wall if you wobble. Right now.',pts:10},
-    medium:{desc:'3 × 10 each leg, slow 3-sec descent. Then hold a 30-sec plank.',pts:30},
-    hard:{desc:'4 × 12 each leg + 45-sec plank + 20-sec side plank each side. Legs and core both pay.',pts:60}},
-
-  /* ═══ NUTRITION ═══ */
-
-
-  /* ═══ MIND / LEARNING ═══ */
-  {id:'t_pl300', name:'PL-300 Study', icon:'📊', tone:'grape', weight:11,
-    easy:{desc:'5 flashcards or re-read one concept page from your last session. Keep the thread warm.',pts:10},
-    medium:{desc:'One micro-session: concept → analogy → trap → quiz. 25 min.',pts:30},
-    hard:{desc:'Full practice exam section or build a sample report. 60 min.',pts:60}},
-
-  {id:'t_dax', name:'DAX Drill', icon:'🧮', tone:'grape', weight:2,
-    easy:{desc:'Write one CALCULATE measure from memory. Then verify.',pts:10},
-    medium:{desc:'Write 3 measures from memory. Time yourself.',pts:30},
-    hard:{desc:'Build a full DAX pattern you haven\'t used: time intelligence, semi-additive, or dynamic segmentation.',pts:60}},
-
-
-  {id:'t_read', name:'Read', icon:'📖', tone:'blueberry', weight:3,
-    easy:{desc:'10 min. Actual book or long article. Not a thread.',pts:10},
-    medium:{desc:'25 min unbroken. One topic, no phone nearby.',pts:30},
-    hard:{desc:'45 min straight. One full chapter. Write one takeaway.',pts:60}},
-
-
-  {id:'t_sql', name:'SQL Practice', icon:'🗃️', tone:'grape', weight:3,
-    easy:{desc:'Write a query on paper or phone Notes. One JOIN, one WHERE filter. 5 min.',pts:10},
-    medium:{desc:'Write and run a real query. Window functions or CTEs.',pts:30},
-    hard:{desc:'Full analysis pipeline. CTE chain, window functions. Save the script.',pts:60}},
-
-  {id:'t_banana', name:'BANANA Sprint', icon:'🍌', tone:'banana', weight:4,
-    easy:{desc:'10 min hands on keyboard. Change one real thing in the file and save it. No planning, no reviewing — build.',pts:10},
-    medium:{desc:'30 min focused build session on your next portfolio dashboard. No planning, no research — hands on keyboard, building.',pts:30},
-    hard:{desc:'60 min deep work session. Ship something visible — a new page, a finished visual, a LinkedIn post draft. Screenshot your progress.',pts:60}},
-
-  {id:'t_pq_automate', name:'Power Query / Automate', icon:'⚙️', tone:'apple', weight:2,
-    easy:{desc:'Open Power Query, load any messy data source, and clean one column. Rename, fix types, remove nulls. 10 min.',pts:10},
-    medium:{desc:'Build a full transform pipeline — merge two tables, reshape, handle errors, output clean. 25 min.',pts:30},
-    hard:{desc:'Build or improve a real automation. A Power Automate flow for work, or a Power Query pipeline you can reuse in BANANA. Save it.',pts:60}},
+  {id:'t_read', name:'Read', icon:'\ud83d\udcd6', tone:'grape', weight:3,
+    easy:{desc:[
+      '10 pages of anything. Book, article, whitepaper. Physical or digital.',
+      'Read one long-form article. No skimming \u2014 actually finish it.',
+      'Open whatever you\u2019ve been meaning to read. Set a 10-min timer. Start.',
+      'Read one chapter of a book. Any book. Even fiction counts.',
+      'Find and read a new blog post in your field. Note one thing you didn\u2019t know.'
+    ],pts:10},
+    medium:{desc:[
+      '25 min focused reading. Timer on, no phone. Note one takeaway when done.',
+      'Pick a topic you\u2019ve been curious about. Find a good source and read for 20 min.',
+      'Read a technical article and explain it to yourself out loud in simple words.',
+      'Read for 20 min. Then write a 2-sentence summary without looking back.',
+      'Pick an opposing viewpoint to something you believe. Read one article from that perspective.'
+    ],pts:30},
+    hard:{desc:[
+      'Read for 45 min. When done, write a 3-sentence summary of what you learned and why it matters to you.',
+      'Finish a chapter or section of something you\u2019ve been putting off. Then explain it to Safa or write it down.',
+      'Deep read: 45 min on one topic. Take notes. Highlight. Engage with it like you\u2019ll teach it tomorrow.',
+      'Read a full whitepaper or long-form essay (3000+ words). Summarize the argument in your own words.',
+      'Audiobook counts: 45 min focused listening. No multitasking. Pause and think when something hits.'
+    ],pts:60}},
 
   /* ═══ RELATIONSHIPS ═══ */
-  {id:'t_cats', name:'Cat Time', icon:'🐱', tone:'bubblegum', weight:3,
-    easy:{desc:'5 min actual playtime with both cats. Laser, string, whatever.',pts:10},
-    medium:{desc:'Clean litter + fresh water + 15 min play + brush them.',pts:30},
-    hard:{desc:'Full grooming session + rearrange their space or introduce something new.',pts:60}},
+  {id:'t_family_call', name:'Family Call', icon:'\ud83d\udcf1', tone:'bubblegum', weight:4,
+    easy:{desc:[
+      'Call someone. Parent, sibling, friend. 5 min minimum. Just check in.',
+      'Send a voice note to a family member. Something real, not just "salam."',
+      'Text someone you haven\u2019t spoken to in a while. Ask one real question.',
+      'Call your mom or dad. Even 3 minutes counts. They\u2019ll remember it.',
+      'Reply to a message you\u2019ve been ignoring. Be honest about why it took a while.'
+    ],pts:10},
+    medium:{desc:[
+      '15 min real conversation. Ask how they\u2019re actually doing. Listen.',
+      'Video call a family member. Show them something from your week.',
+      'Call a friend you miss. Catch up properly. No agenda, just talk.',
+      'Plan something with someone \u2014 a visit, a meal, a game night. Get a date on the calendar.',
+      'Send photos or a video to family. Something from your life they wouldn\u2019t see otherwise.'
+    ],pts:30},
+    hard:{desc:[
+      '30 min+ call with a parent or sibling. No agenda. Be present.',
+      'Call someone you haven\u2019t spoken to in months. Reconnect. It\u2019ll be awkward for 30 seconds, then it won\u2019t.',
+      'Family game night over video call. Play something together.',
+      'Write a long message to a parent or sibling. Tell them something you appreciate. Be specific.',
+      'Plan a future visit or trip to see family. Research dates, costs, logistics. Make it real, not abstract.'
+    ],pts:60}},
 
-  {id:'t_family_call', name:'Family Call', icon:'📞', tone:'bubblegum', weight:4,
-    easy:{desc:'Voice note to a family member. Something personal, not a forward.',pts:10},
-    medium:{desc:'Actual call. 15+ min. Proper conversation.',pts:30},
-    hard:{desc:'Video call 30+ min. Or write a long message to someone you\'ve been meaning to reach.',pts:60}},
+  {id:'t_cats', name:'Cat Time', icon:'\ud83d\udc31', tone:'bubblegum', weight:3,
+    easy:{desc:[
+      '5 min dedicated play with the cats. Laser pointer, string, or just sit with them.',
+      'Brush one cat. Full session, be gentle.',
+      'Refill their water, clean the bowl, top up food. Basic care, done right.',
+      'Sit on the floor near them for 5 min. Let them come to you. Just be present.',
+      'Find a new toy or make one (crumpled paper, bottle cap). See if they engage.'
+    ],pts:10},
+    medium:{desc:[
+      '15 min play session. Rotate toys. Get them actually running.',
+      'Brush both cats. Full grooming session.',
+      'Clean the litter box + refresh water + 10 min play. Full cat reset.',
+      'Spend 15 min with just one cat. Focused attention. Treats, play, whatever they want.',
+      'Build a cardboard box fort or tunnel. Watch them explore it.'
+    ],pts:30},
+    hard:{desc:[
+      'Full cat enrichment: play session + grooming + rearrange one climbing/scratch spot. 30 min.',
+      'Build or set up something new for them \u2014 a box fort, a new perch spot, a puzzle feeder.',
+      'Deep clean the litter area + grooming + 20 min play session. Full royal treatment.',
+      'Research one thing about cat behavior or health. Apply something from it today.',
+      'Photo session with the cats. Get good shots. Send the best one to someone who\u2019d smile.'
+    ],pts:60}},
 
+  {id:'t_safa_random', name:'Random Act for Safa', icon:'\u2764\ufe0f', tone:'bubblegum', weight:3,
+    easy:{desc:[
+      'Make her a coffee or tea exactly how she likes it. Bring it to her.',
+      'Send her a genuine compliment text. Not generic \u2014 specific to today.',
+      'Take one thing off her plate without being asked. Dishes, trash, anything.',
+      'Put on music she likes. No commentary. Just let it play.',
+      'Ask her about her day. Actually listen. Don\u2019t solve, just hear.'
+    ],pts:10},
+    medium:{desc:[
+      'Do one of her chores without being asked. Quietly.',
+      'Plan a small surprise \u2014 her favorite snack, a note, a playlist.',
+      'Cook her something. Doesn\u2019t have to be fancy. The gesture is the point.',
+      'Put your phone away for an hour together. No screens. See what happens.',
+      'Suggest something she\u2019d enjoy doing \u2014 a walk, a show, a dessert run. Follow through.'
+    ],pts:30},
+    hard:{desc:[
+      'Plan a proper date. Doesn\u2019t have to be expensive \u2014 cook dinner, set the table, put the phones away.',
+      'Write her a letter. Not a text \u2014 actual words on paper or a long thoughtful message. Tell her something you haven\u2019t said.',
+      'Recreate something from early in your relationship. A meal, a place, a conversation.',
+      'Take over the entire evening routine. Dinner, cleanup, everything. She does nothing.',
+      'Ask her what she needs this week. Not what she wants \u2014 what she actually needs. Then do one of those things today.'
+    ],pts:60}},
 
-  {id:'t_safa_random', name:'Random Act for Safa', icon:'❤️', tone:'bubblegum', weight:2,
-    easy:{desc:'One thing she didn\'t ask for. Coffee, snack, anything.',pts:10},
-    medium:{desc:'Take over something she normally handles without being asked.',pts:30},
-    hard:{desc:'Plan something small but thoughtful. Homemade, within budget. Effort over money.',pts:60}},
+  /* ═══ MENTAL ═══ */
+  {id:'t_journal', name:'Journal', icon:'\ud83d\udcd3', tone:'blueberry', weight:3,
+    easy:{desc:[
+      'One sentence. What happened today, how it felt.',
+      'Name 3 specific things that went well today. Not generic \u2014 real.',
+      'Write down one thing you\u2019re avoiding. Just name it. That\u2019s enough for now.',
+      'Rate your day 1-10. Write one sentence about why.',
+      'One word that describes today. Then one sentence explaining why that word.'
+    ],pts:10},
+    medium:{desc:[
+      'Free write 10 min. No structure. Dump, then end with one thing you\u2019re grateful for and why.',
+      'Pick one decision you\u2019re stuck on. Write out both sides. Don\u2019t solve it \u2014 just see it clearly.',
+      'Write about one moment from today that you want to remember. Describe it like a scene.',
+      'List 5 things on your mind. Pick the heaviest one. Write about it for 5 min.',
+      'Write a letter to yourself 6 months from now. What should future-you know about right now?'
+    ],pts:30},
+    hard:{desc:[
+      '20 min deep. Where are you vs where you want to be. Operation88, time freedom, everything. Be honest.',
+      'Write a gratitude letter \u2014 Safa, a parent, a friend. Real words. Decide after: send it or keep it.',
+      'Life audit: rate Health, Career, Relationships, Finance, Growth each 1-10. Write why for each. What\u2019s the one lever?',
+      'Write about a failure or regret. What actually happened. What you learned. Be honest, not dramatic.',
+      'Stream of consciousness: 20 min, pen doesn\u2019t stop. Don\u2019t edit, don\u2019t think, just write. Read it after.',
+      'Write your ideal day 3 years from now. Where, doing what, with whom. Be specific enough to feel it.'
+    ],pts:60}},
 
-  /* ═══ MENTAL HEALTH / RECHARGE ═══ */
-  {id:'t_journal', name:'Journal', icon:'📓', tone:'blueberry', weight:3,
-    easy:{desc:'One sentence. What happened today, how it felt.',pts:10},
-    medium:{desc:'Free write 10 min. No structure. Just dump.',pts:30},
-    hard:{desc:'20 min deep. Where are you vs where you want to be. Operation88, everything. Be honest.',pts:60}},
+  {id:'t_breathwork', name:'Breathwork', icon:'\ud83c\udf2c\ufe0f', tone:'blueberry', weight:3,
+    easy:{desc:[
+      'Box breathing: 4-4-4-4 for 3 minutes. Eyes closed.',
+      '10 deep breaths. Inhale 4s, hold 4s, exhale 6s. That\u2019s it.',
+      '2 min: breathe in through your nose for 4s, out through your mouth for 8s. Slow.',
+      'Body scan: close your eyes, breathe normally, notice each body part head to toe. 3 min.',
+      'Physiological sigh: double inhale through nose, long exhale through mouth. 6 reps. Instant calm.'
+    ],pts:10},
+    medium:{desc:[
+      '10 min guided session \u2014 YouTube or Wim Hof app.',
+      'Alternate nostril breathing: 5 min. Then sit quietly for 2 more.',
+      '4-7-8 breathing: inhale 4s, hold 7s, exhale 8s. 8 cycles. Then sit for 3 min.',
+      '10 min box breathing: 4-4-4-4. Increase to 5-5-5-5 if it feels easy.',
+      'Guided body scan meditation: YouTube, 10-15 min. Lie down. Actually let go.'
+    ],pts:30},
+    hard:{desc:[
+      '3 rounds of Wim Hof method. Full retention holds. Log your times.',
+      '20 min session: 5 min box breathing \u2192 10 min slow nasal breathing \u2192 5 min body scan.',
+      '15 min meditation. Just sit. Breath as anchor. No guided audio. You and your mind.',
+      '4 rounds Wim Hof + 5 min cold water finish (hands/face in cold water at minimum).',
+      '20 min: alternate nostril breathing (5 min) \u2192 breath hold practice (10 min) \u2192 silent sit (5 min). Log hold times.'
+    ],pts:60}},
 
-  {id:'t_breathwork', name:'Breathwork', icon:'🌬️', tone:'cotton', weight:2,
-    easy:{desc:'4-7-8: inhale 4, hold 7, exhale 8. Four cycles. Takes 3 min.',pts:10},
-    medium:{desc:'Box breathing 10 min. 4 in, 4 hold, 4 out, 4 hold.',pts:30},
-    hard:{desc:'20 min Wim Hof or extended session. This will change how you sleep.',pts:60}},
+  {id:'t_sleep', name:'Sleep Protocol', icon:'\ud83c\udf19', tone:'blueberry', weight:3,
+    easy:{desc:[
+      'Set a bedtime alarm for tonight. When it fires, actually start winding down.',
+      'No screens 30 min before bed tonight. Put the phone in another room.',
+      'Take your magnesium tonight. That\u2019s the whole task.',
+      'Dim the lights 1 hour before bed. Use warm/amber light only.',
+      'Write tomorrow\u2019s top 3 tasks before bed. Clear the mental queue.'
+    ],pts:10},
+    medium:{desc:[
+      'Full wind-down: screens off 45 min early + magnesium + dim lights.',
+      'Track your sleep tonight (watch or app). Review the data tomorrow.',
+      'No caffeine after 2 PM today + full wind-down routine tonight.',
+      '30 min before bed: 5 min journaling + 5 min stretching + lights off.',
+      'Bedroom environment audit: temperature, light leaks, phone placement. Fix one thing.'
+    ],pts:30},
+    hard:{desc:[
+      'Full sleep audit: no caffeine after 2 PM + screens off 1hr before bed + cold room + magnesium. Log how you feel tomorrow.',
+      'Build a proper bedtime routine and execute it tonight. Write it down so you can repeat it.',
+      'Sleep experiment: try one new thing (earlier bedtime, different pillow, white noise, mouth tape). Track the result.',
+      '24-hour sleep reset: caffeine cutoff at noon, no naps, wind-down starts at 9 PM, phone in another room by 10.',
+      'Full evening protocol: dinner by 8 \u2192 dim lights \u2192 stretch \u2192 journal \u2192 breathwork \u2192 lights out. Execute the whole chain.'
+    ],pts:60}},
 
-  {id:'t_gratitude', name:'Gratitude', icon:'🙏', tone:'cotton', weight:2,
-    easy:{desc:'Name 3 things that went well today. Specific, not generic.',pts:10},
-    medium:{desc:'5 things, one sentence each on why it matters. Then pick the one that surprised you and sit with it for a minute.',pts:30},
-    hard:{desc:'Write a gratitude letter to someone — Safa, a parent, a friend. Then decide: send it or don\'t. But the writing has to be real.',pts:60}},
+  /* ═══ HOME ═══ */
+  {id:'t_home_reset', name:'Home Reset', icon:'\ud83e\uddf9', tone:'apple', weight:3,
+    easy:{desc:[
+      'Just the dishes, or clear one surface. 5 min. Sink empty is a win.',
+      'Take out the trash and wipe one counter. 3 min.',
+      'Make the bed properly. Tuck everything. Fluff the pillows.',
+      'Clear your desk. Put everything in its place. 5 min.',
+      'Wipe down the bathroom sink and mirror. Quick and visible.'
+    ],pts:10},
+    medium:{desc:[
+      'Full kitchen \u2014 dishes + counters + stove. Or one full drawer/closet section, ruthless.',
+      'Vacuum or mop one room properly. Move furniture if needed.',
+      'Bathroom deep clean: toilet, sink, mirror, floor. Full reset.',
+      'Organize one drawer or shelf. Everything out, clean it, put back only what belongs.',
+      'Laundry start to finish: wash, dry, fold, put away. Full cycle.'
+    ],pts:30},
+    hard:{desc:[
+      'Deep clean one zone end to end. Fridge, shelves, floor, or a full declutter of 6-months-untouched stuff.',
+      'Full apartment reset: every surface clear, dishes done, floors swept, laundry started. The whole loop.',
+      'Declutter session: fill one bag for donation/trash. Be ruthless with stuff you haven\u2019t used in 6 months.',
+      'Reorganize a major storage area \u2014 wardrobe, kitchen cabinets, or bathroom shelves. Before/after photo.',
+      'Deep clean the kitchen: oven, fridge interior, behind appliances, descale the kettle. The stuff nobody sees.'
+    ],pts:60}},
 
-
-  {id:'t_sleep', name:'Sleep Protocol', icon:'😴', tone:'grape', weight:3,
-    easy:{desc:'Set a bedtime alarm tonight. When it goes off, wind down. No debate.',pts:10},
-    medium:{desc:'Screens off 30 min before bed. Log what time you slept.',pts:30},
-    hard:{desc:'Tonight: screens off by 10pm, in bed by 10:30, phone charging in another room. Full 8 hours. No negotiation.',pts:60}},
-
-  {id:'t_creative', name:'Creative / Tamiya', icon:'🎨', tone:'banana', weight:2,
-    easy:{desc:'15 min on a model kit, cooking experiment, or any hands-on creative thing. No screen involved.',pts:10},
-    medium:{desc:'30 min focused session. Actual progress on a build, a recipe from scratch, or anything tactile.',pts:30},
-    hard:{desc:'60 min session. Finish a build stage, try a complex recipe, photograph what you made. The output is the experience, not a deliverable.',pts:60}},
-
-  /* ═══ HOME / ADMIN ═══ */
-  {id:'t_home_reset', name:'Home Reset', icon:'🧹', tone:'apple', weight:3,
-    easy:{desc:'Just the dishes, or clear one surface. 5 min. Sink empty is a win.',pts:10},
-    medium:{desc:'Full kitchen — dishes + counters + stove. Or one full drawer/closet section, ruthless.',pts:30},
-    hard:{desc:'Deep clean one zone end to end. Fridge, shelves, floor, or a full declutter of 6-months-untouched stuff.',pts:60}},
+  {id:'t_cook', name:'Cook', icon:'\ud83c\udf73', tone:'apple', weight:3,
+    easy:{desc:[
+      'Make one meal from scratch. No ordering, no frozen stuff.',
+      'Cook something with 5 ingredients or less. Simple, real food.',
+      'Make Safa a coffee or tea exactly how she likes it. Bonus: a small snack alongside.',
+      'Prep one thing for tomorrow \u2014 chop vegetables, marinate meat, soak lentils.',
+      'Make eggs. Any style. But do it properly \u2014 seasoned, plated, not rushed.',
+      'Smoothie or protein shake from scratch. Real ingredients, not just powder and water.'
+    ],pts:10},
+    medium:{desc:[
+      'Try a recipe you\u2019ve never made. YouTube, memory, whatever \u2014 just new.',
+      'Cook Safa\u2019s favorite dish. From memory. No recipe.',
+      'Meal prep: cook one batch that covers 2-3 meals. Efficiency points.',
+      'Recreate a restaurant dish you like. Doesn\u2019t have to be perfect \u2014 just attempt it.',
+      'Cook something from your childhood. A dish your family made. From memory first, then look it up.',
+      'Make a proper breakfast \u2014 eggs, toast, maybe some labneh or fruit. Sit down to eat it.'
+    ],pts:30},
+    hard:{desc:[
+      'Multi-step dish from scratch \u2014 biryani, nihari, karahi. Something with layers. Photograph it.',
+      'Pick a cuisine you\u2019ve never attempted. Research \u2192 shop \u2192 execute. Full journey.',
+      'Cook a full dinner for two. Side + main. Set the table. Make it an event.',
+      'Bake something. Bread, cookies, cake. You haven\u2019t done this before? That\u2019s the point.',
+      'Master one technique: make a proper roux, debone a chicken, roll out fresh pasta. YouTube a tutorial and follow along.',
+      'Cook three meals for the week in one session. Full meal prep marathon. Music on, phone away.'
+    ],pts:60}},
 
 
 ];
@@ -7871,6 +8121,35 @@ function getBowl(){
     s.bowl._themeLibMigrated=true;
     _dirty = true;
   }
+  /* v71 full audit: consolidate library to 15-ball variant pool.
+     Replaces entire library from BOWL_DEFAULT_LIBRARY, marks old
+     single-challenge balls as deleted so history still renders. */
+  if(!s.bowl._v71FullMerge){
+    /* Mark all old balls as deleted in the existing library */
+    var _v71Cut=['t_pushups','t_glute_bridges','t_split_squats','t_gym',
+                 't_dax','t_sql','t_pq_automate','t_gratitude','t_creative'];
+    s.bowl.library.forEach(function(c){
+      if(_v71Cut.indexOf(c.id)!==-1) c.deleted=true;
+    });
+    /* Merge in new/updated balls from default library */
+    var _defLib=JSON.parse(JSON.stringify(BOWL_DEFAULT_LIBRARY));
+    _defLib.forEach(function(defBall){
+      var existing=s.bowl.library.find(function(x){ return x.id===defBall.id; });
+      if(existing){
+        /* Update in place — preserve any user edits to name/icon/tone but overwrite weight+tiers */
+        existing.weight=defBall.weight;
+        existing.easy=defBall.easy;
+        existing.medium=defBall.medium;
+        existing.hard=defBall.hard;
+        existing.deleted=defBall.deleted||false;
+      } else {
+        /* New ball — add to library */
+        s.bowl.library.push(defBall);
+      }
+    });
+    s.bowl._v71FullMerge=true;
+    _dirty=true;
+  }
   /* Only write if we actually changed something (init or migration) */
   if(_dirty) ss(s,true);
   return s.bowl;
@@ -7892,8 +8171,52 @@ var BOWL_RETIRED_BALLS = {
   t_kitchen:       {id:'t_kitchen',       name:'Kitchen Clean',       icon:'🧹', tone:'apple'},
   t_desk:          {id:'t_desk',          name:'Desk Reset',          icon:'🖥️', tone:'blueberry'},
   t_laundry:       {id:'t_laundry',       name:'Laundry',             icon:'👕', tone:'cotton'},
-  t_declutter:     {id:'t_declutter',     name:'Declutter',           icon:'🗑️', tone:'tangerine'}
+  t_declutter:     {id:'t_declutter',     name:'Declutter',           icon:'🗑️', tone:'tangerine'},
+  /* v71 audit — consolidated or cut */
+  t_pushups:       {id:'t_pushups',       name:'Pushups',             icon:'💪', tone:'strawberry'},
+  t_glute_bridges: {id:'t_glute_bridges', name:'Glute Bridges',       icon:'🦵', tone:'strawberry'},
+  t_split_squats:  {id:'t_split_squats',  name:'Split Squats',        icon:'🏋️', tone:'strawberry'},
+  t_gym:           {id:'t_gym',           name:'Gym Session',         icon:'🏋️', tone:'strawberry'},
+  t_dax:           {id:'t_dax',           name:'DAX Drill',           icon:'📐', tone:'grape'},
+  t_sql:           {id:'t_sql',           name:'SQL Practice',        icon:'🗄️', tone:'grape'},
+  t_pq_automate:   {id:'t_pq_automate',   name:'PQ / Automate',       icon:'⚙️', tone:'grape'},
+  t_gratitude:     {id:'t_gratitude',     name:'Gratitude',           icon:'🙏', tone:'cotton'},
+  t_creative:      {id:'t_creative',      name:'Creative / Tamiya',   icon:'🎨', tone:'banana'}
 };
+
+/* Variant-aware desc resolver.  desc can be a string or an array of strings.
+   When array, pick deterministically from a seed (date+theme+tier) so the
+   same challenge on the same day always shows the same variant.  Falls back
+   to first element if seed is empty. */
+function _bowlResolveDesc(desc, seed){
+  if(!Array.isArray(desc)) return desc||'';
+  if(!desc.length) return '';
+  if(desc.length===1) return desc[0];
+  if(!seed) return desc[0];
+  var hash=0;
+  for(var i=0;i<seed.length;i++){ hash=((hash<<5)-hash)+seed.charCodeAt(i); hash|=0; }
+  return desc[Math.abs(hash)%desc.length];
+}
+/* Convenience: resolve for a daily draw's specific tier */
+function _bowlTierDesc(theme, tier, dateKey){
+  var td=theme[tier];
+  if(!td) return '';
+  return _bowlResolveDesc(td.desc, (dateKey||'')+(theme.id||'')+tier);
+}
+/* Format ALL variants as visible options with 'or' dividers (for tier picker) */
+function _bowlAllVariants(theme, tier){
+  var td=theme[tier];
+  if(!td||!td.desc) return '';
+  if(!Array.isArray(td.desc)) return '<div>'+td.desc+'</div>';
+  if(td.desc.length===1) return '<div>'+td.desc[0]+'</div>';
+  var parts=[];
+  td.desc.forEach(function(v,i){
+    if(i>0) parts.push('<div style="color:rgba(200,225,255,.3);font-size:9px;font-weight:700;letter-spacing:1px;margin:3px 0 2px;text-transform:uppercase">\u2014 or \u2014</div>');
+    parts.push('<div>'+v+'</div>');
+  });
+  return parts.join('');
+}
+
 function bowlGetLibBall(id){
   var b=getBowl();
   var found=b.library.find(function(x){ return x.id===id; });
@@ -7911,18 +8234,22 @@ function bowlGetLibBall(id){
    The library stores no category field, so map id→category here.
    Used by the coverage panel and the soft pity timer. */
 var BOWL_CATEGORY={
-  t_pushups:'Physical', t_glute_bridges:'Physical', t_walk:'Physical', t_mobility:'Physical', t_gym:'Physical', t_split_squats:'Physical',
-  t_pl300:'Learning', t_dax:'Learning', t_read:'Learning', t_sql:'Learning', t_banana:'Learning', t_pq_automate:'Learning',
-  t_cats:'Relationships', t_family_call:'Relationships', t_safa_random:'Relationships',
-  t_journal:'Mental', t_breathwork:'Mental', t_gratitude:'Mental', t_sleep:'Mental',
-  t_creative:'Creative',
-  t_home_reset:'Home'
+  /* Active pool (v71) */
+  t_bodyweight:'Physical', t_walk:'Physical', t_cardio:'Physical', t_mobility:'Physical',
+  t_pl300:'Learning', t_banana:'Learning', t_read:'Learning',
+  t_family_call:'Relationships', t_cats:'Relationships', t_safa_random:'Relationships',
+  t_journal:'Mental', t_breathwork:'Mental', t_sleep:'Mental',
+  t_home_reset:'Home', t_cook:'Home',
+  /* Legacy / retired — keep for history coverage counts */
+  t_pushups:'Physical', t_glute_bridges:'Physical', t_gym:'Physical', t_split_squats:'Physical',
+  t_dax:'Learning', t_sql:'Learning', t_pq_automate:'Learning',
+  t_gratitude:'Mental', t_creative:'Creative'
 };
 var BOWL_CAT_META={
   Physical:{icon:'💪'}, Learning:{icon:'📊'}, Relationships:{icon:'❤️'},
-  Mental:{icon:'🧠'}, Creative:{icon:'🎨'}, Home:{icon:'🏠'}
+  Mental:{icon:'🧠'}, Home:{icon:'🏠'}, Creative:{icon:'🎨'}
 };
-var BOWL_CAT_ORDER=['Physical','Learning','Relationships','Mental','Creative','Home'];
+var BOWL_CAT_ORDER=['Physical','Learning','Relationships','Mental','Home'];
 function bowlCatOf(id){ return BOWL_CATEGORY[id]||'Other'; }
 
 /* Days since a category was last DRAWN (not just completed). Returns big number if never. */
@@ -8626,7 +8953,7 @@ function renderBowl(){
           var tc=tierColors[dd.chosenTier]||'#4ade80';
           h+='<div style="background:linear-gradient(160deg,rgba(10,35,15,.92),rgba(8,25,12,.95));border:1px solid rgba(74,222,128,.35);border-radius:12px;padding:16px;text-align:center">';
           h+='<div style="font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:'+tc+';margin-bottom:6px">✓ '+tierLabels[dd.chosenTier]+' Completed</div>';
-          h+='<div style="font-size:13px;color:rgba(200,225,255,.8);margin-bottom:8px">'+theme[dd.chosenTier].desc+'</div>';
+          h+='<div style="font-size:13px;color:rgba(200,225,255,.8);margin-bottom:8px">'+_bowlTierDesc(theme,dd.chosenTier,dd.date)+'</div>';
           h+='<div style="font-size:22px;font-weight:900;color:'+tc+'">+'+dd.pts+' pts</div>';
           h+='</div>';
           h+='<button onclick="bowlUndoTier()" style="display:block;width:100%;margin-top:8px;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(127,178,255,.18);border-radius:10px;color:var(--muted);font-family:var(--font-ui);font-size:11px;font-weight:600;letter-spacing:.3px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:background .15s">↩ Undo — picked by mistake</button>';
@@ -8659,7 +8986,7 @@ function renderBowl(){
             h+='<span style="font-family:var(--font-ui);'+_tierWeight+';font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:'+m.color+'">'+m.label+'</span>';
             h+='<div style="font-family:var(--font-mono);font-size:15px;font-weight:700;color:'+m.color+';text-align:right;flex-shrink:0;line-height:1">+'+displayPts+bonusTag+'</div>';
             h+='</div>';
-            h+='<div style="font-size:11px;color:rgba(200,225,255,.72);line-height:1.35">'+td.desc+'</div>';
+            h+='<div style="font-size:11px;color:rgba(200,225,255,.72);line-height:1.35">'+_bowlAllVariants(theme,t)+'</div>';
             h+='</button>';
           });
         }
@@ -8874,6 +9201,7 @@ function bowlRetroComplete(dateKey, tier){
   toast('✓ '+tierLabels[tier]+' marked complete for '+dateKey+' (+'+dd.pts+' pts)');
   /* Award trophy ball for retroactive completions */
   try{ tcAwardBallForDate(dateKey, tier, theme); }catch(e){}
+  try{ setTimeout(function(){ _grantHabitBonus(dateKey); },300); }catch(e){}
   renderBowl();
 }
 
@@ -9303,7 +9631,7 @@ function bowlRenderLibrary(){
   var filtered=activeLib;
   if(_bowlLibSearch){
     var q=_bowlLibSearch.toLowerCase();
-    filtered=filtered.filter(function(x){return x.name.toLowerCase().indexOf(q)!==-1||x.desc.toLowerCase().indexOf(q)!==-1;});
+    filtered=filtered.filter(function(x){var _d=Array.isArray(x.easy&&x.easy.desc)?x.easy.desc.join(' '):((x.easy&&x.easy.desc)||'');return x.name.toLowerCase().indexOf(q)!==-1||_d.toLowerCase().indexOf(q)!==-1;});
   }
 
   if(!filtered.length){
@@ -9311,9 +9639,9 @@ function bowlRenderLibrary(){
   } else {
     filtered.forEach(function(ball){
       const toneName=ball.tone.charAt(0).toUpperCase()+ball.tone.slice(1);
-      const easyDesc=ball.easy&&ball.easy.desc?ball.easy.desc:'—';
-      const medDesc=ball.medium&&ball.medium.desc?ball.medium.desc:'—';
-      const hardDesc=ball.hard&&ball.hard.desc?ball.hard.desc:'—';
+      const easyDesc=ball.easy?_bowlAllVariants(ball,'easy'):'—';
+      const medDesc=ball.medium?_bowlAllVariants(ball,'medium'):'—';
+      const hardDesc=ball.hard?_bowlAllVariants(ball,'hard'):'—';
       const itemId='bli-'+ball.id;
       html+='<div class="bowl-lib-item" style="flex-direction:column;align-items:stretch;gap:0;padding:10px 0">';
       html+='<div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="var t=document.getElementById(\''+itemId+'\');t.style.display=t.style.display===\'none\'?\'block\':\'none\'">';
@@ -9368,9 +9696,9 @@ function bowlEditBall(id){
   document.getElementById('bowl-modal-title').textContent='Edit Ball';
   document.getElementById('bowl-modal-name').value=ball.name;
   document.getElementById('bowl-modal-icon').value=ball.icon;
-  document.getElementById('bowl-modal-easy-desc').value=(ball.easy&&ball.easy.desc)||ball.desc||'';
-  document.getElementById('bowl-modal-medium-desc').value=(ball.medium&&ball.medium.desc)||ball.desc||'';
-  document.getElementById('bowl-modal-hard-desc').value=(ball.hard&&ball.hard.desc)||ball.desc||'';
+  document.getElementById('bowl-modal-easy-desc').value=ball.easy?_bowlResolveDesc(ball.easy.desc,''):ball.desc||'';
+  document.getElementById('bowl-modal-medium-desc').value=ball.medium?_bowlResolveDesc(ball.medium.desc,''):ball.desc||'';
+  document.getElementById('bowl-modal-hard-desc').value=ball.hard?_bowlResolveDesc(ball.hard.desc,''):ball.desc||'';
   document.getElementById('bowl-modal-delete').style.display='';
   bowlRenderToneGrid();
   bowlPickWeight(_bowlEditingWeight);

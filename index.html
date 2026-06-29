@@ -2657,6 +2657,7 @@ body::before{
 <div class="pg-sub" id="rw-week-label">Complete Bowl challenges daily — don't break the streak</div>
 </div>
 <div id="rw-content"><!-- rendered by JS --></div>
+<div id="lvl-vault"><!-- Level Vault rendered by JS --></div>
 </div>
 </div>
 <div class="pg" id="pg-settings">
@@ -3407,7 +3408,7 @@ function _onPageEnter(id){
     document.querySelectorAll('.bowl-vial-bottom').forEach(function(el){ el.style.setProperty('--shimmer-play','paused'); });
   }
   /* Render reward immediately (no delay) so content is visible before animation completes */
-  if(id==='reward'){ rwCheckNewWeek(); renderReward(); }
+  if(id==='reward'){ rwCheckNewWeek(); renderReward(); try{ if(typeof renderLevelVault==='function') renderLevelVault(); }catch(e){} }
   /* De-dupe rapid page-swipes: cancel a pending page-enter render before queueing a new one */
   clearTimeout(_onPageEnterTimer);
   _onPageEnterTimer=setTimeout(function(){
@@ -5681,7 +5682,7 @@ function getRwLevelScore(){
   var ls=(rw.active&&rw.active.levelStartDate)||null;
   b.dailyDraws.forEach(function(dd){
     if(dd.date>todayKey2) return;
-    if(!dd.chosenTier) return;
+    if(!dd.chosenTier || dd.chosenTier==='skipped') return;  /* skips earn no ball — keep completed count == trophy cabinet */
     /* Pre-level-start days normally don't count, but RETROACTIVELY logged
        ones do — the user did the work this cycle even if the calendar date
        predates the reward level. */
@@ -5924,10 +5925,22 @@ function rwClaimReward(){
     levelNum:rw.active.levelNum||1,
     setDate:rw.active.setDate||todayKey2,
     claimedAt:Date.now(),
+    balls:(typeof score.completed==='number'?score.completed:0),
     pts:score.pts
   });
-  /* Celebration */
-  rwShowCelebration(rw.active);
+  /* Celebration — Currency Mint ceremony plays OVER the Bowl page and lifts the
+     real trophy-cabinet balls. Capture level data NOW (rw.active is cleared below). */
+  var _mintLvl=(rw.active.levelNum||1);
+  var _mintBalls=(typeof score.completed==='number'?score.completed:0);
+  var _mintReward=rw.active.name||'';
+  try{
+    if(typeof bowlMintLevel==='function'){
+      try{ if(typeof navTo==='function' && typeof PAGE_IDS!=='undefined'){ navTo(PAGE_IDS.indexOf('bowl')); } }catch(e){}
+      setTimeout(function(){ requestAnimationFrame(function(){
+        bowlMintLevel({ levelNum:_mintLvl, ballCount:_mintBalls, rewardName:_mintReward, sealCabinet:true });
+      }); }, 420);
+    } else { rwShowCelebration({levelNum:_mintLvl,name:_mintReward}); }
+  }catch(e){ try{ rwShowCelebration({levelNum:_mintLvl,name:_mintReward}); }catch(_e){} }
   /* Clear active */
   rw.active=null;
   setReward(rw);
@@ -15115,6 +15128,635 @@ window.finMonthNav = function(delta){
   };
 
 })();
+</script>
+
+<!-- ════════════════════════════════════════════════════════════════
+     LEVEL MINT — "Currency Mint" level-up ceremony (Direction C)
+     Fully isolated: own overlay layer, own RAF, own teardown.
+     Reuses: tcBallSVG(), TC_BALL_PALETTE, _play* sounds, _triggerHaptic.
+     Touches the live gumball engine: NEVER.
+════════════════════════════════════════════════════════════════ -->
+<style id="lvlmint-css">
+/* ── Overlay shell ── */
+#mint-overlay{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;
+  background:radial-gradient(120% 90% at 50% 40%,rgba(10,18,42,.55),rgba(4,8,22,.86));
+  backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);opacity:0;transition:opacity .35s ease}
+#mint-overlay.on{display:flex;opacity:1}
+.mint-stage{position:relative;width:300px;max-width:88vw;height:380px;max-height:74vh;display:flex;
+  align-items:center;justify-content:center;flex-direction:column}
+/* glow behind the action */
+.mint-aura{position:absolute;top:42%;left:50%;width:300px;height:300px;transform:translate(-50%,-50%) scale(.4);
+  border-radius:50%;background:radial-gradient(circle,rgba(90,154,255,.34),rgba(90,154,255,.08) 55%,transparent 70%);
+  opacity:0;transition:opacity .5s ease,transform .9s cubic-bezier(.34,1.3,.64,1);pointer-events:none;filter:blur(2px)}
+.mint-aura.lit{opacity:1;transform:translate(-50%,-50%) scale(1)}
+/* the ball field — balls live here during gather/pour */
+.mint-field{position:absolute;top:42%;left:50%;width:0;height:0}
+.mint-ball{position:absolute;top:0;left:0;will-change:transform,opacity;opacity:0;
+  filter:drop-shadow(0 3px 6px rgba(0,4,16,.5))}
+
+/* ── THE COIN ── chrome rim + glass core + ball cluster + level pill ── */
+.mintcoin{position:relative;border-radius:50%;flex:0 0 auto}
+.mintcoin-rim{position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 218deg,#eef3fb 0%,#7e93b6 12%,#cdd9ec 26%,#566884 40%,#dde6f3 54%,#5f7395 68%,#b9c7de 82%,#eef3fb 100%);
+  box-shadow:0 0 0 1px rgba(255,255,255,.35) inset,0 10px 30px rgba(0,6,24,.6),0 0 34px rgba(77,141,255,.32)}
+.mintcoin-bezel{position:absolute;border-radius:50%;
+  background:linear-gradient(150deg,#9fb2d2,#3c4d6c 48%,#8aa0c4);
+  box-shadow:0 1px 2px rgba(255,255,255,.4) inset,0 -2px 5px rgba(0,4,18,.55) inset}
+.mintcoin-glass{position:absolute;border-radius:50%;overflow:hidden;
+  background:radial-gradient(circle at 38% 30%,rgba(38,66,140,.55),rgba(8,16,42,.92) 78%);
+  box-shadow:0 0 0 1px rgba(0,6,24,.6) inset,0 2px 10px rgba(0,4,18,.5) inset}
+.mintcoin-cluster{position:absolute;top:0;left:0;width:100%;height:100%}
+.mintcoin-cluster .cb{position:absolute;transform:translate(-50%,-50%);
+  filter:drop-shadow(0 2px 3px rgba(0,4,16,.45))}
+.mintcoin-spec{position:absolute;top:6%;left:14%;width:62%;height:34%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 40% 35%,rgba(255,255,255,.6),rgba(255,255,255,.12) 55%,transparent 70%);
+  transform:rotate(-12deg)}
+.mintcoin-sweep{position:absolute;inset:0;border-radius:50%;pointer-events:none;overflow:hidden;opacity:0}
+.mintcoin-sweep::after{content:'';position:absolute;top:-40%;left:-60%;width:50%;height:180%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.85),transparent);transform:skewX(-18deg)}
+.mintcoin-sweep.go{opacity:1}
+.mintcoin-sweep.go::after{animation:mintSweep .62s cubic-bezier(.4,0,.2,1) 1 forwards}
+@keyframes mintSweep{from{left:-60%}to{left:130%}}
+/* level pill — chrome plate engraved at the bottom of the coin face */
+.mintcoin-pill{position:absolute;left:50%;bottom:9%;transform:translateX(-50%) scale(.2);opacity:0;
+  display:flex;align-items:center;gap:.32em;white-space:nowrap;
+  padding:.18em .62em;border-radius:999px;
+  background:linear-gradient(160deg,#e7eefa,#92a6c8 46%,#566a8c);
+  box-shadow:0 1px 1px rgba(255,255,255,.55) inset,0 -1px 3px rgba(0,4,18,.5) inset,0 3px 8px rgba(0,6,24,.5);
+  font-family:var(--font-ui);font-weight:900;letter-spacing:.4px;
+  color:#1a2740;text-shadow:0 1px 0 rgba(255,255,255,.4)}
+.mintcoin-pill.stamp{animation:mintPill .5s cubic-bezier(.34,1.7,.5,1) 1 forwards}
+@keyframes mintPill{0%{transform:translateX(-50%) scale(.2);opacity:0}
+  60%{transform:translateX(-50%) scale(1.14);opacity:1}100%{transform:translateX(-50%) scale(1);opacity:1}}
+.mintcoin-pill .pl-l{font-size:.62em;font-weight:800;letter-spacing:1.5px;opacity:.72}
+
+/* the animated coin wrapper (scales in around the cluster) */
+.mint-coinwrap{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%) scale(0);opacity:0;
+  will-change:transform,opacity}
+.mint-coinwrap.form{opacity:1;transition:transform .62s cubic-bezier(.34,1.5,.5,1),opacity .4s ease;
+  transform:translate(-50%,-50%) scale(1)}
+.mint-coinwrap.pop{transform:translate(-50%,-50%) scale(1.06)}
+.mint-coinwrap.float{animation:mintFloat 3.4s ease-in-out infinite}
+@keyframes mintFloat{0%,100%{margin-top:0}50%{margin-top:-7px}}
+
+/* ── end card ── */
+.mint-card{position:absolute;left:50%;bottom:2%;transform:translateX(-50%) translateY(14px);
+  width:300px;max-width:88vw;text-align:center;opacity:0;transition:opacity .45s ease,transform .45s cubic-bezier(.34,1.3,.6,1);pointer-events:none}
+.mint-card.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.mint-card-eyebrow{font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:3px;
+  text-transform:uppercase;color:var(--a2);opacity:.8;margin-bottom:6px}
+.mint-card-title{font-family:var(--font-ui);font-size:23px;font-weight:900;letter-spacing:-.4px;
+  color:#fff;text-shadow:0 0 22px rgba(77,141,255,.5);margin-bottom:7px;line-height:1.15}
+.mint-card-title .rwd{color:var(--gold);text-shadow:0 0 18px rgba(255,217,125,.45)}
+.mint-card-sub{font-size:12.5px;color:rgba(220,232,255,.72);line-height:1.5;margin-bottom:4px}
+.mint-card-meta{font-size:11px;color:rgba(150,180,230,.6);font-weight:700;margin-top:8px}
+.mint-card-tap{font-size:10.5px;color:rgba(255,255,255,.32);margin-top:16px;letter-spacing:.5px}
+.mint-card-tag{display:inline-block;margin-bottom:10px;padding:3px 10px;border-radius:999px;
+  background:rgba(255,217,125,.12);border:1px solid rgba(255,217,125,.32);
+  font-family:var(--font-ui);font-size:9.5px;font-weight:800;letter-spacing:1.5px;color:var(--gold)}
+
+/* tiny spark particles on stamp */
+.mint-spark{position:absolute;top:42%;left:50%;width:5px;height:5px;border-radius:50%;
+  background:radial-gradient(circle,#fff,rgba(180,210,255,.6));pointer-events:none;opacity:0}
+
+@media (prefers-reduced-motion:reduce){
+  .mint-coinwrap.form{transition:opacity .3s ease}
+  .mint-coinwrap.float{animation:none}
+  .mintcoin-pill.stamp{animation:none;opacity:1;transform:translateX(-50%) scale(1)}
+  .mint-ball{transition:none!important}
+}
+
+/* ════ LEVEL VAULT (the permanent shelf on the Reward page) ════ */
+.lvlv-wrap{margin:22px 2px 6px}
+.lvlv-head{display:flex;align-items:center;gap:8px;margin-bottom:11px;padding:0 2px}
+.lvlv-title{font-family:var(--font-ui);font-size:13px;font-weight:900;letter-spacing:.3px;color:var(--a2);
+  display:flex;align-items:center;gap:7px}
+.lvlv-title svg{width:15px;height:15px}
+.lvlv-count{font-family:var(--font-ui);font-size:10px;font-weight:700;color:var(--muted);
+  background:rgba(77,141,255,.1);padding:2px 8px;border-radius:999px}
+.lvlv-preview{margin-left:auto;background:rgba(255,217,125,.1);border:1px solid rgba(255,217,125,.28);
+  color:var(--gold);font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:.4px;
+  cursor:pointer;padding:5px 11px;border-radius:7px;display:inline-flex;align-items:center;gap:5px;
+  -webkit-tap-highlight-color:transparent}
+.lvlv-preview:active{transform:scale(.95)}
+/* the chrome/glass cabinet, matching trophy-case language */
+.lvlv-cab{position:relative;border-radius:14px;padding:16px 14px 14px;overflow:hidden;
+  background:linear-gradient(168deg,rgba(20,32,60,.7),rgba(9,15,34,.85));
+  border:1px solid rgba(90,140,220,.18);
+  box-shadow:0 10px 30px rgba(0,6,24,.4),0 0 0 1px rgba(255,255,255,.03) inset}
+.lvlv-cab::before{content:'';position:absolute;top:0;left:0;right:0;height:8px;
+  background:linear-gradient(90deg,rgba(120,150,200,.25),rgba(200,220,255,.45),rgba(120,150,200,.25));opacity:.5}
+.lvlv-shelf{display:flex;gap:14px;overflow-x:auto;padding:6px 2px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.lvlv-shelf::-webkit-scrollbar{display:none}
+.lvlv-slot{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:7px;width:78px}
+.lvlv-slot-cap{text-align:center}
+.lvlv-slot-name{font-family:var(--font-ui);font-size:10px;font-weight:800;color:#dce8ff;line-height:1.2;
+  max-width:78px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.lvlv-slot-meta{font-size:8.5px;color:var(--muted);font-weight:700;margin-top:1px}
+.lvlv-coin-fresh{animation:lvlvFresh 1.1s cubic-bezier(.34,1.4,.6,1) 1}
+@keyframes lvlvFresh{0%{transform:scale(.2);opacity:0}55%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+/* next-journey pedestal */
+.lvlv-next{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:7px;width:78px}
+.lvlv-pedestal{width:64px;height:64px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;
+  border:2px dashed rgba(120,180,255,.32);
+  background:radial-gradient(circle,rgba(77,141,255,.1),transparent 70%);
+  animation:lvlvPulse 2.6s ease-in-out infinite}
+@keyframes lvlvPulse{0%,100%{box-shadow:0 0 14px rgba(77,141,255,.18)}50%{box-shadow:0 0 26px rgba(77,141,255,.4)}}
+.lvlv-ped-num{font-family:var(--font-ui);font-size:20px;font-weight:900;color:var(--a2);opacity:.55}
+.lvlv-ped-ring{position:absolute;inset:-2px;border-radius:50%;
+  background:conic-gradient(var(--a2) var(--pct,0%),transparent 0);
+  -webkit-mask:radial-gradient(circle,transparent 27px,#000 28px);mask:radial-gradient(circle,transparent 27px,#000 28px);
+  opacity:.85}
+.lvlv-empty{text-align:center;padding:14px 8px;color:var(--muted);font-size:11px;line-height:1.5}
+.lvlv-setbtn{display:inline-block;margin-top:8px;background:none;border:none;color:var(--a2);font-family:var(--font-ui);
+  font-size:11px;font-weight:800;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.lvlv-coinbtn{cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent;transition:transform .15s ease,filter .15s ease}
+.lvlv-coinbtn:active{transform:scale(.93)}
+.lvlv-coinbtn:hover .mintcoin{filter:brightness(1.06)}
+
+/* tappable coin affordance in the ceremony */
+.mint-coinwrap.tappable{cursor:pointer}
+.mint-coinwrap.tappable:active .mintcoin{filter:brightness(1.08)}
+.mint-coinwrap.tappable::after{content:'';position:absolute;inset:-6px;border-radius:50%;
+  box-shadow:0 0 0 2px rgba(126,178,255,.0);animation:mintTapHint 1.8s ease-in-out infinite;pointer-events:none}
+@keyframes mintTapHint{0%,100%{box-shadow:0 0 0 2px rgba(126,178,255,0)}50%{box-shadow:0 0 18px 2px rgba(126,178,255,.4)}}
+
+/* ════ INTERACTIVE COIN VIEWER ════ */
+#coin-viewer{position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s ease;pointer-events:none}
+#coin-viewer.on{opacity:1;pointer-events:auto}
+.cv-backdrop{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 42%,rgba(8,14,34,.88),rgba(3,6,18,.96));backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.cv-coin{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);will-change:transform,opacity;transition:transform .42s cubic-bezier(.34,1.4,.5,1),opacity .3s ease}
+.cv-glass{position:absolute;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 38% 30%,rgba(38,66,140,.5),rgba(8,16,42,.94) 80%);box-shadow:0 0 0 1px rgba(0,6,24,.6) inset,0 3px 14px rgba(0,4,18,.55) inset}
+.cv-canvas{position:absolute;inset:0;display:block;touch-action:none}
+.cv-glass .mintcoin-spec{top:5%;left:13%;width:60%;height:30%}
+.cv-cap{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);width:320px;max-width:86vw;text-align:center;font-family:var(--font-ui);font-size:13px;font-weight:800;color:#dce8ff;cursor:pointer;line-height:1.4}
+.cv-cap span{display:block;margin-top:6px;font-size:11px;font-weight:600;color:rgba(150,180,230,.62)}
+
+/* ════ BALL CLUSTER (sealed token — no coin, no edges) ════ */
+.ballclus{position:relative}
+.ballclus-glow{position:absolute;inset:-14%;border-radius:50%;background:radial-gradient(circle,rgba(77,141,255,.34),rgba(77,141,255,.08) 55%,transparent 70%);filter:blur(1px)}
+.ballclus-balls{position:absolute;inset:0}
+.ballclus .cb{position:absolute;transform:translate(-50%,-50%);filter:drop-shadow(0 2px 4px rgba(0,4,16,.5))}
+.lvlv-coinbtn:hover .ballclus{filter:brightness(1.08)}
+
+/* ceremony cluster glow + tap target */
+.mint-cglow{position:absolute;transform:translate(-50%,-50%);border-radius:50%;opacity:0;transition:opacity .6s ease;pointer-events:none;
+  background:radial-gradient(circle,rgba(90,154,255,.42),rgba(90,154,255,.1) 50%,transparent 68%)}
+.mint-cglow.lit{opacity:1}
+.mint-cluster-hit{position:absolute;transform:translate(-50%,-50%);border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:2}
+.mint-cluster-hit::after{content:'';position:absolute;inset:0;border-radius:50%;animation:mintTapHint 1.8s ease-in-out infinite;pointer-events:none}
+
+/* ════ TROPHY CASE VIEWER (zero-g ball case) ════ */
+#trophy-viewer{position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s ease;pointer-events:none}
+#trophy-viewer.on{opacity:1;pointer-events:auto}
+.tv-backdrop{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 42%,rgba(8,14,34,.9),rgba(3,6,18,.97));backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.tv-case{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:18px;overflow:hidden;will-change:transform,opacity;
+  transition:transform .42s cubic-bezier(.34,1.4,.5,1),opacity .3s ease;
+  background:linear-gradient(168deg,#2a3a5c,#141f3a 55%,#0c1428);
+  box-shadow:0 24px 60px rgba(0,6,24,.6),0 0 0 1px rgba(255,255,255,.06) inset,0 0 40px rgba(77,141,255,.18)}
+.tv-top{position:absolute;top:0;left:0;right:0;height:16%;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,rgba(150,180,230,.22),rgba(20,32,60,0));border-bottom:1px solid rgba(120,160,220,.18)}
+.tv-top::before{content:'';position:absolute;top:0;left:6%;right:6%;height:2px;background:linear-gradient(90deg,transparent,rgba(200,224,255,.6),transparent)}
+.tv-ttl{font-family:var(--font-ui);font-size:13px;font-weight:800;letter-spacing:.5px;color:#cfe0ff;max-width:calc(100% - 24px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tv-ttl b{color:var(--gold)}
+.tv-glass{position:absolute;border-radius:12px;overflow:hidden;
+  background:radial-gradient(120% 80% at 50% 0%,rgba(40,70,140,.4),rgba(8,16,42,.92) 80%);
+  box-shadow:0 0 0 1px rgba(0,6,24,.5) inset,0 6px 20px rgba(0,4,18,.5) inset}
+.tv-stage{position:absolute;inset:0;touch-action:none}
+.tv-ball{position:absolute;top:0;left:0;will-change:transform;pointer-events:none;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.tv-ball svg{display:block;width:100%;height:100%}
+.tv-sheen{position:absolute;top:0;left:0;right:0;height:42%;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.1),transparent);border-radius:12px 12px 0 0}
+.tv-shelf{position:absolute;left:6%;right:6%;bottom:6px;height:1px;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(160,210,255,.4),transparent)}
+.tv-cap{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);width:320px;max-width:86vw;text-align:center;font-family:var(--font-ui);font-size:12px;font-weight:700;color:rgba(190,210,245,.7);cursor:pointer}
+</style>
+
+<div id="mint-overlay" aria-hidden="true"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   LEVEL MINT MODULE  (v2 — cluster + trophy-case viewer)
+   - Ceremony lifts the REAL trophy-cabinet balls, plays over Bowl page
+   - NO coin: balls settle into a glowing CLUSTER
+   - Tap the cluster → opens a TROPHY CASE; balls float (zero-g) + drag
+   - Cabinet empties ONLY on a real level clear (never on preview)
+   Isolated overlay; never touches the live gumball engine.
+════════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+
+  var MINT_MAX_BALLS = 24;
+  var VIEWER_MAX     = 99;   /* show the true number of balls a level took */
+  var _mintBusy = false;
+  var _viewerOpen = false;
+
+  function _romanNum(n){
+    if(typeof n!=='number'||n<1) return String(n||1);
+    var map=[[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']],out=''; n=Math.floor(n);
+    if(n>39) return String(n);
+    for(var i=0;i<map.length;i++){ while(n>=map[i][0]){ out+=map[i][1]; n-=map[i][0]; } }
+    return out;
+  }
+  function _esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function _easeInOut(t){ return t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; }
+  function _ptsToBalls(pts){ if(!pts) return 7; return Math.max(4, Math.min(MINT_MAX_BALLS, Math.round(pts/45))); }
+
+  /* (legacy _PAL/_palAt removed — viewer now uses tcBallSVG's palette by seed) */
+
+  function _packCluster(k, R){
+    var pts=[], ga=2.399963229728653;
+    for(var i=0;i<k;i++){ var r=R*Math.sqrt((i+0.5)/k), a=i*ga; pts.push({x:Math.cos(a)*r,y:Math.sin(a)*r}); }
+    return pts;
+  }
+  function _safeBall(sz, seed){
+    try{ if(typeof tcBallSVG==='function') return tcBallSVG(null,null,sz,seed); }catch(e){}
+    return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 52 52"><defs><radialGradient id="fb'+seed+'" cx="36%" cy="30%" r="72%">'
+      +'<stop offset="0%" stop-color="#bcd8ff"/><stop offset="55%" stop-color="#2266ee"/><stop offset="100%" stop-color="#0a1e55"/>'
+      +'</radialGradient></defs><circle cx="26" cy="26" r="22" fill="url(#fb'+seed+')"/></svg>';
+  }
+
+  /* ── Ball CLUSTER markup (replaces the coin) — just packed balls + a soft glow, no edges ── */
+  window.ballClusterHTML = function(levelNum, ballCount, sizePx, opts){
+    opts = opts||{};
+    var S = sizePx||64;
+    var showBalls = Math.min(ballCount||0, opts.maxBalls || (S>140?MINT_MAX_BALLS:7));
+    var clusterR = S*0.42;
+    var pack = _packCluster(showBalls, clusterR);
+    var ballSz = Math.max(8, Math.min(S*0.40, (S*1.05)/(Math.sqrt(Math.max(1,showBalls))+1.0)));
+    var seedBase = (levelNum||1)*7;
+    var cluster='';
+    for(var i=0;i<pack.length;i++){
+      var cx=50 + (pack[i].x/S)*100, cy=50 + (pack[i].y/S)*100;
+      cluster+='<span class="cb" style="left:'+cx+'%;top:'+cy+'%;width:'+ballSz+'px;height:'+ballSz+'px">'
+        +_safeBall(Math.round(ballSz), seedBase+i)+'</span>';
+    }
+    return '<div class="ballclus" style="width:'+S+'px;height:'+S+'px">'
+      +'<div class="ballclus-glow"></div>'
+      +'<div class="ballclus-balls">'+cluster+'</div>'
+      +'</div>';
+  };
+  /* legacy alias (kept so any old reference still resolves) */
+  window.mintCoinHTML = function(l,b,s,o){ return window.ballClusterHTML(l,b,s,o); };
+
+  function snd(fn,arg){ try{ if(typeof window[fn]==='function') window[fn](arg); }catch(e){} }
+  function hap(t){ try{ if(typeof _triggerHaptic==='function') _triggerHaptic(t); }catch(e){} }
+
+  /* empty the trophy cabinet using the app's own data path (same as shatter, no red flash) */
+  function _sealCabinetData(){
+    try{
+      if(typeof tcGetCase==='function' && typeof tcSaveCase==='function'){
+        var tc=tcGetCase();
+        if(tc){ tc._lastStreakSize=(tc.balls&&tc.balls.length)||tc._lastStreakSize||0; tc.balls=[]; tcSaveCase(tc); }
+        if(typeof tcRender==='function') tcRender(false);
+        try{ console.log('[mint] cabinet sealed (emptied) on level clear'); }catch(e){}
+      }
+    }catch(e){ try{ console.warn('[mint] cabinet seal failed', e.message); }catch(_){} }
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     THE CEREMONY — lifts real cabinet balls → glowing cluster
+     opts: { levelNum, ballCount, rewardName, preview, sealCabinet }
+  ════════════════════════════════════════════════════════════ */
+  window.bowlMintLevel = function(opts){
+    opts = opts||{};
+    try{ console.log('[mint] fired', opts); }catch(e){}
+    var ov = document.getElementById('mint-overlay');
+    if(!ov){ try{ console.warn('[mint] #mint-overlay missing'); }catch(e){} return; }
+    if(_mintBusy){ if(ov.classList.contains('on')) return; _mintBusy=false; }
+    _mintBusy = true;
+
+    var reduce=false; try{ reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){}
+    var W=window.innerWidth, H=window.innerHeight;
+    var lvl  = opts.levelNum || 1;
+    var rewardName = opts.rewardName || '';
+    var preview = !!opts.preview;
+    var sealCabinet = !!opts.sealCabinet && !preview;
+
+    /* SOURCE: real trophy-cabinet balls */
+    var srcEls = [].slice.call(document.querySelectorAll('#tc-cabinet-inner .tc-ball'));
+    var sources = srcEls.map(function(el){ var r=el.getBoundingClientRect();
+      return { x:r.left+r.width/2, y:r.top+r.height/2, size:Math.max(18,Math.min(46,r.width||40)) }; })
+      .filter(function(s){ return s.y>0 && s.x>0; });
+
+    var nVis;
+    if(sources.length>0){ nVis=Math.min(sources.length, MINT_MAX_BALLS); sources=sources.slice(0,nVis); }
+    else {
+      nVis=Math.max(3, Math.min(opts.ballCount||12, MINT_MAX_BALLS));
+      var cab=document.getElementById('tc-cabinet')||document.getElementById('tc-cabinet-inner');
+      var cr=cab?cab.getBoundingClientRect():null; if(!cr||cr.width<10) cr={left:W/2-60,top:H-170,width:120,height:70};
+      sources=[]; for(var i=0;i<nVis;i++){ sources.push({x:cr.left+cr.width*(0.15+0.7*Math.random()),y:cr.top+cr.height*(0.25+0.55*Math.random()),size:34}); }
+    }
+    var trueCount = opts.ballCount!=null ? opts.ballCount : nVis;
+
+    var cx=Math.round(W/2), cy=Math.round(Math.min(H*0.42, H/2-30));
+    var ringR=Math.min(Math.round(W*0.32),132);
+    var clumpR=Math.min(Math.round(W*0.17),72);     /* final tight clump radius */
+    var glowD=clumpR*3.4, hitD=clumpR*2.6;
+
+    var cardSub = preview
+      ? 'A preview of what you\u2019ll see the moment you bank 2,000.'
+      : (rewardName ? '<span class="rwd">'+_esc(rewardName)+'</span> is yours. This can never shatter.'
+                    : 'Sealed forever. This can never shatter.');
+    var metaLine = trueCount+' ball'+(trueCount===1?'':'s')+' sealed'+(trueCount>nVis?' \u00b7 showing '+nVis:'');
+
+    ov.innerHTML =
+      '<div class="mint-field" id="mint-field" style="position:absolute;inset:0"></div>'
+      +'<div class="mint-aura" id="mint-aura" style="left:'+cx+'px;top:'+cy+'px"></div>'
+      +'<div class="mint-cglow" id="mint-cglow" style="left:'+cx+'px;top:'+cy+'px;width:'+glowD+'px;height:'+glowD+'px"></div>'
+      +'<div class="mint-card" id="mint-card">'
+        +(preview?'<div class="mint-card-tag">PREVIEW</div>':'')
+        +'<div class="mint-card-eyebrow">Sealed to your Level Vault</div>'
+        +'<div class="mint-card-title">Level '+_romanNum(lvl)+' — Locked In</div>'
+        +'<div class="mint-card-sub">'+cardSub+'</div>'
+        +'<div class="mint-card-meta">'+metaLine+'</div>'
+        +'<div class="mint-card-tap"><b style="color:var(--a2)">Tap the cluster</b> to open it \u00b7 tap anywhere else to continue</div>'
+      +'</div>';
+
+    var field=ov.querySelector('#mint-field'), aura=ov.querySelector('#mint-aura'),
+        cglow=ov.querySelector('#mint-cglow'), card=ov.querySelector('#mint-card');
+
+    /* flyers start exactly on the cabinet balls */
+    var balls=[];
+    for(var i2=0;i2<nVis;i2++){
+      var s=sources[i2], sz=s.size;
+      var el=document.createElement('div'); el.className='mint-ball';
+      el.style.width=sz+'px'; el.style.height=sz+'px'; el.style.opacity='1';
+      el.style.transform='translate('+s.x+'px,'+s.y+'px) translate(-50%,-50%)';
+      el.innerHTML=_safeBall(Math.round(sz), lvl*7+i2);
+      field.appendChild(el);
+      var ang=(i2/nVis)*Math.PI*2 - Math.PI/2;
+      balls.push({ el:el, sx:s.x, sy:s.y, rx:cx+Math.cos(ang)*ringR, ry:cy+Math.sin(ang)*ringR, base:ang, tx:0, ty:0, px:s.x, py:s.y });
+    }
+    var pack=_packCluster(nVis, clumpR);
+    for(var j=0;j<balls.length;j++){ balls[j].tx=cx+pack[j].x; balls[j].ty=cy+pack[j].y; }
+
+    ov.classList.add('on');
+    requestAnimationFrame(function(){ if(aura) aura.classList.add('lit'); });
+    snd('_playMechCapture'); hap('crank');
+
+    var LIFT=reduce?120:680, GATHER=reduce?120:820, POUR_STAGGER=reduce?0:30, POUR_DUR=reduce?160:520;
+    var t0=performance.now(), raf=null, phase='lift', phaseStart=t0;
+    function setPos(b){ b.el.style.transform='translate('+b.px+'px,'+b.py+'px) translate(-50%,-50%) scale('+(b.sc||1)+')'; }
+
+    function frame(now){
+      try{
+        var t=now-phaseStart;
+        if(phase==='lift'){
+          var e=_easeInOut(Math.min(1,t/LIFT));
+          for(var k=0;k<balls.length;k++){ var b=balls[k];
+            b.px=b.sx+(b.rx-b.sx)*e; b.py=b.sy+(b.ry-b.sy)*e - Math.sin(e*Math.PI)*40; b.sc=1+0.08*Math.sin(e*Math.PI); setPos(b); }
+          if(t>=LIFT){ phase='gather'; phaseStart=now; snd('_playMechCapture'); }
+        } else if(phase==='gather'){
+          var spin=t*0.0024;
+          for(var g=0;g<balls.length;g++){ var bg=balls[g]; var a=bg.base+spin; var br=1+Math.sin(t*0.004+g)*0.04;
+            bg.px=cx+Math.cos(a)*ringR*br; bg.py=cy+Math.sin(a)*ringR*br; bg.sc=1; setPos(bg); }
+          if(t>=GATHER){ phase='pour'; phaseStart=now;
+            for(var q=0;q<balls.length;q++){ balls[q].fromx=balls[q].px; balls[q].fromy=balls[q].py; }
+            snd('_playChuteRattle'); hap('medium'); }
+        } else if(phase==='pour'){
+          var done=true;
+          for(var m=0;m<balls.length;m++){ var bb=balls[m]; var local=(t-m*POUR_STAGGER)/POUR_DUR;
+            if(local<0){ done=false; continue; } if(local<1) done=false;
+            var pe=_easeInOut(Math.max(0,Math.min(1,local)));
+            bb.px=bb.fromx+(bb.tx-bb.fromx)*pe; bb.py=bb.fromy+(bb.ty-bb.fromy)*pe; bb.sc=1-0.06*Math.sin(pe*Math.PI); setPos(bb); }
+          if(done){ phase='seal'; _doSeal(); return; }
+        }
+        raf=requestAnimationFrame(frame);
+      }catch(fe){ try{ console.error('[mint] frame error', fe.message); _doSeal(); }catch(e){ _mintBusy=false; } }
+    }
+
+    function _doSeal(){
+      if(cglow) cglow.classList.add('lit');
+      snd('_playPerfectDay'); hap('celebrate'); _sparks();
+      /* tiny settle pop on the clump */
+      for(var i=0;i<balls.length;i++){ (function(b){ b.sc=1.0;
+        try{ if(typeof b.el.animate==='function') b.el.animate([{transform:b.el.style.transform.replace(/scale\([^)]*\)/,'')+' scale(1.12)'},
+                      {transform:b.el.style.transform.replace(/scale\([^)]*\)/,'')+' scale(1)'}],
+                      {duration:reduce?0:340,easing:'cubic-bezier(.34,1.5,.5,1)'}); }catch(e){} })(balls[i]); }
+
+      setTimeout(function(){ if(card) card.classList.add('show'); snd('_playTrayTonk',1); hap('success'); }, reduce?120:480);
+
+      /* tappable cluster → trophy case (does NOT close the ceremony) */
+      setTimeout(function(){
+        var hit=document.createElement('div'); hit.className='mint-cluster-hit';
+        hit.style.left=cx+'px'; hit.style.top=cy+'px'; hit.style.width=hitD+'px'; hit.style.height=hitD+'px';
+        hit.addEventListener('click', function(ev){ ev.stopPropagation();
+          window.openTrophyViewer({ levelNum:lvl, ballCount:trueCount, name:rewardName, fromRect:hit.getBoundingClientRect() }); });
+        ov.appendChild(hit);
+        ov.addEventListener('click', _close, {once:true});
+      }, reduce?140:560);
+    }
+
+    function _sparks(){
+      if(reduce) return;
+      for(var i=0;i<14;i++){(function(idx){
+        var sp=document.createElement('div'); sp.className='mint-spark';
+        sp.style.left=cx+'px'; sp.style.top=cy+'px'; sp.style.opacity='1'; ov.appendChild(sp);
+        var ang=(idx/14)*Math.PI*2+Math.random()*0.4, dist=clumpR*2.2+Math.random()*40;
+        try{ if(typeof sp.animate==='function') sp.animate([{transform:'translate(-50%,-50%) translate(0,0) scale(1)',opacity:1},
+          {transform:'translate(-50%,-50%) translate('+(Math.cos(ang)*dist)+'px,'+(Math.sin(ang)*dist)+'px) scale(0)',opacity:0}],
+          {duration:520+Math.random()*220,easing:'cubic-bezier(.2,.6,.3,1)'}); }catch(e){}
+        setTimeout(function(){ try{sp.remove();}catch(e){} },820);
+      })(i);}
+    }
+
+    function _close(){
+      if(_viewerOpen) return;
+      ov.classList.remove('on');
+      setTimeout(function(){
+        ov.innerHTML=''; _mintBusy=false;
+        if(sealCabinet) _sealCabinetData();   /* empty cabinet ONLY on real clear */
+        try{ if(typeof renderLevelVault==='function') renderLevelVault(true); }catch(e){}
+      }, 360);
+    }
+
+    raf=requestAnimationFrame(frame);
+    setTimeout(function(){ if(_mintBusy && !document.querySelector('#mint-card.show')){ try{ console.warn('[mint] stall→seal'); _doSeal(); }catch(e){ _mintBusy=false; } } }, reduce?600:5200);
+    setTimeout(function(){ if(_mintBusy && !document.querySelector('#mint-card.show')){ try{ ov.classList.remove('on'); ov.innerHTML=''; }catch(e){} _mintBusy=false; } }, reduce?1800:7800);
+  };
+
+  /* ════════════════════════════════════════════════════════════
+     TROPHY CASE VIEWER — glass case, balls float (zero-g) + drag
+     opts: { levelNum, ballCount, name, fromRect }
+  ════════════════════════════════════════════════════════════ */
+  window.openTrophyViewer = function(opts){
+    opts=opts||{};
+    if(_viewerOpen) return; _viewerOpen=true;
+    var lvl=opts.levelNum||1, name=opts.name||'';
+    var n=Math.max(1, Math.min(opts.ballCount||7, VIEWER_MAX));
+    var from=opts.fromRect||null;
+
+    var W=window.innerWidth, H=window.innerHeight;
+    var Wc=Math.round(Math.min(W*0.92, 460));
+    var Hc=Math.round(Math.min(Wc*1.06, H*0.66));
+    var frame=Math.round(Wc*0.035), topH=Math.round(Hc*0.16);
+
+    var host=document.createElement('div'); host.id='trophy-viewer';
+    host.innerHTML=
+      '<div class="tv-backdrop"></div>'
+      +'<div class="tv-case" style="width:'+Wc+'px;height:'+Hc+'px">'
+        +'<div class="tv-top"><span class="tv-ttl"><b>LVL '+_romanNum(lvl)+'</b>'+(name?' \u00b7 '+_esc(name):'')+' \u00b7 '+n+' ball'+(n===1?'':'s')+'</span></div>'
+        +'<div class="tv-glass"><div class="tv-stage"></div><div class="tv-sheen"></div><div class="tv-shelf"></div></div>'
+      +'</div>'
+      +'<div class="tv-cap">drag the balls \u00b7 tap to stir \u00b7 tap outside to close</div>';
+    document.body.appendChild(host);
+
+    var caseEl=host.querySelector('.tv-case'), glass=host.querySelector('.tv-glass'), stage=host.querySelector('.tv-stage');
+    glass.style.left=frame+'px'; glass.style.right=frame+'px'; glass.style.bottom=frame+'px'; glass.style.top=topH+'px';
+    var gW=Wc-frame*2, gH=Hc-frame-topH;
+    stage.style.width=gW+'px'; stage.style.height=gH+'px';
+
+    /* size balls by AREA so any count fits with breathing room */
+    var fillFrac = n>50 ? 0.34 : 0.40;
+    var baseR=Math.sqrt((gW*gH*fillFrac)/(n*Math.PI));
+    baseR=Math.max(7, Math.min(baseR, Math.min(gW,gH)*0.15));
+
+    /* build REAL tcBallSVG balls (identical to the collected ones) — seeded to match this level's cluster token */
+    var P=[];
+    for(var i=0;i<n;i++){
+      var r=baseR*(0.9+Math.random()*0.2), d=Math.round(r*2);
+      var bx=r+Math.random()*(gW-2*r), by=r+Math.random()*(gH-2*r);
+      var el=document.createElement('div'); el.className='tv-ball';
+      el.style.width=d+'px'; el.style.height=d+'px';
+      el.style.transform='translate('+(bx-r)+'px,'+(by-r)+'px)';   /* placed before first paint — kills the 0,0 flash */
+      el.innerHTML=_safeBall(d, (lvl*7)+i);
+      stage.appendChild(el);
+      P.push({ el:el, x:bx, y:by, vx:(Math.random()-0.5)*3, vy:(Math.random()-0.5)*3, r:r });
+    }
+
+    /* ── ZERO-G FLOATY physics (calm) in a rectangular case ── */
+    var DAMP=0.99, WREST=0.72, BREST=0.38, JIT=0.014, MAXV=4.2;
+    var grabbed=null, grabMoved=false, downT=0, downX=0, downY=0;
+    function physics(){
+      var b,i,j;
+      for(i=0;i<P.length;i++){ b=P[i]; if(b===grabbed) continue;
+        b.vx+=(Math.random()-0.5)*JIT; b.vy+=(Math.random()-0.5)*JIT;
+        b.vx*=DAMP; b.vy*=DAMP;
+        var sp=Math.hypot(b.vx,b.vy); if(sp>MAXV){ b.vx=b.vx/sp*MAXV; b.vy=b.vy/sp*MAXV; }
+        b.x+=b.vx; b.y+=b.vy;
+      }
+      for(i=0;i<P.length;i++){ b=P[i];
+        if(b.x<b.r){ b.x=b.r; if(b!==grabbed) b.vx=Math.abs(b.vx)*WREST; }
+        else if(b.x>gW-b.r){ b.x=gW-b.r; if(b!==grabbed) b.vx=-Math.abs(b.vx)*WREST; }
+        if(b.y<b.r){ b.y=b.r; if(b!==grabbed) b.vy=Math.abs(b.vy)*WREST; }
+        else if(b.y>gH-b.r){ b.y=gH-b.r; if(b!==grabbed) b.vy=-Math.abs(b.vy)*WREST; }
+      }
+      for(i=0;i<P.length;i++){ for(j=i+1;j<P.length;j++){
+        var a=P[i], c=P[j], dx=c.x-a.x, dy=c.y-a.y, dd=Math.hypot(dx,dy), mind=a.r+c.r;
+        if(dd>0 && dd<mind){ var ux=dx/dd, uy=dy/dd, ov2=(mind-dd);
+          var aM=(a!==grabbed), cM=(c!==grabbed), push=ov2/((aM?1:0)+(cM?1:0)||1);
+          if(aM){ a.x-=ux*push; a.y-=uy*push; } if(cM){ c.x+=ux*push; c.y+=uy*push; }
+          var rvx=c.vx-a.vx, rvy=c.vy-a.vy, vr=rvx*ux+rvy*uy;
+          if(vr<0){ var im=-(1+BREST)*vr/2; if(aM){ a.vx-=im*ux; a.vy-=im*uy; } if(cM){ c.vx+=im*ux; c.vy+=im*uy; } }
+        }
+      }}
+    }
+    function render(){ for(var i=0;i<P.length;i++){ var b=P[i]; b.el.style.transform='translate('+(b.x-b.r)+'px,'+(b.y-b.r)+'px)'; } }
+    var rafId=null, running=true;
+    function loop(){ if(!running) return; physics(); render(); rafId=requestAnimationFrame(loop); }
+
+    function toStage(ev){ var rc=stage.getBoundingClientRect();
+      var px=(ev.touches?ev.touches[0].clientX:ev.clientX), py=(ev.touches?ev.touches[0].clientY:ev.clientY);
+      return { x:(px-rc.left)*(gW/(rc.width||gW)), y:(py-rc.top)*(gH/(rc.height||gH)) }; }
+    function onDown(ev){ var p=toStage(ev); downT=Date.now(); grabMoved=false; downX=p.x; downY=p.y;
+      var best=null, bd=1e9; for(var i=0;i<P.length;i++){ var b=P[i], dd2=Math.hypot(b.x-p.x,b.y-p.y); if(dd2<Math.max(b.r,22)&&dd2<bd){ bd=dd2; best=b; } }
+      if(best){ grabbed=best; grabbed.vx=0; grabbed.vy=0; } if(ev.cancelable) ev.preventDefault(); }
+    function onMove(ev){ if(!grabbed && downT===0) return; var p=toStage(ev);
+      if(grabbed){ var nx=Math.max(grabbed.r,Math.min(gW-grabbed.r,p.x)), ny=Math.max(grabbed.r,Math.min(gH-grabbed.r,p.y));
+        grabbed.vx=nx-grabbed.x; grabbed.vy=ny-grabbed.y; grabbed.x=nx; grabbed.y=ny; }
+      if(Math.hypot(p.x-downX,p.y-downY)>6) grabMoved=true; if(ev.cancelable) ev.preventDefault(); }
+    function onUp(ev){ if(grabbed){ grabbed=null; }
+      else if(!grabMoved && (Date.now()-downT)<300){
+        for(var i=0;i<P.length;i++){ var b=P[i], dx=b.x-downX, dy=b.y-downY, dd3=Math.hypot(dx,dy)||1, f=7/(0.4+dd3/Math.max(gW,gH));
+          b.vx+=(dx/dd3)*f+(Math.random()-0.5)*5; b.vy+=(dy/dd3)*f+(Math.random()-0.5)*5; } hap('light'); }
+      downT=0; grabMoved=false; if(ev&&ev.cancelable) ev.preventDefault(); }
+    stage.addEventListener('mousedown',onDown); window.addEventListener('mousemove',onMove); window.addEventListener('mouseup',onUp);
+    stage.addEventListener('touchstart',onDown,{passive:false}); stage.addEventListener('touchmove',onMove,{passive:false}); stage.addEventListener('touchend',onUp);
+
+    var sScale=0.6, dx=0, dy=0;
+    if(from){ sScale=Math.max(0.12,(from.width||Wc)/Wc); dx=(from.left+from.width/2)-W/2; dy=(from.top+from.height/2)-H/2; }
+    caseEl.style.transform='translate(-50%,-50%) translate('+dx+'px,'+dy+'px) scale('+sScale+')'; caseEl.style.opacity='0';
+    requestAnimationFrame(function(){ host.classList.add('on'); caseEl.style.transform='translate(-50%,-50%) translate(0,0) scale(1)'; caseEl.style.opacity='1'; });
+    snd('_playMechCapture'); hap('medium'); render(); loop();
+
+    function closeViewer(){ running=false; if(rafId) cancelAnimationFrame(rafId);
+      try{ window.removeEventListener('mousemove',onMove); window.removeEventListener('mouseup',onUp); }catch(e){}
+      host.classList.remove('on'); caseEl.style.transform='translate(-50%,-50%) translate('+dx+'px,'+dy+'px) scale('+sScale+')'; caseEl.style.opacity='0';
+      setTimeout(function(){ try{ host.remove(); }catch(e){} _viewerOpen=false; }, 320); }
+    host.querySelector('.tv-backdrop').addEventListener('click', closeViewer);
+    host.querySelector('.tv-cap').addEventListener('click', closeViewer);
+    caseEl.addEventListener('click', function(e){ e.stopPropagation(); });
+  };
+  /* alias so older references resolve */
+  window.openCoinViewer = function(o){ return window.openTrophyViewer(o); };
+
+  /* tap handler for vault clusters */
+  window.lvlvOpenTrophy = function(el){
+    if(!el) return;
+    try{
+      window.openTrophyViewer({
+        levelNum: parseInt(el.getAttribute('data-lvl'),10)||1,
+        ballCount: parseInt(el.getAttribute('data-balls'),10)||7,
+        name: el.getAttribute('data-name')||'',
+        fromRect: (el.querySelector('.ballclus')||el).getBoundingClientRect()
+      });
+    }catch(e){ try{console.error('[viewer]',e.message);}catch(_){} }
+  };
+  window.lvlvOpenCoin = function(el){ return window.lvlvOpenTrophy(el); };
+
+  /* ════ LEVEL VAULT (clusters, not coins) ════ */
+  window.renderLevelVault = function(freshPop){
+    var host=document.getElementById('lvl-vault'); if(!host) return;
+    var rw, score;
+    try{ rw=getReward()||{}; }catch(e){ rw={}; }
+    try{ score=getRwLevelScore()||{pts:0}; }catch(e){ score={pts:0}; }
+    var hist=(rw.history||[]).filter(function(h){ return h && !h.abandoned && (h.levelNum||h.pts); });
+    var active=rw.active||null;
+
+    var shelf='';
+    if(hist.length===0 && !active){
+      shelf='<div class="lvlv-empty">No levels banked yet.<br>Clear your first 2,000 pts to seal a cluster here.</div>';
+    } else {
+      var ordered=hist.slice().sort(function(a,b){ return (a.levelNum||0)-(b.levelNum||0) || (a.claimedAt||0)-(b.claimedAt||0); });
+      shelf+='<div class="lvlv-shelf">';
+      for(var i=0;i<ordered.length;i++){
+        var h=ordered[i], isNewest=freshPop&&i===ordered.length-1, ballGuess=h.balls||_ptsToBalls(h.pts), lv=h.levelNum||(i+1);
+        shelf+='<div class="lvlv-slot">'
+          +'<div class="lvlv-coinbtn'+(isNewest?' lvlv-coin-fresh':'')+'" role="button" tabindex="0"'
+            +' data-lvl="'+lv+'" data-balls="'+ballGuess+'" data-name="'+_esc(h.name||('Level '+lv))+'"'
+            +' onclick="lvlvOpenTrophy(this)">'+window.ballClusterHTML(lv, ballGuess, 64)+'</div>'
+          +'<div class="lvlv-slot-cap">'
+            +'<div class="lvlv-slot-name">'+_esc(h.name||('Level '+lv))+'</div>'
+            +'<div class="lvlv-slot-meta">Lvl '+lv+' \u00b7 '+(h.pts||2000)+' pts</div>'
+          +'</div></div>';
+      }
+      var REW_TARGET=(typeof REWARD_LEVEL_TARGET!=='undefined')?REWARD_LEVEL_TARGET:2000;
+      var nextNum=(active&&active.levelNum)||(ordered.length?(ordered[ordered.length-1].levelNum||ordered.length)+1:1);
+      var pct=active?Math.max(0,Math.min(100,Math.round((score.pts/REW_TARGET)*100))):0;
+      shelf+='<div class="lvlv-next"><div class="lvlv-pedestal"><div class="lvlv-ped-ring" style="--pct:'+pct+'%"></div>'
+        +'<div class="lvlv-ped-num">'+_romanNum(nextNum)+'</div></div>'
+        +'<div class="lvlv-slot-cap"><div class="lvlv-slot-name">'+(active?_esc(active.name||'In progress'):'Next journey')+'</div>'
+        +'<div class="lvlv-slot-meta">'+(active?(score.pts+' / '+REW_TARGET):'not started')+'</div></div></div>';
+      shelf+='</div>';
+      if(!active){ shelf+='<div style="text-align:center"><button class="lvlv-setbtn" onclick="if(typeof openRewardModal===\'function\')openRewardModal(false)">Set your next reward \u2192</button></div>'; }
+    }
+
+    host.innerHTML='<div class="lvlv-wrap"><div class="lvlv-head">'
+      +'<div class="lvlv-title"><svg viewBox="0 0 24 24" fill="currentColor"><use href="#icon-trophy"/></svg>Level Vault</div>'
+      +'<span class="lvlv-count">'+hist.length+' banked</span></div>'
+      +'<div class="lvlv-cab">'+shelf+'</div></div>';
+  };
+
+  /* kept for the standalone test page only */
+  window.bowlPreviewMint = function(){
+    var rw; try{ rw=getReward()||{}; }catch(e){ rw={}; }
+    var hist=(rw.history||[]).filter(function(h){return h && !h.abandoned;});
+    var nextNum=(rw.active&&rw.active.levelNum)||(hist.length+1);
+    var rname=(rw.active&&rw.active.name)||'';
+    window.bowlMintLevel({ levelNum:nextNum, ballCount:18, rewardName:rname, preview:true });
+  };
+
+})();
+
 </script>
 
 </body>

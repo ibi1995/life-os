@@ -5665,6 +5665,7 @@ function getRwLevelScore(){
   /* Cache key: levelStartDate + dailyDraws length + MAX doneAt + habitBonus count.
      v70: habitBonus count added so completing all habits (no bowl change) busts the cache. */
   var rw=getReward();
+  if(!rw.active){ return {pts:0, completed:0}; }   /* no active level = no current progress (prevents phantom "Level complete" after a claim) */
   var b=getBowl();
   var levelStart=(rw.active&&rw.active.levelStartDate)||'none';
   var maxDoneAt=0;
@@ -5686,7 +5687,7 @@ function getRwLevelScore(){
     /* Pre-level-start days normally don't count, but RETROACTIVELY logged
        ones do — the user did the work this cycle even if the calendar date
        predates the reward level. */
-    if(ls && dd.date<ls && !dd.retroactive && !dd.backfilled) return;
+    if(ls && dd.date<ls) return;   /* strict level window — retroactive/backfilled draws no longer bleed across claimed levels */
     completed++;
     pts+=dd.pts||0;
   });
@@ -5941,6 +5942,17 @@ function rwClaimReward(){
       }); }, 420);
     } else { rwShowCelebration({levelNum:_mintLvl,name:_mintReward}); }
   }catch(e){ try{ rwShowCelebration({levelNum:_mintLvl,name:_mintReward}); }catch(_e){} }
+  /* GUARANTEED SEAL — empty the trophy case as a fact of claiming, not as a side-effect
+     of the animation being dismissed. Runs ~2.6s after claim (past the ceremony's ball-lift
+     so the case visually empties after the balls leave), regardless of whether the ceremony
+     played or was tapped to dismiss. Fixes "level cleared but case still full". */
+  try{ setTimeout(function(){ try{
+    if(typeof tcGetCase==='function' && typeof tcSaveCase==='function'){
+      var _tc=tcGetCase();
+      if(_tc){ _tc._lastStreakSize=(_tc.balls&&_tc.balls.length)||_tc._lastStreakSize||0; _tc.balls=[]; tcSaveCase(_tc);
+        if(typeof tcRender==='function') tcRender(false); }
+    }
+  }catch(_e){} }, 2600); }catch(e){}
   /* Clear active */
   rw.active=null;
   setReward(rw);
@@ -8619,6 +8631,9 @@ function bowlChooseTier(tier){
   var tierData=theme[tier];
   if(!tierData){ toast("Invalid tier."); _bowlChoosingTier=false; return; }
 
+  /* auto level-up: remember score before this completion */
+  var _prevScore=0; try{ _prevScore=(getRwLevelScore()||{}).pts||0; }catch(e){}
+
   dd.chosenTier=tier;
   dd.pts=tierData.pts;
   var hardStreakNow=0;
@@ -8643,11 +8658,32 @@ function bowlChooseTier(tier){
   var celSub=document.getElementById("bowl-celebrate-sub");
   if(celTitle) celTitle.textContent=theme.name+" — "+tierLabel[tier]+" Done!";
   if(celSub) celSub.textContent="+"+dd.pts+" pts toward your reward.";
-  var cel=document.getElementById("bowl-celebrate");
-  if(cel){ cel.classList.add("on"); window._celebrateTimer=setTimeout(function(){ bowlCloseCelebrate(); },3500); }
+  /* ── AUTO LEVEL-UP CEREMONY — fire the moment you cross the target ── */
+  function _bowlAutoMint(){
+    var rw=getReward();
+    if(!rw || !rw.active || rw.active._autoCelebrated) return false;
+    if(((getRwLevelScore()||{}).pts||0) < REWARD_LEVEL_TARGET) return false;
+    rw.active._autoCelebrated=true; setReward(rw);
+    /* Full level clear: rwClaimReward navigates to Bowl, lifts the cabinet balls into
+       the cluster, archives it to the Reward-page vault, empties the cabinet (sealCabinet:true),
+       and clears the active level. The set-next-level prompt fires after the ceremony dismisses. */
+    setTimeout(function(){ try{ rwClaimReward(); }catch(e){} }, 350);
+    return true;
+  }
+  var _crossedNow=false;
+  try{
+    if(_prevScore < REWARD_LEVEL_TARGET && ((getRwLevelScore()||{}).pts||0) >= REWARD_LEVEL_TARGET){
+      _crossedNow=_bowlAutoMint();
+    }
+  }catch(e){}
+  if(!_crossedNow){
+    var cel=document.getElementById("bowl-celebrate");
+    if(cel){ cel.classList.add("on"); window._celebrateTimer=setTimeout(function(){ bowlCloseCelebrate(); },3500); }
+  }
 
   try{ if(typeof rwCheckStreakIntegrity==='function') rwCheckStreakIntegrity(); }catch(e){}
   try{ setTimeout(function(){ _grantHabitBonus(todayKey2); },600); }catch(e){}
+  try{ setTimeout(function(){ if(typeof _bowlAutoMint==='function') _bowlAutoMint(); }, 1000); }catch(e){}
   try{ if(typeof renderRewardStrip==='function') setTimeout(renderRewardStrip,100); }catch(e){}
   /* ── Trophy Case: award ball on completion ── */
   try{ setTimeout(function(){ tcAwardBall(tier, theme); }, 500); }catch(e){}
@@ -15421,10 +15457,12 @@ window.finMonthNav = function(delta){
     try{ console.log('[mint] fired', opts); }catch(e){}
     var ov = document.getElementById('mint-overlay');
     if(!ov){ try{ console.warn('[mint] #mint-overlay missing'); }catch(e){} return; }
-    if(_mintBusy){ if(ov.classList.contains('on')) return; _mintBusy=false; }
+    /* hard-reset any stale/stuck ceremony before starting fresh (auto-claim is single-fire,
+       guarded upstream by _autoCelebrated, so a leftover _mintBusy must never block this) */
+    try{ ov.classList.remove('on'); ov.innerHTML=''; }catch(e){}
     _mintBusy = true;
 
-    var reduce=false; try{ reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){}
+    var reduce=false; /* ceremony always plays full — ignore prefers-reduced-motion so it can't render invisible */
     var W=window.innerWidth, H=window.innerHeight;
     var lvl  = opts.levelNum || 1;
     var rewardName = opts.rewardName || '';
@@ -15566,6 +15604,12 @@ window.finMonthNav = function(delta){
         ov.innerHTML=''; _mintBusy=false;
         if(sealCabinet) _sealCabinetData();   /* empty cabinet ONLY on real clear */
         try{ if(typeof renderLevelVault==='function') renderLevelVault(true); }catch(e){}
+        /* Level cleared → cabinet empty, level archived. If nothing is active now,
+           open the next-level setup so Level N+1 is ready to grind. */
+        if(sealCabinet){ try{ var _rw=getReward();
+          if(_rw && !_rw.active && typeof openRewardModal==='function'){
+            setTimeout(function(){ try{ navTo(PAGE_IDS.indexOf('reward')); }catch(e){} openRewardModal(false); }, 500);
+          } }catch(e){} }
       }, 360);
     }
 
@@ -15626,6 +15670,47 @@ window.finMonthNav = function(delta){
     /* ── ZERO-G FLOATY physics (calm) in a rectangular case ── */
     var DAMP=0.99, WREST=0.72, BREST=0.38, JIT=0.014, MAXV=4.2;
     var grabbed=null, grabMoved=false, downT=0, downX=0, downY=0;
+
+    /* ── Glass-marble SFX: pitched by ball size, loudness by impact, throttled so a
+       50-ball stir doesn't machine-gun. Self-contained to this viewer instance. ── */
+    var _sfxCtx=null, _sfxDest=null, _lastClink=0, _voices=0;
+    function _sfx(){
+      if(typeof _soundEnabled!=='undefined' && !_soundEnabled) return null;
+      if(!_sfxCtx){ try{ _sfxCtx=(typeof _getAudioCtx==='function')?_getAudioCtx():null; }catch(e){}
+        if(_sfxCtx){ try{ _sfxDest=(window._gbAudioDest&&window._gbAudioDest())||_sfxCtx.destination; }catch(e){ _sfxDest=_sfxCtx.destination; } } }
+      return (_sfxCtx && _sfxCtx.state!=='closed') ? _sfxCtx : null;
+    }
+    function clink(vol, sizeR, dull){
+      var now=performance.now();
+      if(now-_lastClink < 20) return;
+      if(_voices > 6) return;
+      var ctx=_sfx(); if(!ctx) return;
+      _lastClink=now; _voices++;
+      var t=ctx.currentTime+0.002;
+      vol=Math.max(0.03, Math.min(0.5, vol||0.18));
+      var base=2600-((sizeR||14)-7)*55; base=Math.max(900, Math.min(3400, base));
+      if(dull) base*=0.6;                                   /* wall = duller, lower */
+      [1, 2.01].forEach(function(mult, idx){
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type=idx?'sine':'triangle';
+        o.frequency.setValueAtTime(base*mult, t);
+        o.frequency.exponentialRampToValueAtTime(base*mult*0.92, t+0.05);
+        var peak=vol*(idx?0.35:1);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(peak, t+0.004);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+(dull?0.07:0.12));
+        o.connect(g); g.connect(_sfxDest||ctx.destination); o.start(t); o.stop(t+(dull?0.09:0.14));
+      });
+      try{                                                  /* contact transient (the "tick") */
+        var len=Math.floor(ctx.sampleRate*0.01), buf=ctx.createBuffer(1,len,ctx.sampleRate), nd=buf.getChannelData(0);
+        for(var i=0;i<len;i++) nd[i]=(Math.random()*2-1)*Math.pow(1-i/len,4);
+        var src=ctx.createBufferSource(); src.buffer=buf;
+        var bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=base*1.4; bp.Q.value=2.5;
+        var ng=ctx.createGain(); ng.gain.setValueAtTime(vol*0.5,t); ng.gain.exponentialRampToValueAtTime(0.0001,t+0.02);
+        src.connect(bp); bp.connect(ng); ng.connect(_sfxDest||ctx.destination); src.start(t);
+      }catch(e){}
+      setTimeout(function(){ _voices=Math.max(0,_voices-1); }, 130);
+    }
     function physics(){
       var b,i,j;
       for(i=0;i<P.length;i++){ b=P[i]; if(b===grabbed) continue;
@@ -15635,10 +15720,10 @@ window.finMonthNav = function(delta){
         b.x+=b.vx; b.y+=b.vy;
       }
       for(i=0;i<P.length;i++){ b=P[i];
-        if(b.x<b.r){ b.x=b.r; if(b!==grabbed) b.vx=Math.abs(b.vx)*WREST; }
-        else if(b.x>gW-b.r){ b.x=gW-b.r; if(b!==grabbed) b.vx=-Math.abs(b.vx)*WREST; }
-        if(b.y<b.r){ b.y=b.r; if(b!==grabbed) b.vy=Math.abs(b.vy)*WREST; }
-        else if(b.y>gH-b.r){ b.y=gH-b.r; if(b!==grabbed) b.vy=-Math.abs(b.vy)*WREST; }
+        if(b.x<b.r){ if(b!==grabbed&&b.vx<-0.7) clink(0.05+Math.abs(b.vx)*0.06,b.r,true); b.x=b.r; if(b!==grabbed) b.vx=Math.abs(b.vx)*WREST; }
+        else if(b.x>gW-b.r){ if(b!==grabbed&&b.vx>0.7) clink(0.05+Math.abs(b.vx)*0.06,b.r,true); b.x=gW-b.r; if(b!==grabbed) b.vx=-Math.abs(b.vx)*WREST; }
+        if(b.y<b.r){ if(b!==grabbed&&b.vy<-0.7) clink(0.05+Math.abs(b.vy)*0.06,b.r,true); b.y=b.r; if(b!==grabbed) b.vy=Math.abs(b.vy)*WREST; }
+        else if(b.y>gH-b.r){ if(b!==grabbed&&b.vy>0.7) clink(0.05+Math.abs(b.vy)*0.06,b.r,true); b.y=gH-b.r; if(b!==grabbed) b.vy=-Math.abs(b.vy)*WREST; }
       }
       for(i=0;i<P.length;i++){ for(j=i+1;j<P.length;j++){
         var a=P[i], c=P[j], dx=c.x-a.x, dy=c.y-a.y, dd=Math.hypot(dx,dy), mind=a.r+c.r;
@@ -15646,7 +15731,8 @@ window.finMonthNav = function(delta){
           var aM=(a!==grabbed), cM=(c!==grabbed), push=ov2/((aM?1:0)+(cM?1:0)||1);
           if(aM){ a.x-=ux*push; a.y-=uy*push; } if(cM){ c.x+=ux*push; c.y+=uy*push; }
           var rvx=c.vx-a.vx, rvy=c.vy-a.vy, vr=rvx*ux+rvy*uy;
-          if(vr<0){ var im=-(1+BREST)*vr/2; if(aM){ a.vx-=im*ux; a.vy-=im*uy; } if(cM){ c.vx+=im*ux; c.vy+=im*uy; } }
+          if(vr<0){ var im=-(1+BREST)*vr/2; if(aM){ a.vx-=im*ux; a.vy-=im*uy; } if(cM){ c.vx+=im*ux; c.vy+=im*uy; }
+            var _imp=-vr; if(_imp>0.5) clink(0.05+_imp*0.085, Math.min(a.r,c.r), false); }
         }
       }}
     }
@@ -15659,7 +15745,7 @@ window.finMonthNav = function(delta){
       return { x:(px-rc.left)*(gW/(rc.width||gW)), y:(py-rc.top)*(gH/(rc.height||gH)) }; }
     function onDown(ev){ var p=toStage(ev); downT=Date.now(); grabMoved=false; downX=p.x; downY=p.y;
       var best=null, bd=1e9; for(var i=0;i<P.length;i++){ var b=P[i], dd2=Math.hypot(b.x-p.x,b.y-p.y); if(dd2<Math.max(b.r,22)&&dd2<bd){ bd=dd2; best=b; } }
-      if(best){ grabbed=best; grabbed.vx=0; grabbed.vy=0; } if(ev.cancelable) ev.preventDefault(); }
+      if(best){ grabbed=best; grabbed.vx=0; grabbed.vy=0; clink(0.12, best.r, false); } if(ev.cancelable) ev.preventDefault(); }
     function onMove(ev){ if(!grabbed && downT===0) return; var p=toStage(ev);
       if(grabbed){ var nx=Math.max(grabbed.r,Math.min(gW-grabbed.r,p.x)), ny=Math.max(grabbed.r,Math.min(gH-grabbed.r,p.y));
         grabbed.vx=nx-grabbed.x; grabbed.vy=ny-grabbed.y; grabbed.x=nx; grabbed.y=ny; }
@@ -15667,7 +15753,8 @@ window.finMonthNav = function(delta){
     function onUp(ev){ if(grabbed){ grabbed=null; }
       else if(!grabMoved && (Date.now()-downT)<300){
         for(var i=0;i<P.length;i++){ var b=P[i], dx=b.x-downX, dy=b.y-downY, dd3=Math.hypot(dx,dy)||1, f=7/(0.4+dd3/Math.max(gW,gH));
-          b.vx+=(dx/dd3)*f+(Math.random()-0.5)*5; b.vy+=(dy/dd3)*f+(Math.random()-0.5)*5; } hap('light'); }
+          b.vx+=(dx/dd3)*f+(Math.random()-0.5)*5; b.vy+=(dy/dd3)*f+(Math.random()-0.5)*5; } hap('light');
+        for(var _k=0;_k<4;_k++){ (function(kk){ setTimeout(function(){ var rb=P[(Math.random()*P.length)|0]; clink(0.16-kk*0.02, rb?rb.r:14, false); }, kk*55); })(_k); } }
       downT=0; grabMoved=false; if(ev&&ev.cancelable) ev.preventDefault(); }
     stage.addEventListener('mousedown',onDown); window.addEventListener('mousemove',onMove); window.addEventListener('mouseup',onUp);
     stage.addEventListener('touchstart',onDown,{passive:false}); stage.addEventListener('touchmove',onMove,{passive:false}); stage.addEventListener('touchend',onUp);
@@ -15677,6 +15764,7 @@ window.finMonthNav = function(delta){
     caseEl.style.transform='translate(-50%,-50%) translate('+dx+'px,'+dy+'px) scale('+sScale+')'; caseEl.style.opacity='0';
     requestAnimationFrame(function(){ host.classList.add('on'); caseEl.style.transform='translate(-50%,-50%) translate(0,0) scale(1)'; caseEl.style.opacity='1'; });
     snd('_playMechCapture'); hap('medium'); render(); loop();
+    setTimeout(function(){ clink(0.13, 12, false); }, 180); setTimeout(function(){ clink(0.10, 18, true); }, 300);
 
     function closeViewer(){ running=false; if(rafId) cancelAnimationFrame(rafId);
       try{ window.removeEventListener('mousemove',onMove); window.removeEventListener('mouseup',onUp); }catch(e){}
